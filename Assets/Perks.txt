@@ -1,0 +1,10 @@
+1. The Clumsy (Common) -> -10% Base Success Chance.
+2. The Overconfident (Common)-> -1 Item Slot.
+3. The Prepared (Common) -> +1 Item Slot.
+4. The Glass Cannon (Rare) -> Item "Match Bonuses" are doubled, but "Base Boosts" are halved.
+5. The Social Media Star (Rare) -> +50% Reputation gain on success; -50% Reputation loss on failure.
+6. The Lucky (Rare) -> Success chance cannot drop below 25%, no matter the monster or gear.
+7. The Honest (Common) -> The Confidence Meter is always hidden for this hero.
+8. The Fearless (Rare) -> Ignores the "Monster Difficulty Penalty" entirely.
+9. The Inspiring (Rare) -> On Success: +10% Base Chance to the next hero.
+10. The Cursed (Hidden/Legendary) -> +40% Base Success Chance, but every item equipped reduces success by 10%.

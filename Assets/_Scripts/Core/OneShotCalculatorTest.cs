@@ -15,8 +15,7 @@ namespace OneShotSupport.Core
         public HeroData testHero;
         public MonsterData testMonster;
         public List<ItemData> testItems = new List<ItemData>();
-
-        [Header("Manual Test")]
+        
         [ContextMenu("Run Calculation Test")]
         public void RunTest()
         {
