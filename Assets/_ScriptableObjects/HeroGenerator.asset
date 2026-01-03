@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca5eea155804049a8be38c7534b6f995, type: 3}
+  m_Name: HeroGenerator
+  m_EditorClassIdentifier: 
+  noobSprite: {fileID: 0}
+  knightSprite: {fileID: 0}
+  legendSprite: {fileID: 0}
+  noobBaseChanceRange: {x: 5, y: 15}
+  knightBaseChanceRange: {x: 15, y: 25}
+  legendBaseChanceRange: {x: 25, y: 35}
+  noobSlots: 2
+  knightSlots: 2
+  legendSlots: 2
+  commonPerkChance: 0.6
+  rarePerkChance: 0.3
+  legendaryPerkChance: 0.1
