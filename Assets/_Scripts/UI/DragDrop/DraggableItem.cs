@@ -35,7 +35,19 @@ namespace OneShotSupport.UI.DragDrop
             if (canvasGroup == null)
                 canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
-            canvas = GetComponentInParent<Canvas>();
+            // Try to find canvas, but don't fail if not found yet
+            TryFindCanvas();
+        }
+
+        /// <summary>
+        /// Try to find the parent canvas
+        /// </summary>
+        private void TryFindCanvas()
+        {
+            if (canvas == null)
+            {
+                canvas = GetComponentInParent<Canvas>();
+            }
         }
 
         /// <summary>
@@ -50,11 +62,22 @@ namespace OneShotSupport.UI.DragDrop
             {
                 itemIcon.sprite = itemData.icon;
             }
+
+            // Ensure we have canvas reference after being placed in scene
+            TryFindCanvas();
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (!isDraggable) return;
+
+            // Make sure we have canvas reference
+            TryFindCanvas();
+            if (canvas == null)
+            {
+                Debug.LogError("DraggableItem: Canvas not found! Make sure item is a child of a Canvas.");
+                return;
+            }
 
             // Store original position and parent
             originalPosition = rectTransform.anchoredPosition;
@@ -78,6 +101,13 @@ namespace OneShotSupport.UI.DragDrop
         public void OnDrag(PointerEventData eventData)
         {
             if (!isDraggable) return;
+
+            // Safety check
+            if (canvas == null)
+            {
+                TryFindCanvas();
+                if (canvas == null) return;
+            }
 
             // Follow mouse
             rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
