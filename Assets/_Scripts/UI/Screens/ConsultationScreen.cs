@@ -15,7 +15,9 @@ namespace OneShotSupport.UI.Screens
     /// <summary>
     /// Main consultation screen with two separate panels:
     /// 1. Main View: Shows hero vs monster info
-    /// 2. Inventory View: Shows inventory grid + equipment slots
+    /// 2. Inventory View: Shows inventory slots + equipment slots
+    ///
+    /// IMPORTANT: Items now properly move between inventory and equipment slots
     /// </summary>
     public class ConsultationScreen : MonoBehaviour
     {
@@ -23,7 +25,7 @@ namespace OneShotSupport.UI.Screens
         [Tooltip("Main view panel (hero/monster display)")]
         public GameObject mainViewPanel;
 
-        [Tooltip("Inventory view panel (inventory grid + equipment slots)")]
+        [Tooltip("Inventory view panel (inventory slots + equipment slots)")]
         public GameObject inventoryViewPanel;
 
         [Header("Main View - Hero Display")]
@@ -40,21 +42,26 @@ namespace OneShotSupport.UI.Screens
         public TextMeshProUGUI monsterDifficultyText;
 
         [Header("Main View - Buttons")]
-        public Button openInventoryButton; // Button to open inventory view
+        public Button openInventoryButton;
         public Button sendHeroButton;
 
-        [Header("Inventory View - Equipment & Items")]
-        public ItemSlot[] equipmentSlots; // Equipment slots for hero
-        public Transform inventoryGrid; // Parent for inventory items
-        public GameObject draggableItemPrefab; // Prefab for draggable items
-        public Button closeInventoryButton; // Button to return to main view
+        [Header("Inventory View - Slots")]
+        [Tooltip("Inventory slots (manually created in scene, e.g., 6 slots)")]
+        public ItemSlot[] inventorySlots;
+
+        [Tooltip("Equipment slots for hero")]
+        public ItemSlot[] equipmentSlots;
+
+        [Header("Inventory View - Prefabs")]
+        public GameObject draggableItemPrefab;
+        public Button closeInventoryButton;
 
         [Header("UI Components")]
         public ConfidenceMeter confidenceMeter;
         public ItemTooltip itemTooltip;
 
         private HeroResult currentHeroResult;
-        private List<DraggableItem> inventoryItems = new List<DraggableItem>();
+        private List<DraggableItem> currentItems = new List<DraggableItem>();
 
         private void Awake()
         {
@@ -73,6 +80,14 @@ namespace OneShotSupport.UI.Screens
             {
                 slot.isEquipmentSlot = true;
                 slot.OnItemPlaced += OnItemEquipped;
+                slot.OnItemRemoved += OnItemUnequipped;
+            }
+
+            // Setup inventory slots
+            foreach (var slot in inventorySlots)
+            {
+                slot.isEquipmentSlot = false;
+                // Inventory slots can also trigger confidence updates
                 slot.OnItemRemoved += OnItemUnequipped;
             }
 
@@ -96,7 +111,10 @@ namespace OneShotSupport.UI.Screens
             // Clear previous equipment
             ClearEquipment();
 
-            // Setup inventory
+            // Clear previous inventory
+            ClearInventory();
+
+            // Setup inventory with new items
             SetupInventory(availableItems, heroResult.monster.weakness);
 
             // Setup equipment slots based on hero
@@ -105,7 +123,6 @@ namespace OneShotSupport.UI.Screens
             // Reset confidence meter
             if (confidenceMeter != null)
             {
-                // Check if meter should be hidden (Honest perk)
                 if (PerkModifier.HidesConfidenceMeter(heroResult.hero.perk))
                 {
                     confidenceMeter.Hide();
@@ -162,23 +179,21 @@ namespace OneShotSupport.UI.Screens
 
         /// <summary>
         /// Setup inventory with available items
+        /// NEW: Items are placed INTO inventory slots, not just under grid
         /// </summary>
         private void SetupInventory(List<ItemData> availableItems, ItemCategory monsterWeakness)
         {
-            // Clear existing inventory
-            foreach (var item in inventoryItems)
-            {
-                if (item != null)
-                    Destroy(item.gameObject);
-            }
-            inventoryItems.Clear();
+            // Clear existing items
+            ClearInventory();
 
-            // Create draggable items
-            foreach (var itemData in availableItems)
+            // Create items and place them in inventory slots
+            for (int i = 0; i < availableItems.Count && i < inventorySlots.Length; i++)
             {
+                var itemData = availableItems[i];
                 if (itemData == null) continue;
 
-                GameObject itemObj = Instantiate(draggableItemPrefab, inventoryGrid);
+                // Create draggable item
+                GameObject itemObj = Instantiate(draggableItemPrefab);
                 DraggableItem draggableItem = itemObj.GetComponent<DraggableItem>();
 
                 if (draggableItem != null)
@@ -196,7 +211,10 @@ namespace OneShotSupport.UI.Screens
                             itemTooltip.Hide();
                     };
 
-                    inventoryItems.Add(draggableItem);
+                    // Place item in inventory slot
+                    inventorySlots[i].PlaceItem(draggableItem);
+
+                    currentItems.Add(draggableItem);
                 }
             }
         }
@@ -210,7 +228,6 @@ namespace OneShotSupport.UI.Screens
 
             for (int i = 0; i < equipmentSlots.Length; i++)
             {
-                // Enable/disable slots based on hero's slot count
                 equipmentSlots[i].gameObject.SetActive(i < effectiveSlots);
             }
         }
@@ -222,8 +239,55 @@ namespace OneShotSupport.UI.Screens
         {
             foreach (var slot in equipmentSlots)
             {
+                if (!slot.IsEmpty())
+                {
+                    // Return item to first empty inventory slot
+                    ReturnItemToInventory(slot.CurrentItem);
+                    slot.RemoveItem();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clear all inventory items
+        /// </summary>
+        private void ClearInventory()
+        {
+            // Destroy all current items
+            foreach (var item in currentItems)
+            {
+                if (item != null)
+                    Destroy(item.gameObject);
+            }
+            currentItems.Clear();
+
+            // Clear all inventory slots
+            foreach (var slot in inventorySlots)
+            {
                 slot.RemoveItem();
             }
+        }
+
+        /// <summary>
+        /// Return an item to the first empty inventory slot
+        /// </summary>
+        private void ReturnItemToInventory(DraggableItem item)
+        {
+            if (item == null) return;
+
+            // Find first empty inventory slot
+            foreach (var slot in inventorySlots)
+            {
+                if (slot.IsEmpty())
+                {
+                    slot.PlaceItem(item);
+                    return;
+                }
+            }
+
+            // If no empty slot found, destroy the item (shouldn't happen)
+            Debug.LogWarning("No empty inventory slot found to return item!");
+            Destroy(item.gameObject);
         }
 
         /// <summary>
@@ -278,7 +342,6 @@ namespace OneShotSupport.UI.Screens
             if (inventoryViewPanel != null)
                 inventoryViewPanel.SetActive(false);
 
-            // Hide tooltip when switching views
             if (itemTooltip != null)
                 itemTooltip.Hide();
         }
@@ -294,7 +357,6 @@ namespace OneShotSupport.UI.Screens
             if (inventoryViewPanel != null)
                 inventoryViewPanel.SetActive(true);
 
-            // Update confidence when entering inventory view
             UpdateConfidence();
         }
 
@@ -315,7 +377,6 @@ namespace OneShotSupport.UI.Screens
                 GameManager.Instance.CompleteConsultation(equippedItems);
             }
 
-            // Hide tooltip
             if (itemTooltip != null)
                 itemTooltip.Hide();
         }
