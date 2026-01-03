@@ -17,7 +17,7 @@ namespace OneShotSupport.UI.Screens
     /// 1. Main View: Shows hero vs monster info
     /// 2. Inventory View: Shows inventory slots + equipment slots
     ///
-    /// IMPORTANT: Items now properly move between inventory and equipment slots
+    /// IMPORTANT: Inventory persists across all heroes in a day, only resets on new day
     /// </summary>
     public class ConsultationScreen : MonoBehaviour
     {
@@ -62,6 +62,8 @@ namespace OneShotSupport.UI.Screens
 
         private HeroResult currentHeroResult;
         private List<DraggableItem> currentItems = new List<DraggableItem>();
+        private bool isInventorySetupForDay = false; // Track if inventory is setup for current day
+        private int currentDay = -1; // Track current day number
 
         private void Awake()
         {
@@ -87,7 +89,6 @@ namespace OneShotSupport.UI.Screens
             foreach (var slot in inventorySlots)
             {
                 slot.isEquipmentSlot = false;
-                // Inventory slots can also trigger confidence updates
                 slot.OnItemRemoved += OnItemUnequipped;
             }
 
@@ -97,10 +98,21 @@ namespace OneShotSupport.UI.Screens
 
         /// <summary>
         /// Setup consultation for a new hero
+        /// IMPORTANT: Inventory persists across heroes, only equipment is cleared
         /// </summary>
         public void SetupConsultation(HeroResult heroResult, List<ItemData> availableItems)
         {
             currentHeroResult = heroResult;
+
+            // Check if this is a new day (reset inventory)
+            int dayNumber = GameManager.Instance?.CurrentDayNumber ?? 0;
+            bool isNewDay = dayNumber != currentDay;
+
+            if (isNewDay)
+            {
+                currentDay = dayNumber;
+                isInventorySetupForDay = false;
+            }
 
             // Display hero info
             DisplayHero(heroResult.hero);
@@ -108,14 +120,16 @@ namespace OneShotSupport.UI.Screens
             // Display monster info
             DisplayMonster(heroResult.monster);
 
-            // Clear previous equipment
+            // Clear previous equipment (always clear between heroes)
             ClearEquipment();
 
-            // Clear previous inventory
-            ClearInventory();
-
-            // Setup inventory with new items
-            SetupInventory(availableItems, heroResult.monster.weakness);
+            // Setup inventory ONLY on first hero of the day
+            if (!isInventorySetupForDay)
+            {
+                ClearInventory();
+                SetupInventory(availableItems, heroResult.monster.weakness);
+                isInventorySetupForDay = true;
+            }
 
             // Setup equipment slots based on hero
             SetupEquipmentSlots(heroResult.hero);
@@ -179,7 +193,7 @@ namespace OneShotSupport.UI.Screens
 
         /// <summary>
         /// Setup inventory with available items
-        /// NEW: Items are placed INTO inventory slots, not just under grid
+        /// ONLY called once per day (first hero)
         /// </summary>
         private void SetupInventory(List<ItemData> availableItems, ItemCategory monsterWeakness)
         {
@@ -217,6 +231,8 @@ namespace OneShotSupport.UI.Screens
                     currentItems.Add(draggableItem);
                 }
             }
+
+            Debug.Log($"[ConsultationScreen] Inventory setup with {currentItems.Count} items for Day {currentDay}");
         }
 
         /// <summary>
@@ -234,6 +250,7 @@ namespace OneShotSupport.UI.Screens
 
         /// <summary>
         /// Clear all equipped items
+        /// Called between heroes - returns items to inventory
         /// </summary>
         private void ClearEquipment()
         {
@@ -250,6 +267,7 @@ namespace OneShotSupport.UI.Screens
 
         /// <summary>
         /// Clear all inventory items
+        /// ONLY called when starting a new day
         /// </summary>
         private void ClearInventory()
         {
@@ -266,6 +284,8 @@ namespace OneShotSupport.UI.Screens
             {
                 slot.RemoveItem();
             }
+
+            Debug.Log("[ConsultationScreen] Inventory cleared");
         }
 
         /// <summary>
