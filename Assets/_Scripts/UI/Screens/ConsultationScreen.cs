@@ -250,7 +250,7 @@ namespace OneShotSupport.UI.Screens
 
         /// <summary>
         /// Clear all equipped items
-        /// Called between heroes - returns items to inventory
+        /// Called between heroes - DESTROYS equipped items (they are consumed)
         /// </summary>
         private void ClearEquipment()
         {
@@ -258,9 +258,16 @@ namespace OneShotSupport.UI.Screens
             {
                 if (!slot.IsEmpty())
                 {
-                    // Return item to first empty inventory slot
-                    ReturnItemToInventory(slot.CurrentItem);
+                    // Destroy the equipped item (it's been used by the hero)
+                    var item = slot.CurrentItem;
                     slot.RemoveItem();
+
+                    if (item != null)
+                    {
+                        // Remove from tracking list
+                        currentItems.Remove(item);
+                        Destroy(item.gameObject);
+                    }
                 }
             }
         }
