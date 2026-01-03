@@ -8,6 +8,7 @@ namespace OneShotSupport.UI.Components
 {
     /// <summary>
     /// Tooltip that displays item information on hover
+    /// IMPORTANT: This tooltip does not block raycasts to prevent blinking issues
     /// </summary>
     public class ItemTooltip : MonoBehaviour
     {
@@ -23,12 +24,24 @@ namespace OneShotSupport.UI.Components
 
         private RectTransform rectTransform;
         private Canvas canvas;
+        private CanvasGroup canvasGroup;
         private bool isVisible = false;
 
         private void Awake()
         {
             rectTransform = GetComponent<RectTransform>();
             canvas = GetComponentInParent<Canvas>();
+
+            // Get or add CanvasGroup
+            canvasGroup = GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+                canvasGroup = gameObject.AddComponent<CanvasGroup>();
+
+            // CRITICAL: Prevent tooltip from blocking raycasts
+            // This stops the blinking issue where tooltip blocks mouse hover detection
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.interactable = false;
+
             Hide();
         }
 

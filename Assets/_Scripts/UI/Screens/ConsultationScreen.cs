@@ -13,40 +13,48 @@ using OneShotSupport.Utils;
 namespace OneShotSupport.UI.Screens
 {
     /// <summary>
-    /// Main consultation screen where player equips heroes
+    /// Main consultation screen with two separate panels:
+    /// 1. Main View: Shows hero vs monster info
+    /// 2. Inventory View: Shows inventory grid + equipment slots
     /// </summary>
     public class ConsultationScreen : MonoBehaviour
     {
-        [Header("Hero Display")]
+        [Header("Panel Management")]
+        [Tooltip("Main view panel (hero/monster display)")]
+        public GameObject mainViewPanel;
+
+        [Tooltip("Inventory view panel (inventory grid + equipment slots)")]
+        public GameObject inventoryViewPanel;
+
+        [Header("Main View - Hero Display")]
         public Image heroPortrait;
         public TextMeshProUGUI heroNameText;
         public TextMeshProUGUI heroTierText;
         public TextMeshProUGUI heroPerkText;
         public TextMeshProUGUI heroSlotsText;
 
-        [Header("Monster Display")]
+        [Header("Main View - Monster Display")]
         public Image monsterSprite;
         public TextMeshProUGUI monsterNameText;
         public TextMeshProUGUI monsterWeaknessText;
         public TextMeshProUGUI monsterDifficultyText;
 
-        [Header("Equipment")]
+        [Header("Main View - Buttons")]
+        public Button openInventoryButton; // Button to open inventory view
+        public Button sendHeroButton;
+
+        [Header("Inventory View - Equipment & Items")]
         public ItemSlot[] equipmentSlots; // Equipment slots for hero
         public Transform inventoryGrid; // Parent for inventory items
         public GameObject draggableItemPrefab; // Prefab for draggable items
+        public Button closeInventoryButton; // Button to return to main view
 
         [Header("UI Components")]
         public ConfidenceMeter confidenceMeter;
         public ItemTooltip itemTooltip;
-        public Button sendHeroButton;
-
-        [Header("Inventory Visibility")]
-        public GameObject inventoryPanel; // Panel containing inventory
-        public Button toggleInventoryButton; // Button to show/hide inventory
 
         private HeroResult currentHeroResult;
         private List<DraggableItem> inventoryItems = new List<DraggableItem>();
-        private bool inventoryVisible = false;
 
         private void Awake()
         {
@@ -54,8 +62,11 @@ namespace OneShotSupport.UI.Screens
             if (sendHeroButton != null)
                 sendHeroButton.onClick.AddListener(OnSendHeroClicked);
 
-            if (toggleInventoryButton != null)
-                toggleInventoryButton.onClick.AddListener(ToggleInventory);
+            if (openInventoryButton != null)
+                openInventoryButton.onClick.AddListener(ShowInventoryView);
+
+            if (closeInventoryButton != null)
+                closeInventoryButton.onClick.AddListener(ShowMainView);
 
             // Setup equipment slots
             foreach (var slot in equipmentSlots)
@@ -65,9 +76,8 @@ namespace OneShotSupport.UI.Screens
                 slot.OnItemRemoved += OnItemUnequipped;
             }
 
-            // Hide inventory by default
-            if (inventoryPanel != null)
-                inventoryPanel.SetActive(false);
+            // Show main view by default
+            ShowMainView();
         }
 
         /// <summary>
@@ -106,6 +116,9 @@ namespace OneShotSupport.UI.Screens
                     UpdateConfidence();
                 }
             }
+
+            // Start in main view
+            ShowMainView();
         }
 
         /// <summary>
@@ -255,14 +268,34 @@ namespace OneShotSupport.UI.Screens
         }
 
         /// <summary>
-        /// Toggle inventory visibility
+        /// Show the main view panel (hero vs monster)
         /// </summary>
-        private void ToggleInventory()
+        private void ShowMainView()
         {
-            inventoryVisible = !inventoryVisible;
+            if (mainViewPanel != null)
+                mainViewPanel.SetActive(true);
 
-            if (inventoryPanel != null)
-                inventoryPanel.SetActive(inventoryVisible);
+            if (inventoryViewPanel != null)
+                inventoryViewPanel.SetActive(false);
+
+            // Hide tooltip when switching views
+            if (itemTooltip != null)
+                itemTooltip.Hide();
+        }
+
+        /// <summary>
+        /// Show the inventory view panel (inventory + equipment)
+        /// </summary>
+        private void ShowInventoryView()
+        {
+            if (mainViewPanel != null)
+                mainViewPanel.SetActive(false);
+
+            if (inventoryViewPanel != null)
+                inventoryViewPanel.SetActive(true);
+
+            // Update confidence when entering inventory view
+            UpdateConfidence();
         }
 
         /// <summary>
@@ -282,7 +315,9 @@ namespace OneShotSupport.UI.Screens
                 GameManager.Instance.CompleteConsultation(equippedItems);
             }
 
-            // Hide this screen (will be handled by UIManager)
+            // Hide tooltip
+            if (itemTooltip != null)
+                itemTooltip.Hide();
         }
     }
 }
