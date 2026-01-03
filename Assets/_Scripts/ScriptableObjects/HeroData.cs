@@ -1,5 +1,6 @@
 using UnityEngine;
 using OneShotSupport.Data;
+using OneShotSupport.Utils;
 
 namespace OneShotSupport.ScriptableObjects
 {
@@ -35,5 +36,15 @@ namespace OneShotSupport.ScriptableObjects
         [Header("Visual")]
         [Tooltip("Hero portrait for UI display")]
         public Sprite portrait;
+
+        /// <summary>
+        /// Get effective number of item slots after perk modifiers
+        /// Overconfident: -1, Prepared: +1
+        /// </summary>
+        public int GetEffectiveSlots()
+        {
+            int effectiveSlots = slots + PerkModifier.GetSlotModifier(perk);
+            return Mathf.Max(1, effectiveSlots); // Minimum 1 slot
+        }
     }
 }

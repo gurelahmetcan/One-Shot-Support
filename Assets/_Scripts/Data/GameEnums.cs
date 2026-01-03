@@ -22,15 +22,38 @@ namespace OneShotSupport.Data
     }
 
     /// <summary>
-    /// Hero perks that modify success chance
-    /// Based on personality traits for customer support context
+    /// Hero perks that modify success chance and game mechanics
+    /// Includes common, rare, and legendary perks
     /// </summary>
     public enum Perk
     {
-        None,           // No modifier
-        Clumsy,         // Negative modifier
-        Prepared,       // Positive modifier
-        Overconfident   // Special behavior (TBD based on design)
+        None,               // No modifier
+
+        // Common Perks
+        Clumsy,             // -10% Base Success Chance
+        Overconfident,      // -1 Item Slot
+        Prepared,           // +1 Item Slot
+        Honest,             // Confidence Meter hidden (UI only)
+
+        // Rare Perks
+        GlassCannon,        // 2x match bonus, 0.5x base boost
+        SocialMediaStar,    // +50% rep gain on success, -50% rep loss on failure
+        Lucky,              // Success chance floor of 25%
+        Fearless,           // Ignores monster difficulty penalty
+        Inspiring,          // +10% base to next hero on success
+
+        // Legendary Perks
+        Cursed              // +40% base, -10% per equipped item
+    }
+
+    /// <summary>
+    /// Perk rarity for UI display and generation
+    /// </summary>
+    public enum PerkRarity
+    {
+        Common,
+        Rare,
+        Legendary
     }
 
     /// <summary>
