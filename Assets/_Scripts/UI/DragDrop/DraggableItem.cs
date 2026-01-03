@@ -120,24 +120,16 @@ namespace OneShotSupport.UI.DragDrop
             canvasGroup.alpha = 1f;
             canvasGroup.blocksRaycasts = true;
 
-            // Check if dropped on a valid slot
-            ItemSlot targetSlot = null;
-            if (eventData.pointerEnter != null)
+            // IMPORTANT: Check if item was already placed by ItemSlot.OnDrop()
+            // If currentSlot is set, the item was successfully placed, don't return it
+            if (currentSlot != null)
             {
-                targetSlot = eventData.pointerEnter.GetComponent<ItemSlot>();
+                // Item was successfully placed in a slot by OnDrop
+                return;
             }
 
-            if (targetSlot != null && targetSlot.CanAcceptItem(this))
-            {
-                // Place in new slot
-                targetSlot.PlaceItem(this);
-                currentSlot = targetSlot;
-            }
-            else
-            {
-                // Return to original position
-                ReturnToOriginal();
-            }
+            // Item was not placed in any slot, return to original position
+            ReturnToOriginal();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
