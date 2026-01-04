@@ -6,20 +6,33 @@ using OneShotSupport.Utils;
 namespace OneShotSupport.Core
 {
     /// <summary>
+    /// Pairs a hero's portrait sprite with their character card sprite
+    /// </summary>
+    [System.Serializable]
+    public class HeroVisuals
+    {
+        [Tooltip("Hero portrait sprite")]
+        public Sprite portrait;
+
+        [Tooltip("Character card sprite (must match portrait)")]
+        public Sprite characterCard;
+    }
+
+    /// <summary>
     /// Configuration for procedural hero generation
     /// </summary>
     [CreateAssetMenu(fileName = "HeroGenerator", menuName = "One-Shot Support/Hero Generator")]
     public class HeroGenerator : ScriptableObject
     {
         [Header("Hero Visuals")]
-        [Tooltip("Sprite pool for Noob tier heroes (randomly selected)")]
-        public Sprite[] noobSprites;
+        [Tooltip("Visual pool for Noob tier heroes (randomly selected)")]
+        public HeroVisuals[] noobVisuals;
 
-        [Tooltip("Sprite pool for Knight tier heroes (randomly selected)")]
-        public Sprite[] knightSprites;
+        [Tooltip("Visual pool for Knight tier heroes (randomly selected)")]
+        public HeroVisuals[] knightVisuals;
 
-        [Tooltip("Sprite pool for Legend tier heroes (randomly selected)")]
-        public Sprite[] legendSprites;
+        [Tooltip("Visual pool for Legend tier heroes (randomly selected)")]
+        public HeroVisuals[] legendVisuals;
 
         [Header("Hero Stats")]
         [Tooltip("Base chance range for Noob tier")]
@@ -69,21 +82,21 @@ namespace OneShotSupport.Core
                     hero.heroName = GenerateHeroName("Noob");
                     hero.baseChance = Random.Range(noobBaseChanceRange.x, noobBaseChanceRange.y + 1);
                     hero.slots = noobSlots;
-                    hero.portrait = GetRandomSprite(noobSprites);
+                    AssignVisuals(hero, noobVisuals);
                     break;
 
                 case HeroTier.Knight:
                     hero.heroName = GenerateHeroName("Knight");
                     hero.baseChance = Random.Range(knightBaseChanceRange.x, knightBaseChanceRange.y + 1);
                     hero.slots = knightSlots;
-                    hero.portrait = GetRandomSprite(knightSprites);
+                    AssignVisuals(hero, knightVisuals);
                     break;
 
                 case HeroTier.Legend:
                     hero.heroName = GenerateHeroName("Legend");
                     hero.baseChance = Random.Range(legendBaseChanceRange.x, legendBaseChanceRange.y + 1);
                     hero.slots = legendSlots;
-                    hero.portrait = GetRandomSprite(legendSprites);
+                    AssignVisuals(hero, legendVisuals);
                     break;
             }
 
@@ -132,17 +145,23 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Get a random sprite from the provided sprite pool
+        /// Assign random visuals (portrait + character card) from the provided pool
+        /// Ensures portrait and card sprites match
         /// </summary>
-        private Sprite GetRandomSprite(Sprite[] spritePool)
+        private void AssignVisuals(HeroData hero, HeroVisuals[] visualPool)
         {
-            if (spritePool == null || spritePool.Length == 0)
+            if (visualPool == null || visualPool.Length == 0)
             {
-                Debug.LogWarning("[HeroGenerator] Sprite pool is empty or null!");
-                return null;
+                Debug.LogWarning("[HeroGenerator] Visual pool is empty or null!");
+                return;
             }
 
-            return spritePool[Random.Range(0, spritePool.Length)];
+            // Get random visual set from pool
+            HeroVisuals visuals = visualPool[Random.Range(0, visualPool.Length)];
+
+            // Assign both portrait and character card
+            hero.portrait = visuals.portrait;
+            hero.characterCard = visuals.characterCard;
         }
     }
 }
