@@ -59,6 +59,13 @@ namespace OneShotSupport.UI.Screens
         [Tooltip("Equipment slots for hero")]
         public ItemSlot[] equipmentSlots;
 
+        [Header("Equipment Background")]
+        [Tooltip("Background image for equipment slots area")]
+        public Image equipmentBackgroundImage;
+
+        [Tooltip("Background sprites for different slot counts [1-slot, 2-slot, 3-slot, 4-slot]")]
+        public Sprite[] equipmentBackgroundSprites = new Sprite[4];
+
         [Header("Inventory View - Prefabs")]
         public GameObject draggableItemPrefab;
         public Button closeInventoryButton;
@@ -258,9 +265,26 @@ namespace OneShotSupport.UI.Screens
         {
             int effectiveSlots = hero.GetEffectiveSlots();
 
+            // Show/hide equipment slots based on hero's effective slot count
             for (int i = 0; i < equipmentSlots.Length; i++)
             {
                 equipmentSlots[i].gameObject.SetActive(i < effectiveSlots);
+            }
+
+            // Change equipment background sprite based on slot count
+            if (equipmentBackgroundImage != null && equipmentBackgroundSprites != null)
+            {
+                // Clamp to valid range (1-4 slots)
+                int slotIndex = Mathf.Clamp(effectiveSlots, 1, 4) - 1; // Convert to 0-based index
+
+                if (slotIndex >= 0 && slotIndex < equipmentBackgroundSprites.Length)
+                {
+                    Sprite backgroundSprite = equipmentBackgroundSprites[slotIndex];
+                    if (backgroundSprite != null)
+                    {
+                        equipmentBackgroundImage.sprite = backgroundSprite;
+                    }
+                }
             }
         }
 

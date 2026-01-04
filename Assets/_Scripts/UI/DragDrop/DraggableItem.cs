@@ -76,6 +76,9 @@ namespace OneShotSupport.UI.DragDrop
         {
             if (itemIcon == null) return;
 
+            // Reset scale to 1,1,1 to ensure proper sizing
+            transform.localScale = Vector3.one;
+
             RectTransform rt = itemIcon.rectTransform;
             if (rt != null)
             {
