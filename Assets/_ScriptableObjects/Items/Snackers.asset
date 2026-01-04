@@ -17,4 +17,4 @@ MonoBehaviour:
   category: 2
   baseBoost: 5
   matchBonus: 50
-  icon: {fileID: 21300000, guid: 3a5c22bd028494618ac0e70440a02f99, type: 3}
+  icon: {fileID: 21300000, guid: 179437d2d3dc448c7bc4ae5c52733d84, type: 3}

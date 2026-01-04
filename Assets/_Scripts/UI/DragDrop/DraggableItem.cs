@@ -82,7 +82,7 @@ namespace OneShotSupport.UI.DragDrop
             RectTransform rt = itemIcon.rectTransform;
             if (rt != null)
             {
-                Vector2 size = isSmall ? new Vector2(120, 120) : new Vector2(350, 350);
+                Vector2 size = isSmall ? new Vector2(120, 120) : new Vector2(330, 330);
                 rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size.x);
                 rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size.y);
             }

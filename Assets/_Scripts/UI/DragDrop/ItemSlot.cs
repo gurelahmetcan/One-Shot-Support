@@ -30,10 +30,6 @@ namespace OneShotSupport.UI.DragDrop
         {
             if (itemContainer == null)
                 itemContainer = transform as RectTransform;
-
-            // Hide info icon initially
-            if (infoIcon != null)
-                infoIcon.SetActive(false);
         }
 
         public void OnDrop(PointerEventData eventData)
