@@ -17,6 +17,7 @@ namespace OneShotSupport.Data
         public bool succeeded;
         public int stars;
         public int reputationChange;
+        public int moneyChange; // Money earned/lost from this hero
 
         public HeroResult()
         {

@@ -19,7 +19,8 @@ namespace OneShotSupport.UI.Screens
         public Button continueButton;
         public TextMeshProUGUI totalReputationText;
         public TextMeshProUGUI totalMoneyText;
-        public RectTransform reputationTarget; // Target position for flying stars
+        public RectTransform reputationTarget; // Target position for flying reputation stars
+        public RectTransform moneyTarget; // Target position for flying money stars
 
         [Header("Animation Settings")]
         public float delayBetweenResults = 0.5f;
@@ -31,6 +32,7 @@ namespace OneShotSupport.UI.Screens
         private List<GameObject> resultEntries = new List<GameObject>();
         private bool isAnimating = false;
         private int currentDisplayedReputation = 0; // Current reputation shown during animation
+        private int currentDisplayedMoney = 0; // Current money shown during animation
 
         private void Awake()
         {
@@ -46,13 +48,15 @@ namespace OneShotSupport.UI.Screens
             // Clear previous results
             ClearResults();
 
-            // Calculate starting reputation (before today's results)
-            int totalReputationChange = 0;
-            foreach (var result in results)
+            // BUG FIX: totalReputation is now the STARTING reputation (before changes)
+            // Reputation changes are applied AFTER animations in StartNextDay()
+            currentDisplayedReputation = totalReputation;
+
+            // Initialize money display
+            if (GameManager.Instance != null && GameManager.Instance.goldManager != null)
             {
-                totalReputationChange += result.reputationChange;
+                currentDisplayedMoney = GameManager.Instance.goldManager.CurrentGold;
             }
-            currentDisplayedReputation = totalReputation - totalReputationChange;
 
             // Set initial reputation display
             if (totalReputationText != null)
@@ -60,7 +64,7 @@ namespace OneShotSupport.UI.Screens
 
             if (totalMoneyText != null)
             {
-                totalMoneyText.text = $"{GameManager.Instance.goldManager.CurrentGold}";
+                totalMoneyText.text = $"{currentDisplayedMoney}";
             }
 
             // Disable continue button during animation
@@ -104,18 +108,27 @@ namespace OneShotSupport.UI.Screens
                 // Wait a moment for result to appear
                 yield return new WaitForSeconds(0.2f);
 
-                // Animate star flying from result to reputation
+                // Animate REPUTATION star flying from result to reputation
                 if (entryObj != null && starSprite != null && reputationTarget != null)
                 {
-                    yield return StartCoroutine(AnimateStarFlight(entryObj.GetComponent<RectTransform>()));
+                    yield return StartCoroutine(AnimateStarFlight(entryObj.GetComponent<RectTransform>(), reputationTarget));
                 }
 
                 // Animate reputation number counting
                 int targetReputation = currentDisplayedReputation + result.reputationChange;
                 yield return StartCoroutine(AnimateReputationCount(targetReputation));
-
-                // Update current reputation
                 currentDisplayedReputation = targetReputation;
+
+                // Animate MONEY star flying from result to money (if hero earned money)
+                if (result.moneyChange > 0 && entryObj != null && starSprite != null && moneyTarget != null)
+                {
+                    yield return StartCoroutine(AnimateStarFlight(entryObj.GetComponent<RectTransform>(), moneyTarget));
+                }
+
+                // Animate money number counting
+                int targetMoney = currentDisplayedMoney + result.moneyChange;
+                yield return StartCoroutine(AnimateMoneyCount(targetMoney));
+                currentDisplayedMoney = targetMoney;
 
                 // Small delay before next result
                 yield return new WaitForSeconds(delayBetweenResults);
@@ -155,9 +168,9 @@ namespace OneShotSupport.UI.Screens
         }
 
         /// <summary>
-        /// Animate a star flying from result entry to reputation display
+        /// Animate a star flying from result entry to target display
         /// </summary>
-        private IEnumerator AnimateStarFlight(RectTransform resultTransform)
+        private IEnumerator AnimateStarFlight(RectTransform resultTransform, RectTransform targetTransform)
         {
             // Create star object
             GameObject starObj = new GameObject("FlyingStar");
@@ -171,7 +184,7 @@ namespace OneShotSupport.UI.Screens
 
             // Set initial position (at result entry)
             Vector3 startPos = resultTransform.position;
-            Vector3 endPos = reputationTarget.position;
+            Vector3 endPos = targetTransform.position;
 
             starRect.position = startPos;
 
@@ -223,6 +236,37 @@ namespace OneShotSupport.UI.Screens
             // Ensure final value is exact
             if (totalReputationText != null)
                 totalReputationText.text = $"{targetReputation}/100";
+        }
+
+        /// <summary>
+        /// Animate money number counting up/down
+        /// </summary>
+        private IEnumerator AnimateMoneyCount(int targetMoney)
+        {
+            int startMoney = currentDisplayedMoney;
+
+            if (startMoney == targetMoney)
+                yield break;
+
+            float elapsed = 0f;
+            while (elapsed < numberCountDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / numberCountDuration);
+
+                // Lerp between start and target
+                int displayedValue = Mathf.RoundToInt(Mathf.Lerp(startMoney, targetMoney, t));
+
+                // Update text
+                if (totalMoneyText != null)
+                    totalMoneyText.text = $"{displayedValue}";
+
+                yield return null;
+            }
+
+            // Ensure final value is exact
+            if (totalMoneyText != null)
+                totalMoneyText.text = $"{targetMoney}";
         }
 
         /// <summary>

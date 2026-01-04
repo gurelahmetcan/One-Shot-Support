@@ -82,7 +82,8 @@ namespace OneShotSupport.Core
         {
             // Start the game
             reputationManager.Initialize();
-            reputationManager.OnReputationDepleted += HandleGameOver;
+            // BUG FIX: Don't subscribe to immediate game over - check in StartNextDay() instead
+            // reputationManager.OnReputationDepleted += HandleGameOver;
 
             ChangeState(GameState.DayStart);
         }
@@ -306,13 +307,17 @@ namespace OneShotSupport.Core
             currentHero.stars = stars;
             currentHero.reputationChange = repChange;
 
-            // Award gold for successful runs
+            // BUG FIX: Calculate money change but DON'T apply it yet (apply in StartNextDay after animations)
             if (currentHero.succeeded && goldManager != null)
             {
-                goldManager.AwardMonsterGold(currentHero.monster.rank);
+                currentHero.moneyChange = goldManager.GetMonsterReward(currentHero.monster.rank);
+            }
+            else
+            {
+                currentHero.moneyChange = 0;
             }
 
-            Debug.Log($"[Consultation] {currentHero.hero.heroName}: {currentHero.successChance}% → {(currentHero.succeeded ? "SUCCESS" : "FAILED")} ({stars}★, {repChange:+0;-0} rep)");
+            Debug.Log($"[Consultation] {currentHero.hero.heroName}: {currentHero.successChance}% → {(currentHero.succeeded ? "SUCCESS" : "FAILED")} ({stars}★, {repChange:+0;-0} rep, {currentHero.moneyChange} gold)");
 
             // Check for inspiring bonus for next hero
             int inspiringBonus = OneShotCalculator.GetInspiringBonusForNextHero(
@@ -353,13 +358,8 @@ namespace OneShotSupport.Core
                 }
             }
 
-            // Apply all reputation changes
-            foreach (var result in currentDay.heroResults)
-            {
-                reputationManager.AddReputation(result.reputationChange);
-            }
-
-            Debug.Log($"[Day End] Reputation: {reputationManager.CurrentReputation}/100 ({reputationManager.GetReputationStatus()})");
+            // BUG FIX: DON'T apply reputation changes here - wait for day end screen animations
+            // Reputation will be applied in StartNextDay() after animations
 
             OnDayEnded?.Invoke(currentDay.heroResults);
         }
@@ -370,10 +370,26 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Called by UI when player is ready for next day
+        /// Called by UI when player is ready for next day (after day end animations)
         /// </summary>
         public void StartNextDay()
         {
+            // BUG FIX: Apply reputation and money changes AFTER day end screen animations complete
+            foreach (var result in currentDay.heroResults)
+            {
+                reputationManager.AddReputation(result.reputationChange);
+
+                // Apply money changes
+                if (result.moneyChange > 0 && goldManager != null)
+                {
+                    goldManager.AddGold(result.moneyChange);
+                }
+            }
+
+            Debug.Log($"[Day End] Final Reputation: {reputationManager.CurrentReputation}/100 ({reputationManager.GetReputationStatus()})");
+            Debug.Log($"[Day End] Final Gold: {goldManager?.CurrentGold ?? 0}");
+
+            // Check for game over AFTER applying reputation changes
             if (reputationManager.IsGameOver)
             {
                 ChangeState(GameState.GameOver);

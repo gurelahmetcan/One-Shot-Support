@@ -52,8 +52,9 @@ namespace OneShotSupport.Core
 
                 if (isMatch)
                 {
-                    // Apply match bonus with perk modifications (GlassCannon doubles it)
-                    boost = PerkModifier.ModifyMatchBonus(perk, item.matchBonus);
+                    // BUG FIX: Apply BOTH base boost AND match bonus
+                    boost = PerkModifier.ModifyBaseBoost(perk, item.baseBoost) +
+                            PerkModifier.ModifyMatchBonus(perk, item.matchBonus);
                 }
                 else
                 {

@@ -48,13 +48,7 @@ namespace OneShotSupport.UI.DragDrop
         {
             if (item == null) return false;
 
-            // Equipment slots: only accept if empty
-            if (isEquipmentSlot)
-            {
-                return currentItem == null;
-            }
-
-            // Inventory slots: always accept (for returning items)
+            // Always allow drops - will swap if occupied
             return true;
         }
 
@@ -63,8 +57,8 @@ namespace OneShotSupport.UI.DragDrop
         /// </summary>
         public void PlaceItem(DraggableItem item)
         {
-            // If slot already has an item, swap them
-            if (currentItem != null && isEquipmentSlot)
+            // BUG FIX: If slot already has an item, swap them (both equipment and inventory)
+            if (currentItem != null)
             {
                 SwapItems(item);
                 return;
