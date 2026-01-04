@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6b856ab9652944c6c891eef2c05c26b4, type: 3}
-  m_Name: Deodorant
+  m_Name: X-Specs
   m_EditorClassIdentifier: 
-  itemName: Deodorant
+  itemName: X-Specs
   description: 
-  category: 0
-  baseBoost: 10
-  matchBonus: 30
-  icon: {fileID: 21300000, guid: f644918ddc05f4f41949d92929fe2e32, type: 3}
+  category: 3
+  baseBoost: 30
+  matchBonus: 20
+  icon: {fileID: 21300000, guid: bea5a10e91ba446088ce1d11ab539edf, type: 3}

@@ -22,9 +22,12 @@ namespace OneShotSupport.UI
             if (nameText != null)
                 nameText.text = result.hero.heroName;
 
+            if (heroImage != null)
+                heroImage.sprite = result.hero.portrait;
+
             if (resultText != null)
             {
-                string resultString = result.succeeded ? "<color=green>SUCCESS!</color>" : "<color=red>FAILED</color>";
+                string resultString = result.succeeded ? "<color=#789566>SUCCESS!</color>" : "<color=#E44949>FAILED</color>";
                 resultText.text = resultString;
             }
 
@@ -36,7 +39,7 @@ namespace OneShotSupport.UI
             if (reputationChangeText != null)
             {
                 string sign = result.reputationChange > 0 ? "+" : "";
-                Color color = result.reputationChange > 0 ? Color.green : Color.red;
+                Color color = result.reputationChange > 0 ? new Color32(120, 149, 102, 255) : new Color32(228, 73, 73, 255);
                 reputationChangeText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{sign}{result.reputationChange}</color>";
             }
 

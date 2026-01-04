@@ -12,9 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca5eea155804049a8be38c7534b6f995, type: 3}
   m_Name: HeroGenerator
   m_EditorClassIdentifier: 
-  noobSprite: {fileID: 21300000, guid: 025b8ed0b735046c9b2c3fd8c135571a, type: 3}
-  knightSprite: {fileID: 21300000, guid: 6764cf6dbf98542cd948fe4763135f7f, type: 3}
-  legendSprite: {fileID: 21300000, guid: 6764cf6dbf98542cd948fe4763135f7f, type: 3}
+  noobVisuals:
+  - portrait: {fileID: 21300000, guid: 025b8ed0b735046c9b2c3fd8c135571a, type: 3}
+    characterCard: {fileID: 21300000, guid: 49805fa43f16e49a189abb517732979d, type: 3}
+  - portrait: {fileID: 21300000, guid: b9c06e70757fd4b4387b019d65ed17fe, type: 3}
+    characterCard: {fileID: 21300000, guid: ce3ee1f8e0a1c4f0091bfbc0fc6da396, type: 3}
+  knightVisuals:
+  - portrait: {fileID: 21300000, guid: b9c06e70757fd4b4387b019d65ed17fe, type: 3}
+    characterCard: {fileID: 21300000, guid: ce3ee1f8e0a1c4f0091bfbc0fc6da396, type: 3}
+  - portrait: {fileID: 21300000, guid: c0707539eaa6e49b8bba29910557e6bf, type: 3}
+    characterCard: {fileID: 21300000, guid: f40b118c477a34dde9c3e808b4d23e6f, type: 3}
+  legendVisuals:
+  - portrait: {fileID: 21300000, guid: 6764cf6dbf98542cd948fe4763135f7f, type: 3}
+    characterCard: {fileID: 21300000, guid: fb8fdc43bbfdc4201b70aa636921a9ad, type: 3}
   noobBaseChanceRange: {x: 5, y: 15}
   knightBaseChanceRange: {x: 15, y: 25}
   legendBaseChanceRange: {x: 25, y: 35}

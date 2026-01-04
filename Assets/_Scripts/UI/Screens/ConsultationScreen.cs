@@ -37,6 +37,7 @@ namespace OneShotSupport.UI.Screens
         [SerializeField] private Button heroPanelButton;
         [SerializeField] private Sprite heroPanelActiveSprite;
         [SerializeField] private Sprite heroPanelInactiveSprite;
+        [SerializeField] private Image heroCardImage;
 
         [Header("Main View - Monster Display")]
         public Image monsterSprite;
@@ -189,6 +190,9 @@ namespace OneShotSupport.UI.Screens
         {
             if (heroPortrait != null)
                 heroPortrait.sprite = hero.portrait;
+
+            if (heroCardImage != null)
+                heroCardImage.sprite = hero.characterCard;
 
             if (heroNameText != null)
                 heroNameText.text = hero.heroName;
