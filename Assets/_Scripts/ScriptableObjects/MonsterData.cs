@@ -31,5 +31,7 @@ namespace OneShotSupport.ScriptableObjects
         [Header("Visual")]
         [Tooltip("Monster sprite for UI display")]
         public Sprite sprite;
+        [Tooltip("Category sprite for UI display")]
+        public Sprite categorySprite;
     }
 }

@@ -20,7 +20,7 @@ MonoBehaviour:
   knightVisuals:
   - portrait: {fileID: 21300000, guid: b9c06e70757fd4b4387b019d65ed17fe, type: 3}
     characterCard: {fileID: 21300000, guid: ce3ee1f8e0a1c4f0091bfbc0fc6da396, type: 3}
-  - portrait: {fileID: 21300000, guid: c0707539eaa6e49b8bba29910557e6bf, type: 3}
+  - portrait: {fileID: 21300000, guid: 69251b14a045344c29fe645e42ab6105, type: 3}
     characterCard: {fileID: 21300000, guid: f40b118c477a34dde9c3e808b4d23e6f, type: 3}
   legendVisuals:
   - portrait: {fileID: 21300000, guid: 6764cf6dbf98542cd948fe4763135f7f, type: 3}

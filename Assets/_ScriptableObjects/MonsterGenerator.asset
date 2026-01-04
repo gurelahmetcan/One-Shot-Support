@@ -25,6 +25,11 @@ MonoBehaviour:
   - {fileID: 21300000, guid: bc97c5ce8545745e4a8db1aa65f802bb, type: 3}
   - {fileID: 21300000, guid: 9a8bef3a0ac934644aaa58d1208785fb, type: 3}
   - {fileID: 21300000, guid: 962ea061465cc445f958e6e6bba15acd, type: 3}
+  categorySprites:
+  - {fileID: 21300000, guid: 28b74fbb325864ab4b0fefee3028cf03, type: 3}
+  - {fileID: 21300000, guid: 2fea9003d43bf41f1b1eb2a03b4a6200, type: 3}
+  - {fileID: 21300000, guid: c6e0e1cac9e9c42c1a308a0f776670f8, type: 3}
+  - {fileID: 21300000, guid: 07bf2fc2d11f44fd69ce8c0eb74bec56, type: 3}
   easyPenalty: 0
   mediumPenalty: 10
   hardPenalty: 15

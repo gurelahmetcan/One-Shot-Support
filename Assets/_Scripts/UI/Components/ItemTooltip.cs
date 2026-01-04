@@ -14,6 +14,7 @@ namespace OneShotSupport.UI.Components
     {
         [Header("UI References")]
         public Image itemIconImage;
+        public Image categoryIconImage;
         public TextMeshProUGUI itemNameText;
         public TextMeshProUGUI categoryText;
         public TextMeshProUGUI baseBoostText;
@@ -53,6 +54,10 @@ namespace OneShotSupport.UI.Components
             // Item icon
             if (itemIconImage != null && itemData.icon != null)
                 itemIconImage.sprite = itemData.icon;
+
+            // Category icon
+            if (categoryIconImage != null && itemData.categoryIcon != null)
+                categoryIconImage.sprite = itemData.categoryIcon;
 
             // Item name
             if (itemNameText != null)

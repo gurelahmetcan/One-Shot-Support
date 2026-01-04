@@ -44,10 +44,12 @@ namespace OneShotSupport.UI.Screens
         public TextMeshProUGUI monsterNameText;
         public TextMeshProUGUI monsterWeaknessText;
         public TextMeshProUGUI monsterDifficultyText;
+        public TextMeshProUGUI monsterBountyText;
         [SerializeField] private GameObject monsterPanel;
         [SerializeField] private Button monsterPanelButton;
         [SerializeField] private Sprite monsterPanelActiveSprite;
         [SerializeField] private Sprite monsterPanelInactiveSprite;
+        [SerializeField] private Image monsterWeaknessImage;
 
         [Header("Main View - Buttons")]
         public Button openInventoryButton;
@@ -218,8 +220,14 @@ namespace OneShotSupport.UI.Screens
             if (monsterWeaknessText != null)
                 monsterWeaknessText.text = $"Weakness: {monster.weakness}";
 
+            if (monsterWeaknessImage != null)
+                monsterWeaknessImage.sprite = monster.categorySprite;
+
             if (monsterDifficultyText != null)
                 monsterDifficultyText.text = $"Difficulty: -{monster.difficultyPenalty}%";
+
+            if (monsterBountyText != null)
+                monsterBountyText.text = $"Bounty: {GameManager.Instance.goldManager.GetMonsterReward(monster.rank)}";
         }
 
         /// <summary>

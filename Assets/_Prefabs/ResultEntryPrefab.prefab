@@ -251,8 +251,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: SUCCESS!
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2e0909e072ccc4e808648e5ed20317f2, type: 2}
+  m_sharedMaterial: {fileID: 1701250539827281293, guid: 2e0909e072ccc4e808648e5ed20317f2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -688,8 +688,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: John the Knight
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2e0909e072ccc4e808648e5ed20317f2, type: 2}
+  m_sharedMaterial: {fileID: 1701250539827281293, guid: 2e0909e072ccc4e808648e5ed20317f2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -941,8 +941,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 201.50008, y: 0}
-  m_SizeDelta: {x: 149.5, y: 100}
+  m_AnchoredPosition: {x: 181.86452, y: 0}
+  m_SizeDelta: {x: 169.1356, y: 100}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &1746594671342526112
 CanvasRenderer:
@@ -974,8 +974,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'Chance: 52%'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2e0909e072ccc4e808648e5ed20317f2, type: 2}
+  m_sharedMaterial: {fileID: 1701250539827281293, guid: 2e0909e072ccc4e808648e5ed20317f2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1110,8 +1110,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: +10
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2e0909e072ccc4e808648e5ed20317f2, type: 2}
+  m_sharedMaterial: {fileID: 1701250539827281293, guid: 2e0909e072ccc4e808648e5ed20317f2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

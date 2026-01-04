@@ -34,6 +34,9 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Icon for UI display")]
         public Sprite icon;
 
+        [Tooltip("Icon for category")] 
+        public Sprite categoryIcon;
+
         /// <summary>
         /// Get the boost value based on whether it matches the monster weakness
         /// </summary>

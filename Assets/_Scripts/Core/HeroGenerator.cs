@@ -115,7 +115,7 @@ namespace OneShotSupport.Core
         private string GenerateHeroName(string prefix)
         {
             string[] names = { "Bob", "Alice", "Charlie", "Diana", "Eric", "Fiona", "Greg", "Hannah", "Ivan", "Julia" };
-            return $"{names[Random.Range(0, names.Length)]} the {prefix}";
+            return $"{names[Random.Range(0, names.Length)]}";
         }
 
         /// <summary>

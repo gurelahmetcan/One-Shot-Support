@@ -1,6 +1,8 @@
+using System;
 using UnityEngine;
 using OneShotSupport.Data;
 using OneShotSupport.ScriptableObjects;
+using Random = UnityEngine.Random;
 
 namespace OneShotSupport.Core
 {
@@ -20,6 +22,10 @@ namespace OneShotSupport.Core
         [Header("Monster Sprites")]
         [Tooltip("Pool of monster sprites (optional, can be null)")]
         public Sprite[] monsterSprites;
+
+        [Header("Category Sprites")] 
+        [Tooltip("Pool of category sprites")]
+        public Sprite[] categorySprites;
 
         [Header("Difficulty Settings")]
         [Tooltip("Easy difficulty penalty")]
@@ -75,6 +81,11 @@ namespace OneShotSupport.Core
             if (monsterSprites != null && monsterSprites.Length > 0)
             {
                 monster.sprite = monsterSprites[Random.Range(0, monsterSprites.Length)];
+            }
+
+            if (categorySprites != null && categorySprites.Length > 0)
+            {
+                monster.categorySprite = GetCategorySprite(monster.weakness);
             }
 
             // Description
@@ -154,6 +165,30 @@ namespace OneShotSupport.Core
                 return 1; // Medium
             else
                 return 2; // Hard
+        }
+
+        private Sprite GetCategorySprite(ItemCategory category)
+        {
+            Sprite returnSprite;
+            switch (category)
+            {
+                case ItemCategory.Hygiene:
+                    returnSprite = categorySprites[0];
+                    break;
+                case ItemCategory.Magic:
+                    returnSprite = categorySprites[1];
+                    break;
+                case ItemCategory.Catering:
+                    returnSprite = categorySprites[2];
+                    break;
+                case ItemCategory.Lighting:
+                    returnSprite = categorySprites[3];
+                    break;
+                default:
+                    returnSprite = categorySprites[0];
+                    break;
+            }
+            return returnSprite;
         }
     }
 }
