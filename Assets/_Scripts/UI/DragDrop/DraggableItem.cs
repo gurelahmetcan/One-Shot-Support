@@ -67,6 +67,12 @@ namespace OneShotSupport.UI.DragDrop
             TryFindCanvas();
         }
 
+        public void ChangeIconSize(bool isSmall)
+        {
+            RectTransform rt = itemIcon.GetComponent (typeof (RectTransform)) as RectTransform;
+            if (rt != null) rt.sizeDelta = isSmall ? new Vector2(120, 120) : new Vector2(350, 350);
+        }
+
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (!isDraggable) return;

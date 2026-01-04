@@ -13,16 +13,9 @@ namespace OneShotSupport.UI.Components
     public class ConfidenceMeter : MonoBehaviour
     {
         [Header("UI References")]
-        public Slider confidenceSlider;
+        public Image confidenceFillImage;
         public TextMeshProUGUI percentageText;
-        public TextMeshProUGUI confidenceLevelText;
-        public Image fillImage;
-
-        [Header("Color Settings")]
-        public Color lowConfidenceColor = Color.red;
-        public Color mediumConfidenceColor = Color.yellow;
-        public Color highConfidenceColor = Color.green;
-
+        
         private bool isHidden = false;
         private CanvasGroup canvasGroup;
 
@@ -31,12 +24,6 @@ namespace OneShotSupport.UI.Components
             canvasGroup = GetComponent<CanvasGroup>();
             if (canvasGroup == null)
                 canvasGroup = gameObject.AddComponent<CanvasGroup>();
-
-            if (confidenceSlider != null)
-            {
-                confidenceSlider.minValue = 0;
-                confidenceSlider.maxValue = 100;
-            }
         }
 
         /// <summary>
@@ -50,9 +37,9 @@ namespace OneShotSupport.UI.Components
             successPercentage = Mathf.Clamp(successPercentage, 1, 99);
 
             // Update slider
-            if (confidenceSlider != null)
+            if (confidenceFillImage != null)
             {
-                confidenceSlider.value = successPercentage;
+                confidenceFillImage.fillAmount = successPercentage;
             }
 
             // Update percentage text
@@ -60,13 +47,6 @@ namespace OneShotSupport.UI.Components
             {
                 percentageText.text = $"{successPercentage}%";
             }
-
-            // Update confidence level text and color
-            ConfidenceLevel level = GetConfidenceLevel(successPercentage);
-            UpdateConfidenceLevel(level);
-
-            // Update fill color
-            UpdateFillColor(level);
         }
 
         /// <summary>
@@ -83,9 +63,6 @@ namespace OneShotSupport.UI.Components
 
             if (percentageText != null)
                 percentageText.text = "???";
-
-            if (confidenceLevelText != null)
-                confidenceLevelText.text = "Unknown";
         }
 
         /// <summary>
@@ -109,42 +86,6 @@ namespace OneShotSupport.UI.Components
             if (percentage >= 80) return ConfidenceLevel.High;
             if (percentage >= 40) return ConfidenceLevel.Medium;
             return ConfidenceLevel.Low;
-        }
-
-        /// <summary>
-        /// Update confidence level text
-        /// </summary>
-        private void UpdateConfidenceLevel(ConfidenceLevel level)
-        {
-            if (confidenceLevelText == null) return;
-
-            string levelText = level switch
-            {
-                ConfidenceLevel.High => "High Confidence",
-                ConfidenceLevel.Medium => "Medium Confidence",
-                ConfidenceLevel.Low => "Low Confidence",
-                _ => "Unknown"
-            };
-
-            confidenceLevelText.text = levelText;
-        }
-
-        /// <summary>
-        /// Update fill color based on confidence level
-        /// </summary>
-        private void UpdateFillColor(ConfidenceLevel level)
-        {
-            if (fillImage == null) return;
-
-            Color targetColor = level switch
-            {
-                ConfidenceLevel.High => highConfidenceColor,
-                ConfidenceLevel.Medium => mediumConfidenceColor,
-                ConfidenceLevel.Low => lowConfidenceColor,
-                _ => Color.white
-            };
-
-            fillImage.color = targetColor;
         }
 
         /// <summary>

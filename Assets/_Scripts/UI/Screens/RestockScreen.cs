@@ -25,16 +25,12 @@ namespace OneShotSupport.UI.Screens
         [SerializeField] private TextMeshProUGUI mediumCrateText;
         [SerializeField] private TextMeshProUGUI premiumCrateText;
 
-        [Header("Category Display (Medium Crate)")]
-        [SerializeField] private TextMeshProUGUI mediumCategoriesText;
-
         [Header("Category Selection (Premium Crate)")]
         [SerializeField] private GameObject categorySelectionPanel;
         [SerializeField] private Button[] categoryButtons; // 4 buttons for Hygiene, Magic, Catering, Lighting
 
         [Header("Continue Button")]
         [SerializeField] private Button continueButton;
-        [SerializeField] private TextMeshProUGUI purchaseCountText;
 
         [Header("References")]
         [SerializeField] private ItemDatabase itemDatabase;
@@ -118,11 +114,7 @@ namespace OneShotSupport.UI.Screens
             // Premium crate
             UpdateCrateButton(premiumCrateButton, premiumCrateText, CrateType.Premium,
                 "Premium Crate\nSelect Category\n3 Items", canBuyMore);
-
-            // Purchase count
-            if (purchaseCountText != null)
-                purchaseCountText.text = $"Crates Purchased: {cratesPurchased}/{MAX_CRATES}";
-
+            
             // Continue button
             if (continueButton != null)
                 continueButton.interactable = cratesPurchased > 0;
