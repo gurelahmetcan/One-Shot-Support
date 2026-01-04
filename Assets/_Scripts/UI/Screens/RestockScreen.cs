@@ -42,7 +42,6 @@ namespace OneShotSupport.UI.Screens
         public event Action<List<ItemData>> OnCratesPurchased;
 
         // State
-        private GoldManager goldManager;
         private List<ItemData> purchasedItems = new List<ItemData>();
         private HashSet<CrateType> purchasedCrates = new HashSet<CrateType>();
         private ItemCategory mediumCrateCategory; // Single random category for medium crate
@@ -70,13 +69,6 @@ namespace OneShotSupport.UI.Screens
                 categorySelectionPanel.SetActive(false);
         }
 
-        private void Start()
-        {
-            goldManager = FindObjectOfType<GoldManager>();
-            if (goldManager == null)
-                Debug.LogError("[RestockScreen] GoldManager not found!");
-        }
-
         /// <summary>
         /// Setup the restock screen for a new day
         /// </summary>
@@ -91,10 +83,6 @@ namespace OneShotSupport.UI.Screens
             // Clear item preview slots
             ClearItemPreview();
 
-            // Ensure goldManager is available
-            if (goldManager == null)
-                goldManager = FindObjectOfType<GoldManager>();
-
             UpdateUI();
             gameObject.SetActive(true);
         }
@@ -104,8 +92,6 @@ namespace OneShotSupport.UI.Screens
         /// </summary>
         private void UpdateUI()
         {
-            if (goldManager == null) return;
-
             int cratesPurchased = purchasedCrates.Count;
             bool canBuyMore = cratesPurchased < MAX_CRATES;
 
@@ -133,9 +119,9 @@ namespace OneShotSupport.UI.Screens
         {
             if (button == null || text == null) return;
 
-            int cost = goldManager.GetCrateCost(crateType);
+            int cost = GameManager.Instance.goldManager.GetCrateCost(crateType);
             bool alreadyPurchased = purchasedCrates.Contains(crateType);
-            bool canAfford = goldManager.CanAffordCrate(crateType);
+            bool canAfford = GameManager.Instance.goldManager.CanAffordCrate(crateType);
 
             // Button state
             button.interactable = !alreadyPurchased && canBuyMore && canAfford;
@@ -219,11 +205,11 @@ namespace OneShotSupport.UI.Screens
         /// </summary>
         private void PurchaseCrate(CrateType crateType, ItemCategory? selectedCategory)
         {
-            if (goldManager == null || itemDatabase == null) return;
+            if (itemDatabase == null) return;
 
             // Try to spend gold
-            int cost = goldManager.GetCrateCost(crateType);
-            if (!goldManager.TrySpendGold(cost))
+            int cost = GameManager.Instance.goldManager.GetCrateCost(crateType);
+            if (!GameManager.Instance.goldManager.TrySpendGold(cost))
                 return;
 
             // Mark as purchased

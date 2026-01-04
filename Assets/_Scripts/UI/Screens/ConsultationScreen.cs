@@ -227,7 +227,7 @@ namespace OneShotSupport.UI.Screens
                 monsterDifficultyText.text = $"Difficulty: -{monster.difficultyPenalty}%";
 
             if (monsterBountyText != null)
-                monsterBountyText.text = $"Bounty: {GameManager.Instance.goldManager.GetMonsterReward(monster.rank)}";
+                monsterBountyText.text = $"{GameManager.Instance.goldManager.GetMonsterReward(monster.rank)}";
         }
 
         /// <summary>

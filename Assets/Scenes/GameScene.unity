@@ -3319,7 +3319,9 @@ MonoBehaviour:
   reputationBar: {fileID: 936005362}
   dayCounter: {fileID: 794011744}
   goldDisplay: {fileID: 830507441}
+  mainMenuButton: {fileID: 1188652081}
   autoHideScreens: 1
+  mainMenuSceneName: MainMenuScene
 --- !u!1 &518464642
 GameObject:
   m_ObjectHideFlags: 0
@@ -6194,7 +6196,7 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_DisabledColor: {r: 1, g: 1, b: 1, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -6208,7 +6210,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 2085227747}
   m_FillRect: {fileID: 1120563373}
   m_HandleRect: {fileID: 2085227746}
@@ -6358,7 +6360,7 @@ MonoBehaviour:
   monsterNameText: {fileID: 1174130906}
   monsterWeaknessText: {fileID: 1238477990}
   monsterDifficultyText: {fileID: 747728396}
-  monsterBountyText: {fileID: 0}
+  monsterBountyText: {fileID: 1118186661}
   monsterPanel: {fileID: 1463336723}
   monsterPanelButton: {fileID: 1494544504}
   monsterPanelActiveSprite: {fileID: 21300000, guid: 1e963c9b8d8b34e2da20698e5b7838ab, type: 3}
@@ -6846,7 +6848,8 @@ MonoBehaviour:
   daysSurvivedText: {fileID: 0}
   finalReputationText: {fileID: 0}
   restartButton: {fileID: 0}
-  quitButton: {fileID: 1929959003}
+  mainMenuButton: {fileID: 1929959003}
+  mainMenuSceneName: MainMenuScene
   gameOverMessage: GAME OVER
   daysSurvivedFormat: You survived {0} days
 --- !u!114 &1036813313
