@@ -11,8 +11,8 @@ namespace OneShotSupport.Core
     [System.Serializable]
     public class HeroVisuals
     {
-        [Tooltip("Hero name (e.g., 'Bob the Noob')")]
-        public string heroName;
+        [Tooltip("Possible names for this hero (one will be randomly selected)")]
+        public string[] heroNames;
 
         [Tooltip("Hero portrait sprite")]
         public Sprite portrait;
@@ -159,13 +159,23 @@ namespace OneShotSupport.Core
             // Get random visual set from pool
             HeroVisuals visuals = visualPool[Random.Range(0, visualPool.Length)];
 
-            // Assign name, portrait, and character card (all match the same character)
-            if (!string.IsNullOrEmpty(visuals.heroName))
-            {
-                hero.heroName = visuals.heroName;
-            }
+            // Assign portrait and character card
             hero.portrait = visuals.portrait;
             hero.characterCard = visuals.characterCard;
+
+            // Randomly select one name from the available names for this visual
+            if (visuals.heroNames != null && visuals.heroNames.Length > 0)
+            {
+                string randomName = visuals.heroNames[Random.Range(0, visuals.heroNames.Length)];
+                if (!string.IsNullOrEmpty(randomName))
+                {
+                    hero.heroName = randomName;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[HeroGenerator] Hero visual has no names assigned!");
+            }
         }
     }
 }

@@ -12,8 +12,8 @@ namespace OneShotSupport.Core
     [System.Serializable]
     public class MonsterVisuals
     {
-        [Tooltip("Monster name (e.g., 'Slime King')")]
-        public string monsterName;
+        [Tooltip("Possible names for this monster (one will be randomly selected)")]
+        public string[] monsterNames;
 
         [Tooltip("Monster sprite")]
         public Sprite sprite;
@@ -235,12 +235,22 @@ namespace OneShotSupport.Core
             // Get random visual set from pool
             MonsterVisuals visuals = monsterVisuals[Random.Range(0, monsterVisuals.Length)];
 
-            // Assign name and sprite (both match the same monster)
-            if (!string.IsNullOrEmpty(visuals.monsterName))
-            {
-                monster.monsterName = visuals.monsterName;
-            }
+            // Assign sprite
             monster.sprite = visuals.sprite;
+
+            // Randomly select one name from the available names for this sprite
+            if (visuals.monsterNames != null && visuals.monsterNames.Length > 0)
+            {
+                string randomName = visuals.monsterNames[Random.Range(0, visuals.monsterNames.Length)];
+                if (!string.IsNullOrEmpty(randomName))
+                {
+                    monster.monsterName = randomName;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[MonsterGenerator] Monster visual has no names assigned!");
+            }
         }
     }
 }
