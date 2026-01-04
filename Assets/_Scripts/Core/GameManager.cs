@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using OneShotSupport.Data;
 using OneShotSupport.ScriptableObjects;
+using OneShotSupport.Tutorial;
 using Random = UnityEngine.Random;
 
 namespace OneShotSupport.Core
@@ -38,6 +39,9 @@ namespace OneShotSupport.Core
         [Header("Managers")]
         [Tooltip("Gold manager for currency system")]
         public GoldManager goldManager;
+
+        [Tooltip("Tutorial manager for Day 1 tutorial")]
+        public TutorialManager tutorialManager;
 
         [Header("UI References (Internal)")]
         [Tooltip("Consultation screen reference for item recycling")]
@@ -84,6 +88,12 @@ namespace OneShotSupport.Core
             reputationManager.Initialize();
             // BUG FIX: Don't subscribe to immediate game over - check in StartNextDay() instead
             // reputationManager.OnReputationDepleted += HandleGameOver;
+
+            // Check if tutorial should run (Day 1)
+            if (tutorialManager != null && tutorialManager.ShouldRunTutorial(currentDayNumber))
+            {
+                tutorialManager.StartTutorial();
+            }
 
             ChangeState(GameState.DayStart);
         }
@@ -172,8 +182,22 @@ namespace OneShotSupport.Core
             Debug.Log($"=== DAY {currentDayNumber} START ===");
             currentDay = new DayData(currentDayNumber);
 
-            // Generate daily hint
-            if (hintSystem != null)
+            // Generate daily hint (or use tutorial hint if Day 1)
+            bool isTutorial = tutorialManager != null && tutorialManager.IsTutorialActive();
+
+            if (isTutorial)
+            {
+                // Use tutorial hint
+                var tutorialData = tutorialManager.GetTutorialData();
+                currentDayHint = new DailyHint
+                {
+                    hasHint = true,
+                    hintMessage = tutorialData.tutorialHint,
+                    hintedWeakness = tutorialData.tutorialMonster.weakness
+                };
+                OnDayHintGenerated?.Invoke(currentDayNumber, currentDayHint.hintMessage);
+            }
+            else if (hintSystem != null)
             {
                 currentDayHint = hintSystem.GenerateHint();
                 OnDayHintGenerated?.Invoke(currentDayNumber, currentDayHint.hintMessage);
@@ -200,8 +224,45 @@ namespace OneShotSupport.Core
         {
             if (currentState == GameState.DayStart)
             {
-                ChangeState(GameState.Restock);
+                // Skip restock if tutorial is active
+                bool isTutorial = tutorialManager != null && tutorialManager.IsTutorialActive();
+
+                if (isTutorial)
+                {
+                    // Skip restock, load tutorial items directly
+                    SkipRestockForTutorial();
+                }
+                else
+                {
+                    ChangeState(GameState.Restock);
+                }
             }
+        }
+
+        /// <summary>
+        /// Skip restock and load tutorial data directly
+        /// </summary>
+        private void SkipRestockForTutorial()
+        {
+            Debug.Log("[Tutorial] Skipping restock, loading tutorial data...");
+
+            var tutorialData = tutorialManager.GetTutorialData();
+
+            // Create tutorial hero result
+            var tutorialHeroResult = new HeroResult
+            {
+                hero = tutorialData.tutorialHero,
+                monster = tutorialData.tutorialMonster
+            };
+            currentDay.heroResults.Add(tutorialHeroResult);
+
+            // Load tutorial items
+            currentDay.availableItems = tutorialData.GetTutorialItems();
+
+            Debug.Log($"[Tutorial] Loaded tutorial hero and {currentDay.availableItems.Count} items");
+
+            // Transition directly to consultation
+            ChangeState(GameState.Consultation);
         }
 
         // === RESTOCK STATE ===

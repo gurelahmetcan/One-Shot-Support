@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using OneShotSupport.Tutorial;
 
 namespace OneShotSupport.UI.Screens
 {
@@ -46,6 +47,15 @@ namespace OneShotSupport.UI.Screens
         /// </summary>
         private void HandleContinue()
         {
+            // Complete tutorial step if tutorial is active
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                if (TutorialManager.Instance.GetCurrentStep() == TutorialStep.DayStartHint)
+                {
+                    TutorialManager.Instance.CompleteCurrentStep();
+                }
+            }
+
             OnContinueClicked?.Invoke();
             Hide();
         }

@@ -9,6 +9,7 @@ using OneShotSupport.ScriptableObjects;
 using OneShotSupport.UI.Components;
 using OneShotSupport.UI.DragDrop;
 using OneShotSupport.Utils;
+using OneShotSupport.Tutorial;
 
 namespace OneShotSupport.UI.Screens
 {
@@ -148,7 +149,7 @@ namespace OneShotSupport.UI.Screens
                 currentDay = dayNumber;
                 isInventorySetupForDay = false;
             }
-            
+
             OnMonsterPanelClicked();
 
             // Display hero info
@@ -189,6 +190,16 @@ namespace OneShotSupport.UI.Screens
 
             // Start in main view
             ShowMainView();
+
+            // Tutorial: Advance to ExamineMonster step when consultation screen opens
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                var currentStep = TutorialManager.Instance.GetCurrentStep();
+                if (currentStep == TutorialStep.DayStartHint || currentStep == TutorialStep.None)
+                {
+                    TutorialManager.Instance.AdvanceToStep(TutorialStep.ExamineMonster);
+                }
+            }
         }
 
         /// <summary>
@@ -389,6 +400,15 @@ namespace OneShotSupport.UI.Screens
         {
             UpdateConfidence();
             UpdateEquipmentDisplay();
+
+            // Tutorial: Complete DragItem step when player equips an item
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                if (TutorialManager.Instance.GetCurrentStep() == TutorialStep.DragItem)
+                {
+                    TutorialManager.Instance.CompleteCurrentStep(); // Advances to CheckConfidence
+                }
+            }
         }
 
         /// <summary>
@@ -474,6 +494,22 @@ namespace OneShotSupport.UI.Screens
                 inventoryViewPanel.SetActive(true);
 
             UpdateConfidence();
+
+            // Tutorial: Advance to CheckInventory and then DragItem when opening inventory
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                var currentStep = TutorialManager.Instance.GetCurrentStep();
+                if (currentStep == TutorialStep.ExamineMonster)
+                {
+                    // Advance through CheckInventory to DragItem
+                    TutorialManager.Instance.AdvanceToStep(TutorialStep.CheckInventory);
+                }
+                else if (currentStep == TutorialStep.CheckInventory)
+                {
+                    // Auto-advance to DragItem step
+                    TutorialManager.Instance.CompleteCurrentStep();
+                }
+            }
         }
 
         /// <summary>
@@ -481,6 +517,22 @@ namespace OneShotSupport.UI.Screens
         /// </summary>
         private void OnSendHeroClicked()
         {
+            // Tutorial: Check if SendHero action is allowed
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                if (!TutorialManager.Instance.IsActionAllowed("SendHero"))
+                {
+                    Debug.Log("[Tutorial] SendHero action blocked - complete tutorial steps first");
+                    return;
+                }
+
+                // Complete tutorial when player sends hero
+                if (TutorialManager.Instance.GetCurrentStep() == TutorialStep.SendHero)
+                {
+                    TutorialManager.Instance.CompleteCurrentStep(); // Completes tutorial
+                }
+            }
+
             // Get equipped items
             List<ItemData> equippedItems = equipmentSlots
                 .Where(slot => !slot.IsEmpty())
@@ -512,6 +564,15 @@ namespace OneShotSupport.UI.Screens
             {
                 monsterPanel.SetActive(false);
                 monsterPanelButton.image.sprite = monsterPanelInactiveSprite;
+            }
+
+            // Tutorial: Complete UnderstandHero step when player clicks hero panel
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                if (TutorialManager.Instance.GetCurrentStep() == TutorialStep.UnderstandHero)
+                {
+                    TutorialManager.Instance.CompleteCurrentStep(); // Advances to SendHero
+                }
             }
         }
         

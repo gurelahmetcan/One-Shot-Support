@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using OneShotSupport.ScriptableObjects;
+using OneShotSupport.Tutorial;
 
 namespace OneShotSupport.UI.DragDrop
 {
@@ -91,6 +92,16 @@ namespace OneShotSupport.UI.DragDrop
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (!isDraggable) return;
+
+            // Tutorial: Check if dragging is allowed
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                if (!TutorialManager.Instance.IsActionAllowed("DragItem"))
+                {
+                    Debug.Log("[Tutorial] Dragging blocked - complete tutorial steps first");
+                    return;
+                }
+            }
 
             // Make sure we have canvas reference
             TryFindCanvas();
