@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6b856ab9652944c6c891eef2c05c26b4, type: 3}
-  m_Name: Magic-1
+  m_Name: Snackers
   m_EditorClassIdentifier: 
-  itemName: Magic 1
+  itemName: Snackers
   description: 
-  category: 3
-  baseBoost: 15
-  matchBonus: 40
-  icon: {fileID: 0}
+  category: 2
+  baseBoost: 5
+  matchBonus: 50
+  icon: {fileID: 21300000, guid: 3a5c22bd028494618ac0e70440a02f99, type: 3}

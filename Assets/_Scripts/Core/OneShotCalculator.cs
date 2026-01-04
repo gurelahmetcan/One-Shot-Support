@@ -129,7 +129,7 @@ namespace OneShotSupport.Core
 
                 // Low confidence outcomes
                 (ConfidenceLevel.Low, true) => (5, 25),       // "Miracle" bonus
-                (ConfidenceLevel.Low, false) => (3, -2),      // Expected failure
+                (ConfidenceLevel.Low, false) => (2, -5),      // Expected failure
 
                 _ => (3, 0) // Fallback
             };

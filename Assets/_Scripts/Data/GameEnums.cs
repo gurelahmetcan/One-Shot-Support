@@ -5,10 +5,10 @@ namespace OneShotSupport.Data
     /// </summary>
     public enum ItemCategory
     {
-        Fire,
-        Water,
-        Electric,
-        Magic
+        Hygiene,
+        Magic,
+        Catering,
+        Lighting
     }
 
     /// <summary>
