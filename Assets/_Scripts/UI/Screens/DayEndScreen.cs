@@ -28,6 +28,7 @@ namespace OneShotSupport.UI.Screens
         public Sprite starSprite; // Star sprite for flying animation
         public float starFlyDuration = 1f; // Duration of star flight
         public float numberCountDuration = 0.5f; // Duration of number counting animation
+        public Sprite moneySprite; // Star sprite for flying animation
 
         private List<GameObject> resultEntries = new List<GameObject>();
         private bool isAnimating = false;
@@ -122,7 +123,7 @@ namespace OneShotSupport.UI.Screens
                 // Animate MONEY star flying from result to money (if hero earned money)
                 if (result.moneyChange > 0 && entryObj != null && starSprite != null && moneyTarget != null)
                 {
-                    yield return StartCoroutine(AnimateStarFlight(entryObj.GetComponent<RectTransform>(), moneyTarget));
+                    yield return StartCoroutine(AnimateMoneyFlight(entryObj.GetComponent<RectTransform>(), moneyTarget));
                 }
 
                 // Animate money number counting
@@ -206,6 +207,44 @@ namespace OneShotSupport.UI.Screens
             // Destroy star when it reaches target
             Destroy(starObj);
         }
+        
+        private IEnumerator AnimateMoneyFlight(RectTransform resultTransform, RectTransform targetTransform)
+        {
+            // Create star object
+            GameObject moneyObj = new GameObject("FlyingMoney");
+            moneyObj.transform.SetParent(transform, false);
+
+            Image moneyImage = moneyObj.AddComponent<Image>();
+            moneyImage.sprite = moneySprite;
+            moneyImage.SetNativeSize();
+
+            RectTransform moneyRect = moneyObj.GetComponent<RectTransform>();
+
+            // Set initial position (at result entry)
+            Vector3 startPos = resultTransform.position;
+            Vector3 endPos = targetTransform.position;
+
+            moneyRect.position = startPos;
+
+            // Animate movement
+            float elapsed = 0f;
+            while (elapsed < starFlyDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / starFlyDuration;
+
+                // Ease out curve for smooth deceleration
+                float smoothT = 1f - (1f - t) * (1f - t);
+
+                moneyRect.position = Vector3.Lerp(startPos, endPos, smoothT);
+
+                yield return null;
+            }
+
+            // Destroy star when it reaches target
+            Destroy(moneyObj);
+        }
+
 
         /// <summary>
         /// Animate reputation number counting up/down

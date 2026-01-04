@@ -107,15 +107,15 @@ namespace OneShotSupport.UI.Screens
 
             // Cheap crate
             UpdateCrateButton(cheapCrateButton, cheapCrateText, CrateType.Cheap,
-                "Cheap Crate\n3 Random Items", canBuyMore);
+                "3 Random Items\n (Random Category)", canBuyMore);
 
             // Medium crate (shows single random category)
-            string mediumDesc = $"Medium Crate\n3 Items from:\n{mediumCrateCategory}";
+            string mediumDesc = $"3 Random Items\n ({mediumCrateCategory} Category)";
             UpdateCrateButton(mediumCrateButton, mediumCrateText, CrateType.Medium, mediumDesc, canBuyMore);
 
             // Premium crate
             UpdateCrateButton(premiumCrateButton, premiumCrateText, CrateType.Premium,
-                "Premium Crate\nSelect Category\n3 Items", canBuyMore);
+                "3 Random Items\n(Select Category)", canBuyMore);
             
             // Continue button
             if (continueButton != null)
@@ -145,7 +145,7 @@ namespace OneShotSupport.UI.Screens
             else if (!canAfford)
                 statusText = "\n[NOT ENOUGH GOLD]";
 
-            text.text = $"{description}\n\nCost: {cost}g{statusText}";
+            text.text = $"{description} {statusText}";
         }
 
         /// <summary>

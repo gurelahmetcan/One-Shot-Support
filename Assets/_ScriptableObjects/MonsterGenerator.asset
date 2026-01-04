@@ -12,19 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eefbdfaf061d64b49980500c240f7b16, type: 3}
   m_Name: MonsterGenerator
   m_EditorClassIdentifier: 
-  monsterNames:
-  - Dusa Me
-  - Ms. Smellington
-  - Dragon
-  - Cyclopus Octopus
-  - Demonissia
-  monsterSprites:
-  - {fileID: 21300000, guid: 963b8a8883dcc42a18153caa9f548e43, type: 3}
-  - {fileID: 21300000, guid: acba1da4e9abe4fe6b4c9a230929aa7f, type: 3}
-  - {fileID: 21300000, guid: f67563552e67b492e94025fdd6558b9d, type: 3}
-  - {fileID: 21300000, guid: bc97c5ce8545745e4a8db1aa65f802bb, type: 3}
-  - {fileID: 21300000, guid: 9a8bef3a0ac934644aaa58d1208785fb, type: 3}
-  - {fileID: 21300000, guid: 962ea061465cc445f958e6e6bba15acd, type: 3}
+  monsterVisuals:
+  - monsterName: 
+    sprite: {fileID: 21300000, guid: 963b8a8883dcc42a18153caa9f548e43, type: 3}
+  - monsterName: 
+    sprite: {fileID: 21300000, guid: acba1da4e9abe4fe6b4c9a230929aa7f, type: 3}
+  - monsterName: 
+    sprite: {fileID: 21300000, guid: f67563552e67b492e94025fdd6558b9d, type: 3}
+  - monsterName: 
+    sprite: {fileID: 21300000, guid: bc97c5ce8545745e4a8db1aa65f802bb, type: 3}
+  - monsterName: 
+    sprite: {fileID: 21300000, guid: 9a8bef3a0ac934644aaa58d1208785fb, type: 3}
+  - monsterName: 
+    sprite: {fileID: 21300000, guid: 962ea061465cc445f958e6e6bba15acd, type: 3}
   categorySprites:
   - {fileID: 21300000, guid: 28b74fbb325864ab4b0fefee3028cf03, type: 3}
   - {fileID: 21300000, guid: 2fea9003d43bf41f1b1eb2a03b4a6200, type: 3}
