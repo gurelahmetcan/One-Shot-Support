@@ -12,14 +12,14 @@ namespace OneShotSupport.Core
     public class HeroGenerator : ScriptableObject
     {
         [Header("Hero Visuals")]
-        [Tooltip("Sprite for Noob tier heroes")]
-        public Sprite noobSprite;
+        [Tooltip("Sprite pool for Noob tier heroes (randomly selected)")]
+        public Sprite[] noobSprites;
 
-        [Tooltip("Sprite for Knight tier heroes")]
-        public Sprite knightSprite;
+        [Tooltip("Sprite pool for Knight tier heroes (randomly selected)")]
+        public Sprite[] knightSprites;
 
-        [Tooltip("Sprite for Legend tier heroes")]
-        public Sprite legendSprite;
+        [Tooltip("Sprite pool for Legend tier heroes (randomly selected)")]
+        public Sprite[] legendSprites;
 
         [Header("Hero Stats")]
         [Tooltip("Base chance range for Noob tier")]
@@ -69,21 +69,21 @@ namespace OneShotSupport.Core
                     hero.heroName = GenerateHeroName("Noob");
                     hero.baseChance = Random.Range(noobBaseChanceRange.x, noobBaseChanceRange.y + 1);
                     hero.slots = noobSlots;
-                    hero.portrait = noobSprite;
+                    hero.portrait = GetRandomSprite(noobSprites);
                     break;
 
                 case HeroTier.Knight:
                     hero.heroName = GenerateHeroName("Knight");
                     hero.baseChance = Random.Range(knightBaseChanceRange.x, knightBaseChanceRange.y + 1);
                     hero.slots = knightSlots;
-                    hero.portrait = knightSprite;
+                    hero.portrait = GetRandomSprite(knightSprites);
                     break;
 
                 case HeroTier.Legend:
                     hero.heroName = GenerateHeroName("Legend");
                     hero.baseChance = Random.Range(legendBaseChanceRange.x, legendBaseChanceRange.y + 1);
                     hero.slots = legendSlots;
-                    hero.portrait = legendSprite;
+                    hero.portrait = GetRandomSprite(legendSprites);
                     break;
             }
 
@@ -129,6 +129,20 @@ namespace OneShotSupport.Core
                 Perk[] commonPerks = { Perk.None, Perk.Clumsy, Perk.Overconfident, Perk.Prepared, Perk.Honest };
                 return commonPerks[Random.Range(0, commonPerks.Length)];
             }
+        }
+
+        /// <summary>
+        /// Get a random sprite from the provided sprite pool
+        /// </summary>
+        private Sprite GetRandomSprite(Sprite[] spritePool)
+        {
+            if (spritePool == null || spritePool.Length == 0)
+            {
+                Debug.LogWarning("[HeroGenerator] Sprite pool is empty or null!");
+                return null;
+            }
+
+            return spritePool[Random.Range(0, spritePool.Length)];
         }
     }
 }
