@@ -57,10 +57,11 @@ namespace OneShotSupport.UI.DragDrop
         /// </summary>
         public void PlaceItem(DraggableItem item)
         {
-            // BUG FIX: If slot already has an item, swap them (both equipment and inventory)
+            // If slot already has an item, reject placement
+            // Item will return to original position automatically
             if (currentItem != null)
             {
-                SwapItems(item);
+                Debug.Log($"[ItemSlot] Slot already occupied, rejecting placement");
                 return;
             }
 
@@ -108,31 +109,6 @@ namespace OneShotSupport.UI.DragDrop
                     infoIcon.SetActive(false);
 
                 OnItemRemoved?.Invoke(this);
-            }
-        }
-
-        /// <summary>
-        /// Swap items between this slot and the dragged item's slot
-        /// </summary>
-        private void SwapItems(DraggableItem draggedItem)
-        {
-            var itemToSwap = currentItem;
-            var draggedItemSlot = draggedItem.CurrentSlot;
-
-            // Remove both items
-            RemoveItem();
-            if (draggedItemSlot != null)
-            {
-                draggedItemSlot.RemoveItem();
-            }
-
-            // Place dragged item in this slot
-            PlaceItem(draggedItem);
-
-            // Place this slot's item in the dragged item's original slot
-            if (draggedItemSlot != null && itemToSwap != null)
-            {
-                draggedItemSlot.PlaceItem(itemToSwap);
             }
         }
 

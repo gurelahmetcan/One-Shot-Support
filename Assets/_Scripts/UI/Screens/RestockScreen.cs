@@ -240,6 +240,7 @@ namespace OneShotSupport.UI.Screens
         private List<ItemData> GenerateCrateItems(CrateType crateType, ItemCategory? selectedCategory)
         {
             List<ItemData> items = new List<ItemData>();
+            HashSet<ItemCategory> usedCategories = new HashSet<ItemCategory>(); // Track used categories for cheap crate
 
             for (int i = 0; i < 3; i++)
             {
@@ -248,8 +249,22 @@ namespace OneShotSupport.UI.Screens
                 switch (crateType)
                 {
                     case CrateType.Cheap:
-                        // Random item from any category
-                        item = itemDatabase.GetRandomItem();
+                        // Get items from DIFFERENT categories
+                        // Try to get an item from a category we haven't used yet
+                        int attempts = 0;
+                        const int maxAttempts = 20; // Prevent infinite loop
+
+                        do
+                        {
+                            item = itemDatabase.GetRandomItem();
+                            attempts++;
+                        }
+                        while (item != null && usedCategories.Contains(item.category) && attempts < maxAttempts);
+
+                        if (item != null)
+                        {
+                            usedCategories.Add(item.category);
+                        }
                         break;
 
                     case CrateType.Medium:
