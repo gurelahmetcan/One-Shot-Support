@@ -7,21 +7,27 @@ using Random = UnityEngine.Random;
 namespace OneShotSupport.Core
 {
     /// <summary>
+    /// Pairs a monster's sprite with their name
+    /// </summary>
+    [System.Serializable]
+    public class MonsterVisuals
+    {
+        [Tooltip("Monster name (e.g., 'Slime King')")]
+        public string monsterName;
+
+        [Tooltip("Monster sprite")]
+        public Sprite sprite;
+    }
+
+    /// <summary>
     /// Configuration for procedural monster generation
     /// </summary>
     [CreateAssetMenu(fileName = "MonsterGenerator", menuName = "One-Shot Support/Monster Generator")]
     public class MonsterGenerator : ScriptableObject
     {
-        [Header("Monster Names")]
-        [Tooltip("Pool of monster names")]
-        public string[] monsterNames = {
-            "Slime", "Goblin", "Dragon", "Troll", "Wraith",
-            "Demon", "Hydra", "Basilisk", "Chimera", "Golem"
-        };
-
-        [Header("Monster Sprites")]
-        [Tooltip("Pool of monster sprites (optional, can be null)")]
-        public Sprite[] monsterSprites;
+        [Header("Monster Visuals")]
+        [Tooltip("Visual pool for monsters (sprite + name pairs, randomly selected)")]
+        public MonsterVisuals[] monsterVisuals;
 
         [Header("Category Sprites")] 
         [Tooltip("Pool of category sprites")]
@@ -58,8 +64,8 @@ namespace OneShotSupport.Core
             // Create runtime instance
             var monster = ScriptableObject.CreateInstance<MonsterData>();
 
-            // Random name
-            monster.monsterName = monsterNames[Random.Range(0, monsterNames.Length)];
+            // Assign random visuals (sprite + name match)
+            AssignVisuals(monster);
 
             // Random weakness
             monster.weakness = (ItemCategory)Random.Range(0, 4);
@@ -76,12 +82,6 @@ namespace OneShotSupport.Core
                 2 => hardPenalty,
                 _ => mediumPenalty
             };
-
-            // Random sprite (if available)
-            if (monsterSprites != null && monsterSprites.Length > 0)
-            {
-                monster.sprite = monsterSprites[Random.Range(0, monsterSprites.Length)];
-            }
 
             if (categorySprites != null && categorySprites.Length > 0)
             {
@@ -110,8 +110,8 @@ namespace OneShotSupport.Core
             // Create runtime instance
             var monster = ScriptableObject.CreateInstance<MonsterData>();
 
-            // Random name
-            monster.monsterName = monsterNames[Random.Range(0, monsterNames.Length)];
+            // Assign random visuals (sprite + name match)
+            AssignVisuals(monster);
 
             // Specific weakness (from hint)
             monster.weakness = specificWeakness;
@@ -129,10 +129,9 @@ namespace OneShotSupport.Core
                 _ => mediumPenalty
             };
 
-            // Random sprite (if available)
-            if (monsterSprites != null && monsterSprites.Length > 0)
+            if (categorySprites != null && categorySprites.Length > 0)
             {
-                monster.sprite = monsterSprites[Random.Range(0, monsterSprites.Length)];
+                monster.categorySprite = GetCategorySprite(monster.weakness);
             }
 
             // Description
@@ -189,6 +188,29 @@ namespace OneShotSupport.Core
                     break;
             }
             return returnSprite;
+        }
+
+        /// <summary>
+        /// Assign random visuals (sprite + name) from the pool
+        /// Ensures sprite and name always match
+        /// </summary>
+        private void AssignVisuals(MonsterData monster)
+        {
+            if (monsterVisuals == null || monsterVisuals.Length == 0)
+            {
+                Debug.LogWarning("[MonsterGenerator] Visual pool is empty or null!");
+                return;
+            }
+
+            // Get random visual set from pool
+            MonsterVisuals visuals = monsterVisuals[Random.Range(0, monsterVisuals.Length)];
+
+            // Assign name and sprite (both match the same monster)
+            if (!string.IsNullOrEmpty(visuals.monsterName))
+            {
+                monster.monsterName = visuals.monsterName;
+            }
+            monster.sprite = visuals.sprite;
         }
     }
 }

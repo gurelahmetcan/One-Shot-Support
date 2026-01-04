@@ -6,11 +6,14 @@ using OneShotSupport.Utils;
 namespace OneShotSupport.Core
 {
     /// <summary>
-    /// Pairs a hero's portrait sprite with their character card sprite
+    /// Pairs a hero's portrait sprite with their character card sprite and name
     /// </summary>
     [System.Serializable]
     public class HeroVisuals
     {
+        [Tooltip("Hero name (e.g., 'Bob the Noob')")]
+        public string heroName;
+
         [Tooltip("Hero portrait sprite")]
         public Sprite portrait;
 
@@ -75,25 +78,22 @@ namespace OneShotSupport.Core
             HeroTier tier = (HeroTier)Random.Range(0, 3);
             hero.tier = tier;
 
-            // Set stats based on tier
+            // Set stats based on tier (name assigned in AssignVisuals)
             switch (tier)
             {
                 case HeroTier.Noob:
-                    hero.heroName = GenerateHeroName("Noob");
                     hero.baseChance = Random.Range(noobBaseChanceRange.x, noobBaseChanceRange.y + 1);
                     hero.slots = noobSlots;
                     AssignVisuals(hero, noobVisuals);
                     break;
 
                 case HeroTier.Knight:
-                    hero.heroName = GenerateHeroName("Knight");
                     hero.baseChance = Random.Range(knightBaseChanceRange.x, knightBaseChanceRange.y + 1);
                     hero.slots = knightSlots;
                     AssignVisuals(hero, knightVisuals);
                     break;
 
                 case HeroTier.Legend:
-                    hero.heroName = GenerateHeroName("Legend");
                     hero.baseChance = Random.Range(legendBaseChanceRange.x, legendBaseChanceRange.y + 1);
                     hero.slots = legendSlots;
                     AssignVisuals(hero, legendVisuals);
@@ -145,8 +145,8 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Assign random visuals (portrait + character card) from the provided pool
-        /// Ensures portrait and card sprites match
+        /// Assign random visuals (portrait + character card + name) from the provided pool
+        /// Ensures portrait, card, and name all match
         /// </summary>
         private void AssignVisuals(HeroData hero, HeroVisuals[] visualPool)
         {
@@ -159,7 +159,11 @@ namespace OneShotSupport.Core
             // Get random visual set from pool
             HeroVisuals visuals = visualPool[Random.Range(0, visualPool.Length)];
 
-            // Assign both portrait and character card
+            // Assign name, portrait, and character card (all match the same character)
+            if (!string.IsNullOrEmpty(visuals.heroName))
+            {
+                hero.heroName = visuals.heroName;
+            }
             hero.portrait = visuals.portrait;
             hero.characterCard = visuals.characterCard;
         }
