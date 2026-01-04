@@ -91,6 +91,53 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
+        /// Generate a monster with a specific weakness
+        /// Used for daily hints - guarantees one monster matches the hinted weakness
+        /// </summary>
+        public MonsterData GenerateMonsterWithWeakness(ItemCategory specificWeakness)
+        {
+            // Create runtime instance
+            var monster = ScriptableObject.CreateInstance<MonsterData>();
+
+            // Random name
+            monster.monsterName = monsterNames[Random.Range(0, monsterNames.Length)];
+
+            // Specific weakness (from hint)
+            monster.weakness = specificWeakness;
+
+            // Random rank (D to S)
+            monster.rank = (MonsterRank)Random.Range(0, 5);
+
+            // Random difficulty
+            int difficulty = GetRandomDifficulty();
+            monster.difficultyPenalty = difficulty switch
+            {
+                0 => easyPenalty,
+                1 => mediumPenalty,
+                2 => hardPenalty,
+                _ => mediumPenalty
+            };
+
+            // Random sprite (if available)
+            if (monsterSprites != null && monsterSprites.Length > 0)
+            {
+                monster.sprite = monsterSprites[Random.Range(0, monsterSprites.Length)];
+            }
+
+            // Description
+            string difficultyName = difficulty switch
+            {
+                0 => "Easy",
+                1 => "Medium",
+                2 => "Hard",
+                _ => "Medium"
+            };
+            monster.description = $"Rank {monster.rank} - A {difficultyName} monster weak to {monster.weakness} attacks";
+
+            return monster;
+        }
+
+        /// <summary>
         /// Get random difficulty based on probabilities
         /// </summary>
         private int GetRandomDifficulty()

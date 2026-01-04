@@ -31,6 +31,9 @@ namespace OneShotSupport.Core
         [Tooltip("Monster generator for procedural monsters")]
         public MonsterGenerator monsterGenerator;
 
+        [Tooltip("Hint system for daily hints")]
+        public HintSystem hintSystem;
+
         [Header("Managers")]
         [Tooltip("Gold manager for currency system")]
         public GoldManager goldManager;
@@ -45,10 +48,12 @@ namespace OneShotSupport.Core
         private ReputationManager reputationManager;
         private DayData currentDay;
         private int currentDayNumber = 1;
+        private DailyHint currentDayHint;
 
         // Events for UI
         public event Action<GameState> OnStateChanged;
         public event Action<DayData> OnDayStarted;
+        public event Action<int, string> OnDayHintGenerated; // (dayNumber, hintMessage)
         public event Action<HeroResult> OnHeroReady;
         public event Action<HeroResult> OnHeroEquipped;
         public event Action<List<HeroResult>> OnDayEnded;
@@ -164,15 +169,37 @@ namespace OneShotSupport.Core
         {
             Debug.Log($"=== DAY {currentDayNumber} START ===");
             currentDay = new DayData(currentDayNumber);
+
+            // Generate daily hint
+            if (hintSystem != null)
+            {
+                currentDayHint = hintSystem.GenerateHint();
+                OnDayHintGenerated?.Invoke(currentDayNumber, currentDayHint.hintMessage);
+            }
+            else
+            {
+                currentDayHint = new DailyHint { hasHint = false, hintMessage = "Today everything feels normal." };
+            }
+
             OnDayStarted?.Invoke(currentDay);
 
-            // Immediately transition to restock
-            ChangeState(GameState.Restock);
+            // Transition to restock will happen after DayStartScreen is dismissed via UIManager
         }
 
         private void UpdateDayStart()
         {
-            // Nothing to update, transitions automatically
+            // Waiting for player to acknowledge day start via UIManager
+        }
+
+        /// <summary>
+        /// Called by UIManager when player dismisses day start screen
+        /// </summary>
+        public void StartRestock()
+        {
+            if (currentState == GameState.DayStart)
+            {
+                ChangeState(GameState.Restock);
+            }
         }
 
         // === RESTOCK STATE ===
@@ -190,6 +217,15 @@ namespace OneShotSupport.Core
                     monster = monsterGenerator != null ? monsterGenerator.GenerateMonster() : null
                 };
                 currentDay.heroResults.Add(heroResult);
+            }
+
+            // If there's a hint, assign hinted monster to random hero
+            if (currentDayHint.hasHint && currentDayHint.hintedWeakness.HasValue && monsterGenerator != null)
+            {
+                int randomHeroIndex = Random.Range(0, heroesPerDay);
+                currentDay.heroResults[randomHeroIndex].monster =
+                    monsterGenerator.GenerateMonsterWithWeakness(currentDayHint.hintedWeakness.Value);
+                Debug.Log($"[Hint] Hero {randomHeroIndex} assigned monster with {currentDayHint.hintedWeakness.Value} weakness");
             }
 
             Debug.Log($"[Restock] Generated {heroesPerDay} heroes");

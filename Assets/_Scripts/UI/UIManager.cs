@@ -14,6 +14,7 @@ namespace OneShotSupport.UI
     public class UIManager : MonoBehaviour
     {
         [Header("Screens")]
+        public DayStartScreen dayStartScreen;
         public RestockScreen restockScreen;
         public ConsultationScreen consultationScreen;
         public DayEndScreen dayEndScreen;
@@ -41,6 +42,7 @@ namespace OneShotSupport.UI
 
             // Subscribe to game events
             gameManager.OnStateChanged += HandleStateChanged;
+            gameManager.OnDayHintGenerated += HandleDayHintGenerated;
             gameManager.OnHeroReady += HandleHeroReady;
             gameManager.OnDayEnded += HandleDayEnded;
             gameManager.OnGameOver += HandleGameOver;
@@ -51,7 +53,12 @@ namespace OneShotSupport.UI
                 gameManager.Reputation.OnReputationChanged += HandleReputationChanged;
             }
 
-            // Subscribe to restock screen events
+            // Subscribe to screen events
+            if (dayStartScreen != null)
+            {
+                dayStartScreen.OnContinueClicked += HandleDayStartContinue;
+            }
+
             if (restockScreen != null)
             {
                 restockScreen.OnCratesPurchased += HandleCratesPurchased;
@@ -67,6 +74,7 @@ namespace OneShotSupport.UI
             if (gameManager != null)
             {
                 gameManager.OnStateChanged -= HandleStateChanged;
+                gameManager.OnDayHintGenerated -= HandleDayHintGenerated;
                 gameManager.OnHeroReady -= HandleHeroReady;
                 gameManager.OnDayEnded -= HandleDayEnded;
                 gameManager.OnGameOver -= HandleGameOver;
@@ -77,7 +85,12 @@ namespace OneShotSupport.UI
                 }
             }
 
-            // Unsubscribe from restock screen
+            // Unsubscribe from screen events
+            if (dayStartScreen != null)
+            {
+                dayStartScreen.OnContinueClicked -= HandleDayStartContinue;
+            }
+
             if (restockScreen != null)
             {
                 restockScreen.OnCratesPurchased -= HandleCratesPurchased;
@@ -119,6 +132,10 @@ namespace OneShotSupport.UI
             // Show/hide appropriate screens based on state
             switch (newState)
             {
+                case GameState.DayStart:
+                    // Day start hint is handled by OnDayHintGenerated event
+                    break;
+
                 case GameState.Restock:
                     ShowRestockScreen();
                     break;
@@ -133,10 +150,6 @@ namespace OneShotSupport.UI
 
                 case GameState.GameOver:
                     ShowGameOverScreen();
-                    break;
-
-                default:
-                    // For DayStart, keep current screen
                     break;
             }
 
@@ -207,10 +220,33 @@ namespace OneShotSupport.UI
             }
         }
 
+        /// <summary>
+        /// Handle day hint generated
+        /// </summary>
+        private void HandleDayHintGenerated(int dayNumber, string hintMessage)
+        {
+            ShowDayStartScreen(dayNumber, hintMessage);
+        }
+
+        /// <summary>
+        /// Handle day start continue button clicked
+        /// </summary>
+        private void HandleDayStartContinue()
+        {
+            // Notify GameManager to transition to Restock state
+            if (gameManager != null)
+            {
+                gameManager.StartRestock();
+            }
+        }
+
         // === Screen Management ===
 
         private void HideAllScreens()
         {
+            if (dayStartScreen != null)
+                dayStartScreen.gameObject.SetActive(false);
+
             if (restockScreen != null)
                 restockScreen.gameObject.SetActive(false);
 
@@ -222,6 +258,16 @@ namespace OneShotSupport.UI
 
             if (gameOverScreen != null)
                 gameOverScreen.gameObject.SetActive(false);
+        }
+
+        private void ShowDayStartScreen(int dayNumber, string hintMessage)
+        {
+            HideAllScreens();
+
+            if (dayStartScreen != null)
+            {
+                dayStartScreen.Setup(dayNumber, hintMessage);
+            }
         }
 
         private void ShowRestockScreen()
