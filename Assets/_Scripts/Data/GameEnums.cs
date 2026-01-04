@@ -5,9 +5,9 @@ namespace OneShotSupport.Data
     /// </summary>
     public enum ItemCategory
     {
-        Sharp,
-        Heavy,
-        Precise,
+        Fire,
+        Water,
+        Electric,
         Magic
     }
 

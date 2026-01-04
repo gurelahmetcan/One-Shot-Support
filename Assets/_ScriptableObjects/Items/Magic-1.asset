@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6b856ab9652944c6c891eef2c05c26b4, type: 3}
-  m_Name: test_magic
+  m_Name: Magic-1
   m_EditorClassIdentifier: 
-  itemName: test_magic
+  itemName: Magic 1
   description: 
   category: 3
   baseBoost: 15

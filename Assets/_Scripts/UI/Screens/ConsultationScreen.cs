@@ -33,13 +33,20 @@ namespace OneShotSupport.UI.Screens
         public TextMeshProUGUI heroNameText;
         public TextMeshProUGUI heroTierText;
         public TextMeshProUGUI heroPerkText;
-        public TextMeshProUGUI heroSlotsText;
+        [SerializeField] private GameObject heroPanel;
+        [SerializeField] private Button heroPanelButton;
+        [SerializeField] private Sprite heroPanelActiveSprite;
+        [SerializeField] private Sprite heroPanelInactiveSprite;
 
         [Header("Main View - Monster Display")]
         public Image monsterSprite;
         public TextMeshProUGUI monsterNameText;
         public TextMeshProUGUI monsterWeaknessText;
         public TextMeshProUGUI monsterDifficultyText;
+        [SerializeField] private GameObject monsterPanel;
+        [SerializeField] private Button monsterPanelButton;
+        [SerializeField] private Sprite monsterPanelActiveSprite;
+        [SerializeField] private Sprite monsterPanelInactiveSprite;
 
         [Header("Main View - Buttons")]
         public Button openInventoryButton;
@@ -77,6 +84,16 @@ namespace OneShotSupport.UI.Screens
             if (closeInventoryButton != null)
                 closeInventoryButton.onClick.AddListener(ShowMainView);
 
+            if (heroPanelButton != null)
+            {
+                heroPanelButton.onClick.AddListener(OnHeroPanelClicked);
+            }
+            
+            if (monsterPanelButton != null)
+            {
+                monsterPanelButton.onClick.AddListener(OnMonsterPanelClicked);
+            }
+
             // Setup equipment slots
             foreach (var slot in equipmentSlots)
             {
@@ -113,6 +130,8 @@ namespace OneShotSupport.UI.Screens
                 currentDay = dayNumber;
                 isInventorySetupForDay = false;
             }
+            
+            OnMonsterPanelClicked();
 
             // Display hero info
             DisplayHero(heroResult.hero);
@@ -164,13 +183,10 @@ namespace OneShotSupport.UI.Screens
                 heroNameText.text = hero.heroName;
 
             if (heroTierText != null)
-                heroTierText.text = $"Tier: {hero.tier}";
+                heroTierText.text = $"{hero.tier}";
 
             if (heroPerkText != null)
-                heroPerkText.text = PerkModifier.GetDescription(hero.perk);
-
-            if (heroSlotsText != null)
-                heroSlotsText.text = $"Equipment Slots: {hero.GetEffectiveSlots()}";
+                heroPerkText.text = hero.perk.ToString();
         }
 
         /// <summary>
@@ -406,6 +422,42 @@ namespace OneShotSupport.UI.Screens
 
             if (itemTooltip != null)
                 itemTooltip.Hide();
+        }
+
+        /// <summary>
+        /// Called when Hero Panel button is clicked
+        /// </summary>
+        private void OnHeroPanelClicked()
+        {
+            if (heroPanel != null)
+            {
+                heroPanel.SetActive(true);
+                heroPanelButton.image.sprite = heroPanelActiveSprite;
+            }
+
+            if (monsterPanel != null)
+            {
+                monsterPanel.SetActive(false);
+                monsterPanelButton.image.sprite = monsterPanelInactiveSprite;
+            }
+        }
+        
+        /// <summary>
+        /// Called when Hero Panel button is clicked
+        /// </summary>
+        private void OnMonsterPanelClicked()
+        {
+            if (heroPanel != null)
+            {
+                heroPanel.SetActive(false);
+                heroPanelButton.image.sprite = heroPanelInactiveSprite;
+            }
+
+            if (monsterPanel != null)
+            {
+                monsterPanel.SetActive(true);
+                monsterPanelButton.image.sprite = monsterPanelActiveSprite;
+            }
         }
     }
 }
