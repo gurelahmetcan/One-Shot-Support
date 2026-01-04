@@ -133,6 +133,12 @@ namespace OneShotSupport.UI.Screens
         {
             currentHeroResult = heroResult;
 
+            // Play hero voiceline when they enter the store
+            if (heroResult.hero.heroVoiceline != null && AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayHeroVoiceline(heroResult.hero.heroVoiceline);
+            }
+
             // Check if this is a new day (reset inventory)
             int dayNumber = GameManager.Instance?.CurrentDayNumber ?? 0;
             bool isNewDay = dayNumber != currentDay;

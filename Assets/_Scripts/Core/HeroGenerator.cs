@@ -6,13 +6,16 @@ using OneShotSupport.Utils;
 namespace OneShotSupport.Core
 {
     /// <summary>
-    /// Pairs a hero's portrait sprite with their character card sprite and name
+    /// Pairs a hero's portrait sprite with their character card sprite, name, and voiceline
     /// </summary>
     [System.Serializable]
     public class HeroVisuals
     {
         [Tooltip("Possible names for this hero (one will be randomly selected)")]
         public string[] heroNames;
+
+        [Tooltip("Possible voicelines for this hero (one will be randomly selected)")]
+        public AudioClip[] heroVoicelines;
 
         [Tooltip("Hero portrait sprite")]
         public Sprite portrait;
@@ -145,8 +148,8 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Assign random visuals (portrait + character card + name) from the provided pool
-        /// Ensures portrait, card, and name all match
+        /// Assign random visuals (portrait + character card + name + voiceline) from the provided pool
+        /// Ensures portrait, card, name, and voiceline all match the same character
         /// </summary>
         private void AssignVisuals(HeroData hero, HeroVisuals[] visualPool)
         {
@@ -175,6 +178,20 @@ namespace OneShotSupport.Core
             else
             {
                 Debug.LogWarning("[HeroGenerator] Hero visual has no names assigned!");
+            }
+
+            // Randomly select one voiceline from the available voicelines for this visual
+            if (visuals.heroVoicelines != null && visuals.heroVoicelines.Length > 0)
+            {
+                AudioClip randomVoiceline = visuals.heroVoicelines[Random.Range(0, visuals.heroVoicelines.Length)];
+                if (randomVoiceline != null)
+                {
+                    hero.heroVoiceline = randomVoiceline;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[HeroGenerator] Hero visual has no voicelines assigned!");
             }
         }
     }

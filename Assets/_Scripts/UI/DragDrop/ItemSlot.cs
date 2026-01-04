@@ -84,6 +84,12 @@ namespace OneShotSupport.UI.DragDrop
             if (infoIcon != null)
                 infoIcon.SetActive(true);
 
+            // Play equip sound for equipment slots only
+            if (isEquipmentSlot && Core.AudioManager.Instance != null)
+            {
+                Core.AudioManager.Instance.PlayItemEquipSound();
+            }
+
             OnItemPlaced?.Invoke(this, item.itemData);
         }
 

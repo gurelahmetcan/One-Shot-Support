@@ -40,6 +40,10 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Character card sprite for hero card UI")]
         public Sprite characterCard;
 
+        [Header("Audio")]
+        [Tooltip("Hero voiceline (plays when entering store)")]
+        public AudioClip heroVoiceline;
+
         /// <summary>
         /// Get effective number of item slots after perk modifiers
         /// Overconfident: -1, Prepared: +1

@@ -219,6 +219,12 @@ namespace OneShotSupport.UI.Screens
             List<ItemData> crateItems = GenerateCrateItems(crateType, selectedCategory);
             purchasedItems.AddRange(crateItems);
 
+            // Play crate purchase sound
+            if (Core.AudioManager.Instance != null)
+            {
+                Core.AudioManager.Instance.PlayCratePurchaseSound();
+            }
+
             Debug.Log($"[RestockScreen] Purchased {crateType} crate for {cost}g. Got {crateItems.Count} items.");
 
             // Update item preview display
