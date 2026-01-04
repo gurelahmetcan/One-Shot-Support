@@ -58,6 +58,9 @@ namespace OneShotSupport.Core
             // Random weakness
             monster.weakness = (ItemCategory)Random.Range(0, 4);
 
+            // Random rank (D to S)
+            monster.rank = (MonsterRank)Random.Range(0, 5);
+
             // Random difficulty
             int difficulty = GetRandomDifficulty();
             monster.difficultyPenalty = difficulty switch
@@ -82,7 +85,7 @@ namespace OneShotSupport.Core
                 2 => "Hard",
                 _ => "Medium"
             };
-            monster.description = $"A {difficultyName} monster weak to {monster.weakness} attacks";
+            monster.description = $"Rank {monster.rank} - A {difficultyName} monster weak to {monster.weakness} attacks";
 
             return monster;
         }

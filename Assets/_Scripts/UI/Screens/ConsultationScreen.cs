@@ -459,5 +459,19 @@ namespace OneShotSupport.UI.Screens
                 monsterPanelButton.image.sprite = monsterPanelActiveSprite;
             }
         }
+
+        /// <summary>
+        /// Get the number of leftover items in inventory at day end
+        /// </summary>
+        public int GetLeftoverItemCount()
+        {
+            int count = 0;
+            foreach (var slot in inventorySlots)
+            {
+                if (!slot.IsEmpty())
+                    count++;
+            }
+            return count;
+        }
     }
 }

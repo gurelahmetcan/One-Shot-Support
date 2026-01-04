@@ -21,6 +21,9 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Monster's weakness - items matching this get bonus")]
         public ItemCategory weakness;
 
+        [Tooltip("Monster rank determining difficulty and gold reward")]
+        public MonsterRank rank = MonsterRank.D;
+
         [Tooltip("Difficulty penalty subtracted from hero's success chance")]
         [Range(0, 30)]
         public int difficultyPenalty = 15;

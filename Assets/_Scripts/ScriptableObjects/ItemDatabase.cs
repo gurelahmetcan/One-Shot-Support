@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using OneShotSupport.Data;
 
 namespace OneShotSupport.ScriptableObjects
 {
@@ -39,6 +41,43 @@ namespace OneShotSupport.ScriptableObjects
             }
 
             return selectedItems;
+        }
+
+        /// <summary>
+        /// Get a single random item from the database
+        /// </summary>
+        public ItemData GetRandomItem()
+        {
+            if (allItems == null || allItems.Count == 0)
+            {
+                Debug.LogWarning("ItemDatabase is empty!");
+                return null;
+            }
+
+            return allItems[Random.Range(0, allItems.Count)];
+        }
+
+        /// <summary>
+        /// Get a random item of a specific category
+        /// </summary>
+        public ItemData GetRandomItemOfCategory(ItemCategory category)
+        {
+            if (allItems == null || allItems.Count == 0)
+            {
+                Debug.LogWarning("ItemDatabase is empty!");
+                return null;
+            }
+
+            // Filter items by category
+            var categoryItems = allItems.Where(item => item.category == category).ToList();
+
+            if (categoryItems.Count == 0)
+            {
+                Debug.LogWarning($"No items found for category {category}. Returning random item instead.");
+                return GetRandomItem();
+            }
+
+            return categoryItems[Random.Range(0, categoryItems.Count)];
         }
 
         /// <summary>

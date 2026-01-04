@@ -65,4 +65,26 @@ namespace OneShotSupport.Data
         Medium,   // 40-79%
         High      // >= 80%
     }
+
+    /// <summary>
+    /// Monster difficulty ranks affecting gold rewards
+    /// </summary>
+    public enum MonsterRank
+    {
+        D,  // 15 gold
+        C,  // 30 gold
+        B,  // 45 gold
+        A,  // 60 gold
+        S   // 100 gold
+    }
+
+    /// <summary>
+    /// Types of item crates available during restock phase
+    /// </summary>
+    public enum CrateType
+    {
+        Cheap,      // 10 gold - 3 random items from any category
+        Medium,     // 30 gold - 3 items from 2 shown random categories
+        Premium     // 50 gold - 3 items from 1 player-selected category
+    }
 }

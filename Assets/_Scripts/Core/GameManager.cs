@@ -31,6 +31,17 @@ namespace OneShotSupport.Core
         [Tooltip("Monster generator for procedural monsters")]
         public MonsterGenerator monsterGenerator;
 
+        [Header("UI References")]
+        [Tooltip("Restock screen for crate purchasing")]
+        public UI.Screens.RestockScreen restockScreen;
+
+        [Tooltip("Consultation screen for hero equipping")]
+        public UI.Screens.ConsultationScreen consultationScreen;
+
+        [Header("Managers")]
+        [Tooltip("Gold manager for currency system")]
+        public GoldManager goldManager;
+
         // State machine
         private GameState currentState;
         private ReputationManager reputationManager;
@@ -68,6 +79,12 @@ namespace OneShotSupport.Core
             // Start the game
             reputationManager.Initialize();
             reputationManager.OnReputationDepleted += HandleGameOver;
+
+            // Subscribe to restock screen events
+            if (restockScreen != null)
+            {
+                restockScreen.OnCratesPurchased += HandleCratesPurchased;
+            }
 
             ChangeState(GameState.DayStart);
         }
@@ -170,18 +187,7 @@ namespace OneShotSupport.Core
 
         private void EnterRestock()
         {
-            Debug.Log("[Restock] Generating items and heroes...");
-
-            // Generate daily items
-            if (itemDatabase != null)
-            {
-                currentDay.availableItems = itemDatabase.GetRandomItems(itemsPerDay);
-                Debug.Log($"[Restock] Generated {currentDay.availableItems.Count} items");
-            }
-            else
-            {
-                Debug.LogError("[Restock] ItemDatabase not assigned!");
-            }
+            Debug.Log("[Restock] Starting restock phase...");
 
             // Generate heroes for the day
             for (int i = 0; i < heroesPerDay; i++)
@@ -196,13 +202,33 @@ namespace OneShotSupport.Core
 
             Debug.Log($"[Restock] Generated {heroesPerDay} heroes");
 
-            // Transition to consultation
-            ChangeState(GameState.Consultation);
+            // Show restock screen for crate purchasing
+            if (restockScreen != null)
+            {
+                restockScreen.Setup();
+            }
+            else
+            {
+                Debug.LogError("[Restock] RestockScreen not assigned! Skipping to consultation.");
+                ChangeState(GameState.Consultation);
+            }
         }
 
         private void UpdateRestock()
         {
-            // Nothing to update, transitions automatically
+            // Waiting for player to purchase crates and call HandleCratesPurchased()
+        }
+
+        /// <summary>
+        /// Called by RestockScreen when player finishes purchasing crates
+        /// </summary>
+        private void HandleCratesPurchased(List<ItemData> purchasedItems)
+        {
+            Debug.Log($"[Restock] Received {purchasedItems.Count} items from crates");
+            currentDay.availableItems = purchasedItems;
+
+            // Transition to consultation
+            ChangeState(GameState.Consultation);
         }
 
         // === CONSULTATION STATE ===
@@ -260,6 +286,12 @@ namespace OneShotSupport.Core
             currentHero.stars = stars;
             currentHero.reputationChange = repChange;
 
+            // Award gold for successful runs
+            if (currentHero.succeeded && goldManager != null)
+            {
+                goldManager.AwardMonsterGold(currentHero.monster.rank);
+            }
+
             Debug.Log($"[Consultation] {currentHero.hero.heroName}: {currentHero.successChance}% → {(currentHero.succeeded ? "SUCCESS" : "FAILED")} ({stars}★, {repChange:+0;-0} rep)");
 
             // Check for inspiring bonus for next hero
@@ -289,6 +321,17 @@ namespace OneShotSupport.Core
         private void EnterDayEnd()
         {
             Debug.Log("=== DAY END ===");
+
+            // Recycle leftover items for gold
+            if (goldManager != null && consultationScreen != null)
+            {
+                int leftoverItems = consultationScreen.GetLeftoverItemCount();
+                if (leftoverItems > 0)
+                {
+                    goldManager.RecycleItems(leftoverItems);
+                    Debug.Log($"[Day End] Recycled {leftoverItems} leftover items for gold");
+                }
+            }
 
             // Apply all reputation changes
             foreach (var result in currentDay.heroResults)
