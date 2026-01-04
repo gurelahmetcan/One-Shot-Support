@@ -29,6 +29,9 @@ namespace OneShotSupport.UI.Screens
         [SerializeField] private GameObject categorySelectionPanel;
         [SerializeField] private Button[] categoryButtons; // 4 buttons for Hygiene, Magic, Catering, Lighting
 
+        [Header("Item Preview Slots")]
+        [SerializeField] private Image[] itemPreviewSlots = new Image[6]; // Bottom slots to show purchased items
+
         [Header("Continue Button")]
         [SerializeField] private Button continueButton;
 
@@ -42,7 +45,7 @@ namespace OneShotSupport.UI.Screens
         private GoldManager goldManager;
         private List<ItemData> purchasedItems = new List<ItemData>();
         private HashSet<CrateType> purchasedCrates = new HashSet<CrateType>();
-        private ItemCategory[] mediumCrateCategories = new ItemCategory[2];
+        private ItemCategory mediumCrateCategory; // Single random category for medium crate
         private const int MAX_CRATES = 2;
 
         private void Awake()
@@ -82,12 +85,11 @@ namespace OneShotSupport.UI.Screens
             purchasedItems.Clear();
             purchasedCrates.Clear();
 
-            // Generate random categories for medium crate
-            mediumCrateCategories[0] = (ItemCategory)UnityEngine.Random.Range(0, 4);
-            do
-            {
-                mediumCrateCategories[1] = (ItemCategory)UnityEngine.Random.Range(0, 4);
-            } while (mediumCrateCategories[1] == mediumCrateCategories[0]);
+            // Generate ONE random category for medium crate
+            mediumCrateCategory = (ItemCategory)UnityEngine.Random.Range(0, 4);
+
+            // Clear item preview slots
+            ClearItemPreview();
 
             UpdateUI();
             gameObject.SetActive(true);
@@ -107,8 +109,8 @@ namespace OneShotSupport.UI.Screens
             UpdateCrateButton(cheapCrateButton, cheapCrateText, CrateType.Cheap,
                 "Cheap Crate\n3 Random Items", canBuyMore);
 
-            // Medium crate
-            string mediumDesc = $"Medium Crate\n3 Items from:\n{mediumCrateCategories[0]} or {mediumCrateCategories[1]}";
+            // Medium crate (shows single random category)
+            string mediumDesc = $"Medium Crate\n3 Items from:\n{mediumCrateCategory}";
             UpdateCrateButton(mediumCrateButton, mediumCrateText, CrateType.Medium, mediumDesc, canBuyMore);
 
             // Premium crate
@@ -229,6 +231,9 @@ namespace OneShotSupport.UI.Screens
 
             Debug.Log($"[RestockScreen] Purchased {crateType} crate for {cost}g. Got {crateItems.Count} items.");
 
+            // Update item preview display
+            UpdateItemPreview();
+
             // Update UI
             UpdateUI();
         }
@@ -252,9 +257,8 @@ namespace OneShotSupport.UI.Screens
                         break;
 
                     case CrateType.Medium:
-                        // Random item from one of the two shown categories
-                        ItemCategory randomCategory = mediumCrateCategories[UnityEngine.Random.Range(0, 2)];
-                        item = itemDatabase.GetRandomItemOfCategory(randomCategory);
+                        // Item from the single shown category
+                        item = itemDatabase.GetRandomItemOfCategory(mediumCrateCategory);
                         break;
 
                     case CrateType.Premium:
@@ -292,6 +296,50 @@ namespace OneShotSupport.UI.Screens
         public void Hide()
         {
             gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Clear all item preview slots
+        /// </summary>
+        private void ClearItemPreview()
+        {
+            if (itemPreviewSlots == null) return;
+
+            for (int i = 0; i < itemPreviewSlots.Length; i++)
+            {
+                if (itemPreviewSlots[i] != null)
+                {
+                    itemPreviewSlots[i].sprite = null;
+                    itemPreviewSlots[i].enabled = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update item preview slots to show purchased items
+        /// </summary>
+        private void UpdateItemPreview()
+        {
+            if (itemPreviewSlots == null) return;
+
+            // Display all purchased items in the preview slots (max 6)
+            for (int i = 0; i < itemPreviewSlots.Length; i++)
+            {
+                if (itemPreviewSlots[i] == null) continue;
+
+                if (i < purchasedItems.Count && purchasedItems[i] != null)
+                {
+                    // Show item icon
+                    itemPreviewSlots[i].sprite = purchasedItems[i].icon;
+                    itemPreviewSlots[i].enabled = true;
+                }
+                else
+                {
+                    // Empty slot
+                    itemPreviewSlots[i].sprite = null;
+                    itemPreviewSlots[i].enabled = false;
+                }
+            }
         }
     }
 }
