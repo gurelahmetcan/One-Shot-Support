@@ -83,9 +83,14 @@ namespace OneShotSupport.Core
                 _ => mediumPenalty
             };
 
-            if (categorySprites != null && categorySprites.Length > 0)
+            // Assign category sprite (with proper validation)
+            if (categorySprites != null && categorySprites.Length >= 4)
             {
                 monster.categorySprite = GetCategorySprite(monster.weakness);
+            }
+            else
+            {
+                Debug.LogWarning("[MonsterGenerator] Cannot assign category sprite - array needs 4 sprites!");
             }
 
             // Description
@@ -129,9 +134,14 @@ namespace OneShotSupport.Core
                 _ => mediumPenalty
             };
 
-            if (categorySprites != null && categorySprites.Length > 0)
+            // Assign category sprite (with proper validation)
+            if (categorySprites != null && categorySprites.Length >= 4)
             {
                 monster.categorySprite = GetCategorySprite(monster.weakness);
+            }
+            else
+            {
+                Debug.LogWarning("[MonsterGenerator] Cannot assign category sprite - array needs 4 sprites!");
             }
 
             // Description
@@ -168,25 +178,45 @@ namespace OneShotSupport.Core
 
         private Sprite GetCategorySprite(ItemCategory category)
         {
-            Sprite returnSprite;
+            // Ensure we have enough sprites in the array
+            if (categorySprites == null || categorySprites.Length < 4)
+            {
+                Debug.LogWarning($"[MonsterGenerator] Category sprites array missing or incomplete! Need 4 sprites, got {categorySprites?.Length ?? 0}");
+                return null;
+            }
+
+            Sprite returnSprite = null;
+            int index = -1;
+
             switch (category)
             {
                 case ItemCategory.Hygiene:
-                    returnSprite = categorySprites[0];
+                    index = 0;
                     break;
                 case ItemCategory.Magic:
-                    returnSprite = categorySprites[1];
+                    index = 1;
                     break;
                 case ItemCategory.Catering:
-                    returnSprite = categorySprites[2];
+                    index = 2;
                     break;
                 case ItemCategory.Lighting:
-                    returnSprite = categorySprites[3];
+                    index = 3;
                     break;
                 default:
-                    returnSprite = categorySprites[0];
+                    index = 0;
                     break;
             }
+
+            // Bounds check and null check
+            if (index >= 0 && index < categorySprites.Length)
+            {
+                returnSprite = categorySprites[index];
+                if (returnSprite == null)
+                {
+                    Debug.LogWarning($"[MonsterGenerator] Category sprite for {category} (index {index}) is null!");
+                }
+            }
+
             return returnSprite;
         }
 

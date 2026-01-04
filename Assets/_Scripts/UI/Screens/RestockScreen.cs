@@ -91,6 +91,10 @@ namespace OneShotSupport.UI.Screens
             // Clear item preview slots
             ClearItemPreview();
 
+            // Ensure goldManager is available
+            if (goldManager == null)
+                goldManager = FindObjectOfType<GoldManager>();
+
             UpdateUI();
             gameObject.SetActive(true);
         }
