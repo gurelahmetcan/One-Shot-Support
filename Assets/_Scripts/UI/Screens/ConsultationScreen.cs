@@ -74,6 +74,7 @@ namespace OneShotSupport.UI.Screens
         public ConfidenceMeter confidenceMeter;
         public ConfidenceMeter confidenceMeterMain;
         public ItemTooltip itemTooltip;
+        public EquipmentDisplay equipmentDisplay;
 
         private HeroResult currentHeroResult;
         private List<DraggableItem> currentItems = new List<DraggableItem>();
@@ -289,6 +290,9 @@ namespace OneShotSupport.UI.Screens
                     }
                 }
             }
+
+            // Update equipment display on main panel
+            UpdateEquipmentDisplay();
         }
 
         /// <summary>
@@ -366,6 +370,7 @@ namespace OneShotSupport.UI.Screens
         private void OnItemEquipped(ItemSlot slot, ItemData item)
         {
             UpdateConfidence();
+            UpdateEquipmentDisplay();
         }
 
         /// <summary>
@@ -374,6 +379,7 @@ namespace OneShotSupport.UI.Screens
         private void OnItemUnequipped(ItemSlot slot)
         {
             UpdateConfidence();
+            UpdateEquipmentDisplay();
         }
 
         /// <summary>
@@ -400,6 +406,27 @@ namespace OneShotSupport.UI.Screens
             // Update meter
             confidenceMeter.UpdateConfidence(successChance);
             confidenceMeterMain.UpdateConfidence(successChance);
+        }
+
+        /// <summary>
+        /// Update equipment display on main panel with currently equipped items
+        /// </summary>
+        private void UpdateEquipmentDisplay()
+        {
+            if (equipmentDisplay == null || currentHeroResult == null) return;
+
+            // Get currently equipped items (or null for empty slots)
+            ItemData[] equippedItems = new ItemData[4];
+            for (int i = 0; i < equipmentSlots.Length && i < equippedItems.Length; i++)
+            {
+                equippedItems[i] = equipmentSlots[i].IsEmpty() ? null : equipmentSlots[i].GetItemData();
+            }
+
+            // Get active slot count for current hero
+            int activeSlots = currentHeroResult.hero.GetEffectiveSlots();
+
+            // Update the display
+            equipmentDisplay.UpdateDisplay(equippedItems, activeSlots);
         }
 
         /// <summary>
