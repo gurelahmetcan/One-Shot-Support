@@ -15,7 +15,10 @@ namespace OneShotSupport.UI.Screens
         public TextMeshProUGUI daysSurvivedText;
         public TextMeshProUGUI finalReputationText;
         public Button restartButton;
-        public Button quitButton;
+        public Button mainMenuButton;
+
+        [Header("Scene Settings")]
+        public string mainMenuSceneName = "MainMenuScene";
 
         [Header("Text Settings")]
         public string gameOverMessage = "GAME OVER";
@@ -26,8 +29,8 @@ namespace OneShotSupport.UI.Screens
             if (restartButton != null)
                 restartButton.onClick.AddListener(OnRestartClicked);
 
-            if (quitButton != null)
-                quitButton.onClick.AddListener(OnQuitClicked);
+            if (mainMenuButton != null)
+                mainMenuButton.onClick.AddListener(OnMainMenuClicked);
         }
 
         /// <summary>
@@ -55,15 +58,12 @@ namespace OneShotSupport.UI.Screens
         }
 
         /// <summary>
-        /// Quit the game
+        /// Return to main menu
         /// </summary>
-        private void OnQuitClicked()
+        private void OnMainMenuClicked()
         {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
+            Debug.Log("[GameOverScreen] Returning to main menu...");
+            SceneManager.LoadScene(mainMenuSceneName);
         }
     }
 }

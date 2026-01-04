@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using OneShotSupport.Core;
 using OneShotSupport.Data;
@@ -24,9 +26,11 @@ namespace OneShotSupport.UI
         public ReputationBar reputationBar;
         public DayCounter dayCounter;
         public GoldDisplay goldDisplay;
+        public Button mainMenuButton;
 
         [Header("Settings")]
         public bool autoHideScreens = true;
+        public string mainMenuSceneName = "MainMenuScene";
 
         private GameManager gameManager;
 
@@ -62,6 +66,12 @@ namespace OneShotSupport.UI
             if (restockScreen != null)
             {
                 restockScreen.OnCratesPurchased += HandleCratesPurchased;
+            }
+
+            // Setup main menu button
+            if (mainMenuButton != null)
+            {
+                mainMenuButton.onClick.AddListener(OnMainMenuClicked);
             }
 
             // Initialize UI
@@ -303,6 +313,15 @@ namespace OneShotSupport.UI
 
             if (gameOverScreen != null)
                 gameOverScreen.gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// Return to main menu
+        /// </summary>
+        private void OnMainMenuClicked()
+        {
+            Debug.Log("[UIManager] Returning to main menu...");
+            SceneManager.LoadScene(mainMenuSceneName);
         }
     }
 }
