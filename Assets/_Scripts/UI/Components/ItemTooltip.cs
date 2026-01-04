@@ -7,59 +7,34 @@ using OneShotSupport.Data;
 namespace OneShotSupport.UI.Components
 {
     /// <summary>
-    /// Tooltip that displays item information on hover
-    /// IMPORTANT: This tooltip does not block raycasts to prevent blinking issues
+    /// Persistent tooltip panel that displays item information at bottom left
+    /// Shows selected item's icon and details
     /// </summary>
     public class ItemTooltip : MonoBehaviour
     {
         [Header("UI References")]
+        public Image itemIconImage;
         public TextMeshProUGUI itemNameText;
         public TextMeshProUGUI categoryText;
         public TextMeshProUGUI baseBoostText;
         public TextMeshProUGUI matchBonusText;
         public TextMeshProUGUI descriptionText;
 
-        [Header("Settings")]
-        public Vector2 offset = new Vector2(10, 10);
-
-        private RectTransform rectTransform;
-        private Canvas canvas;
         private CanvasGroup canvasGroup;
-        private bool isVisible = false;
 
         private void Awake()
         {
-            rectTransform = GetComponent<RectTransform>();
-            canvas = GetComponentInParent<Canvas>();
-
             // Get or add CanvasGroup
             canvasGroup = GetComponent<CanvasGroup>();
             if (canvasGroup == null)
                 canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
-            // CRITICAL: Prevent tooltip from blocking raycasts
-            // This stops the blinking issue where tooltip blocks mouse hover detection
+            // Panel doesn't block raycasts
             canvasGroup.blocksRaycasts = false;
             canvasGroup.interactable = false;
 
+            // Start hidden
             Hide();
-        }
-
-        private void Update()
-        {
-            if (isVisible)
-            {
-                // Follow mouse cursor
-                Vector2 localPoint;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvas.transform as RectTransform,
-                    Input.mousePosition,
-                    canvas.worldCamera,
-                    out localPoint
-                );
-
-                rectTransform.anchoredPosition = localPoint + offset;
-            }
         }
 
         /// <summary>
@@ -67,10 +42,17 @@ namespace OneShotSupport.UI.Components
         /// </summary>
         public void Show(ItemData itemData, ItemCategory? monsterWeakness = null)
         {
-            if (itemData == null) return;
+            if (itemData == null)
+            {
+                Hide();
+                return;
+            }
 
             gameObject.SetActive(true);
-            isVisible = true;
+
+            // Item icon
+            if (itemIconImage != null && itemData.icon != null)
+                itemIconImage.sprite = itemData.icon;
 
             // Item name
             if (itemNameText != null)
@@ -104,11 +86,10 @@ namespace OneShotSupport.UI.Components
         }
 
         /// <summary>
-        /// Hide the tooltip
+        /// Hide the tooltip panel
         /// </summary>
         public void Hide()
         {
-            isVisible = false;
             gameObject.SetActive(false);
         }
     }

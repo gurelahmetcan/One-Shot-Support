@@ -14,8 +14,13 @@ namespace OneShotSupport.UI.Components
     {
         [Header("UI References")]
         public Image confidenceFillImage;
+        public RectTransform handleTransform; // Black line that moves with fill
         public TextMeshProUGUI percentageText;
-        
+
+        [Header("Handle Settings")]
+        public float handleLeftPosition = 0f; // Left edge X position (0%)
+        public float handleRightPosition = 100f; // Right edge X position (100%)
+
         private bool isHidden = false;
         private CanvasGroup canvasGroup;
 
@@ -36,10 +41,21 @@ namespace OneShotSupport.UI.Components
             // Clamp value
             successPercentage = Mathf.Clamp(successPercentage, 1, 99);
 
-            // Update slider
+            // Calculate fill amount (0-1 range)
+            float fillAmount = successPercentage / 100f;
+
+            // Update fill image
             if (confidenceFillImage != null)
             {
-                confidenceFillImage.fillAmount = successPercentage;
+                confidenceFillImage.fillAmount = fillAmount;
+            }
+
+            // Update handle position
+            if (handleTransform != null)
+            {
+                // Lerp between left and right positions based on fill amount
+                float handleX = Mathf.Lerp(handleLeftPosition, handleRightPosition, fillAmount);
+                handleTransform.anchoredPosition = new Vector2(handleX, handleTransform.anchoredPosition.y);
             }
 
             // Update percentage text

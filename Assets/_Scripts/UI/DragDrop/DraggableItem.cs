@@ -67,10 +67,22 @@ namespace OneShotSupport.UI.DragDrop
             TryFindCanvas();
         }
 
+        /// <summary>
+        /// Change icon size based on slot type
+        /// isSmall = true for equipment slots (120x120)
+        /// isSmall = false for inventory slots (350x350)
+        /// </summary>
         public void ChangeIconSize(bool isSmall)
         {
-            RectTransform rt = itemIcon.GetComponent (typeof (RectTransform)) as RectTransform;
-            if (rt != null) rt.sizeDelta = isSmall ? new Vector2(120, 120) : new Vector2(350, 350);
+            if (itemIcon == null) return;
+
+            RectTransform rt = itemIcon.rectTransform;
+            if (rt != null)
+            {
+                Vector2 size = isSmall ? new Vector2(120, 120) : new Vector2(350, 350);
+                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size.x);
+                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size.y);
+            }
         }
 
         public void OnBeginDrag(PointerEventData eventData)
