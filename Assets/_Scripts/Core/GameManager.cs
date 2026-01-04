@@ -31,16 +31,14 @@ namespace OneShotSupport.Core
         [Tooltip("Monster generator for procedural monsters")]
         public MonsterGenerator monsterGenerator;
 
-        [Header("UI References")]
-        [Tooltip("Restock screen for crate purchasing")]
-        public UI.Screens.RestockScreen restockScreen;
-
-        [Tooltip("Consultation screen for hero equipping")]
-        public UI.Screens.ConsultationScreen consultationScreen;
-
         [Header("Managers")]
         [Tooltip("Gold manager for currency system")]
         public GoldManager goldManager;
+
+        [Header("UI References (Internal)")]
+        [Tooltip("Consultation screen reference for item recycling")]
+        [HideInInspector]
+        public UI.Screens.ConsultationScreen consultationScreen;
 
         // State machine
         private GameState currentState;
@@ -79,12 +77,6 @@ namespace OneShotSupport.Core
             // Start the game
             reputationManager.Initialize();
             reputationManager.OnReputationDepleted += HandleGameOver;
-
-            // Subscribe to restock screen events
-            if (restockScreen != null)
-            {
-                restockScreen.OnCratesPurchased += HandleCratesPurchased;
-            }
 
             ChangeState(GameState.DayStart);
         }
@@ -202,27 +194,18 @@ namespace OneShotSupport.Core
 
             Debug.Log($"[Restock] Generated {heroesPerDay} heroes");
 
-            // Show restock screen for crate purchasing
-            if (restockScreen != null)
-            {
-                restockScreen.Setup();
-            }
-            else
-            {
-                Debug.LogError("[Restock] RestockScreen not assigned! Skipping to consultation.");
-                ChangeState(GameState.Consultation);
-            }
+            // UI will show restock screen via UIManager
         }
 
         private void UpdateRestock()
         {
-            // Waiting for player to purchase crates and call HandleCratesPurchased()
+            // Waiting for player to purchase crates via UIManager
         }
 
         /// <summary>
-        /// Called by RestockScreen when player finishes purchasing crates
+        /// Called by UIManager when player finishes purchasing crates
         /// </summary>
-        private void HandleCratesPurchased(List<ItemData> purchasedItems)
+        public void CompleteCratePurchase(List<ItemData> purchasedItems)
         {
             Debug.Log($"[Restock] Received {purchasedItems.Count} items from crates");
             currentDay.availableItems = purchasedItems;

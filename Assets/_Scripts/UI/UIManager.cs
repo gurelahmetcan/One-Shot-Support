@@ -14,6 +14,7 @@ namespace OneShotSupport.UI
     public class UIManager : MonoBehaviour
     {
         [Header("Screens")]
+        public RestockScreen restockScreen;
         public ConsultationScreen consultationScreen;
         public DayEndScreen dayEndScreen;
         public GameOverScreen gameOverScreen;
@@ -21,6 +22,7 @@ namespace OneShotSupport.UI
         [Header("Persistent UI")]
         public ReputationBar reputationBar;
         public DayCounter dayCounter;
+        public GoldDisplay goldDisplay;
 
         [Header("Settings")]
         public bool autoHideScreens = true;
@@ -49,6 +51,12 @@ namespace OneShotSupport.UI
                 gameManager.Reputation.OnReputationChanged += HandleReputationChanged;
             }
 
+            // Subscribe to restock screen events
+            if (restockScreen != null)
+            {
+                restockScreen.OnCratesPurchased += HandleCratesPurchased;
+            }
+
             // Initialize UI
             InitializeUI();
         }
@@ -67,6 +75,12 @@ namespace OneShotSupport.UI
                 {
                     gameManager.Reputation.OnReputationChanged -= HandleReputationChanged;
                 }
+            }
+
+            // Unsubscribe from restock screen
+            if (restockScreen != null)
+            {
+                restockScreen.OnCratesPurchased -= HandleCratesPurchased;
             }
         }
 
@@ -105,6 +119,10 @@ namespace OneShotSupport.UI
             // Show/hide appropriate screens based on state
             switch (newState)
             {
+                case GameState.Restock:
+                    ShowRestockScreen();
+                    break;
+
                 case GameState.Consultation:
                     ShowConsultationScreen();
                     break;
@@ -118,7 +136,7 @@ namespace OneShotSupport.UI
                     break;
 
                 default:
-                    // For DayStart and Restock, keep current screen
+                    // For DayStart, keep current screen
                     break;
             }
 
@@ -177,10 +195,25 @@ namespace OneShotSupport.UI
             }
         }
 
+        /// <summary>
+        /// Handle crates purchased from restock screen
+        /// </summary>
+        private void HandleCratesPurchased(List<ScriptableObjects.ItemData> purchasedItems)
+        {
+            // Notify GameManager about purchased items
+            if (gameManager != null)
+            {
+                gameManager.CompleteCratePurchase(purchasedItems);
+            }
+        }
+
         // === Screen Management ===
 
         private void HideAllScreens()
         {
+            if (restockScreen != null)
+                restockScreen.gameObject.SetActive(false);
+
             if (consultationScreen != null)
                 consultationScreen.gameObject.SetActive(false);
 
@@ -189,6 +222,17 @@ namespace OneShotSupport.UI
 
             if (gameOverScreen != null)
                 gameOverScreen.gameObject.SetActive(false);
+        }
+
+        private void ShowRestockScreen()
+        {
+            HideAllScreens();
+
+            if (restockScreen != null)
+            {
+                restockScreen.Setup();
+                restockScreen.gameObject.SetActive(true);
+            }
         }
 
         private void ShowConsultationScreen()
