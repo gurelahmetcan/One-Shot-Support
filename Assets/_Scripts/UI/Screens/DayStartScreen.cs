@@ -32,7 +32,7 @@ namespace OneShotSupport.UI.Screens
         {
             // Update day number
             if (dayNumberText != null)
-                dayNumberText.text = $"DAY {dayNumber}";
+                dayNumberText.text = $"{dayNumber}";
 
             // Update hint message
             if (hintMessageText != null)

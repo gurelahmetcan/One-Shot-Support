@@ -17,6 +17,7 @@ namespace OneShotSupport.UI.Screens
         public GameObject resultEntryPrefab; // Prefab for each result
         public Button continueButton;
         public TextMeshProUGUI totalReputationText;
+        public TextMeshProUGUI totalMoneyText;
 
         [Header("Animation Settings")]
         public float delayBetweenResults = 0.5f;
@@ -41,7 +42,12 @@ namespace OneShotSupport.UI.Screens
 
             // Update total reputation
             if (totalReputationText != null)
-                totalReputationText.text = $"Total Reputation: {totalReputation}/100";
+                totalReputationText.text = $"{totalReputation}/100";
+
+            if (totalMoneyText != null)
+            {
+                totalMoneyText.text = $"{GameManager.Instance.goldManager.CurrentGold}";
+            }
 
             // Disable continue button during animation
             if (continueButton != null)
@@ -92,40 +98,8 @@ namespace OneShotSupport.UI.Screens
             if (resultEntryPrefab == null || resultsContainer == null) return;
 
             GameObject entryObj = Instantiate(resultEntryPrefab, resultsContainer);
+            entryObj.GetComponent<ResultEntryUI>().Initialize(result);
             resultEntries.Add(entryObj);
-
-            // Get components (assuming prefab has these)
-            var heroNameText = entryObj.transform.Find("HeroName")?.GetComponent<TextMeshProUGUI>();
-            var resultText = entryObj.transform.Find("Result")?.GetComponent<TextMeshProUGUI>();
-            var starsText = entryObj.transform.Find("Stars")?.GetComponent<TextMeshProUGUI>();
-            var reputationText = entryObj.transform.Find("Reputation")?.GetComponent<TextMeshProUGUI>();
-            var successChanceText = entryObj.transform.Find("SuccessChance")?.GetComponent<TextMeshProUGUI>();
-
-            // Populate data
-            if (heroNameText != null)
-                heroNameText.text = result.hero.heroName;
-
-            if (resultText != null)
-            {
-                string resultString = result.succeeded ? "<color=green>SUCCESS!</color>" : "<color=red>FAILED</color>";
-                resultText.text = resultString;
-            }
-
-            if (starsText != null)
-            {
-                string stars = new string('★', result.stars) + new string('☆', 5 - result.stars);
-                starsText.text = stars;
-            }
-
-            if (reputationText != null)
-            {
-                string sign = result.reputationChange > 0 ? "+" : "";
-                Color color = result.reputationChange > 0 ? Color.green : Color.red;
-                reputationText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{sign}{result.reputationChange}</color>";
-            }
-
-            if (successChanceText != null)
-                successChanceText.text = $"Chance: {result.successChance}%";
         }
 
         /// <summary>

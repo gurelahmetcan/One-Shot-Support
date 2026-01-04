@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using OneShotSupport.Data;
 using OneShotSupport.ScriptableObjects;
+using Random = UnityEngine.Random;
 
 namespace OneShotSupport.Core
 {

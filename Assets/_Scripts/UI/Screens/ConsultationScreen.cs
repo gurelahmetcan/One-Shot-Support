@@ -72,6 +72,7 @@ namespace OneShotSupport.UI.Screens
 
         [Header("UI Components")]
         public ConfidenceMeter confidenceMeter;
+        public ConfidenceMeter confidenceMeterMain;
         public ItemTooltip itemTooltip;
 
         private HeroResult currentHeroResult;
@@ -166,10 +167,12 @@ namespace OneShotSupport.UI.Screens
                 if (PerkModifier.HidesConfidenceMeter(heroResult.hero.perk))
                 {
                     confidenceMeter.Hide();
+                    confidenceMeterMain.Hide();
                 }
                 else
                 {
                     confidenceMeter.Show();
+                    confidenceMeterMain.Show();
                     UpdateConfidence();
                 }
             }
@@ -396,6 +399,7 @@ namespace OneShotSupport.UI.Screens
 
             // Update meter
             confidenceMeter.UpdateConfidence(successChance);
+            confidenceMeterMain.UpdateConfidence(successChance);
         }
 
         /// <summary>
