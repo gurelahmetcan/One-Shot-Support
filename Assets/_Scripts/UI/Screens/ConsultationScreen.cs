@@ -480,6 +480,15 @@ namespace OneShotSupport.UI.Screens
 
             if (itemTooltip != null)
                 itemTooltip.Hide();
+
+            // Tutorial: Advance from CheckConfidence to UnderstandHero when closing inventory
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                if (TutorialManager.Instance.GetCurrentStep() == TutorialStep.CheckConfidence)
+                {
+                    TutorialManager.Instance.CompleteCurrentStep(); // Advances to UnderstandHero
+                }
+            }
         }
 
         /// <summary>

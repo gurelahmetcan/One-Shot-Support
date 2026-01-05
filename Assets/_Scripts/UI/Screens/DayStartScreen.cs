@@ -39,36 +39,7 @@ namespace OneShotSupport.UI.Screens
             if (hintMessageText != null)
                 hintMessageText.text = hintMessage;
 
-            // Tutorial: Disable continue button during DayStartHint step
-            // Player will auto-advance after reading the hint
-            bool isTutorialDayStart = TutorialManager.Instance != null &&
-                                      TutorialManager.Instance.IsTutorialActive() &&
-                                      TutorialManager.Instance.GetCurrentStep() == TutorialStep.DayStartHint;
-
-            if (continueButton != null)
-            {
-                continueButton.gameObject.SetActive(!isTutorialDayStart);
-            }
-
             gameObject.SetActive(true);
-
-            // Tutorial: Auto-advance after a short delay during tutorial
-            if (isTutorialDayStart)
-            {
-                StartCoroutine(AutoAdvanceTutorial());
-            }
-        }
-
-        /// <summary>
-        /// Auto-advance tutorial after showing hint
-        /// </summary>
-        private System.Collections.IEnumerator AutoAdvanceTutorial()
-        {
-            // Wait for player to read the hint (3 seconds)
-            yield return new WaitForSeconds(3f);
-
-            // Auto-proceed
-            HandleContinue();
         }
 
         /// <summary>

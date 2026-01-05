@@ -26,6 +26,10 @@ namespace OneShotSupport.Tutorial
 
         [Header("UI Element References")]
         [SerializeField] private RectTransform openInventoryButtonTransform;
+        [SerializeField] private RectTransform continueButtonTransform;
+        [SerializeField] private RectTransform closeInventoryButtonTransform;
+        [SerializeField] private RectTransform heroPanelButtonTransform;
+        [SerializeField] private RectTransform sendHeroButtonTransform;
 
         // Tutorial step messages
         private readonly string[] stepMessages = new string[]
@@ -73,24 +77,43 @@ namespace OneShotSupport.Tutorial
             }
 
             // Show/hide continue button based on step
-            // Only show for reading-only steps (no action required)
+            // Only show continue button for CheckInventory step
             if (continueButton != null)
             {
-                bool showContinue = step == TutorialStep.CheckConfidence ||
-                                   step == TutorialStep.UnderstandHero;
+                bool showContinue = step == TutorialStep.CheckInventory;
                 continueButton.gameObject.SetActive(showContinue);
             }
 
             // Show hand animation for specific steps
             if (step == TutorialStep.ExamineMonster)
             {
-                // Point to inventory button
-                ShowHandPointingAtInventoryButton();
+                // Point to open inventory button
+                ShowHandPointingAt(openInventoryButtonTransform);
+            }
+            else if (step == TutorialStep.CheckInventory)
+            {
+                // Point to continue button
+                ShowHandPointingAt(continueButtonTransform);
             }
             else if (step == TutorialStep.DragItem)
             {
                 // Animate dragging motion
-                ShowHandAnimation();
+                ShowHandDraggingAnimation();
+            }
+            else if (step == TutorialStep.CheckConfidence)
+            {
+                // Point to close inventory button
+                ShowHandPointingAt(closeInventoryButtonTransform);
+            }
+            else if (step == TutorialStep.UnderstandHero)
+            {
+                // Point to hero panel button
+                ShowHandPointingAt(heroPanelButtonTransform);
+            }
+            else if (step == TutorialStep.SendHero)
+            {
+                // Point to send hero button
+                ShowHandPointingAt(sendHeroButtonTransform);
             }
             else
             {
@@ -110,29 +133,29 @@ namespace OneShotSupport.Tutorial
         }
 
         /// <summary>
-        /// Show hand pointing at inventory button
+        /// Show hand pointing at a specific UI element
         /// </summary>
-        private void ShowHandPointingAtInventoryButton()
+        private void ShowHandPointingAt(RectTransform targetTransform)
         {
-            if (handSprite != null && handTransform != null && openInventoryButtonTransform != null)
+            if (handSprite != null && handTransform != null && targetTransform != null)
             {
                 handSprite.SetActive(true);
-                // Position hand near inventory button
-                handTransform.position = openInventoryButtonTransform.position;
+                // Position hand near target button
+                handTransform.position = targetTransform.position;
                 // Start pulsing animation to draw attention
                 StartCoroutine(PulseHand());
             }
         }
 
         /// <summary>
-        /// Show hand animation for dragging
+        /// Show hand animation for dragging items
         /// </summary>
-        private void ShowHandAnimation()
+        private void ShowHandDraggingAnimation()
         {
             if (handSprite != null)
             {
                 handSprite.SetActive(true);
-                StartCoroutine(AnimateHand());
+                StartCoroutine(AnimateHandDragging());
             }
         }
 
@@ -179,7 +202,7 @@ namespace OneShotSupport.Tutorial
         /// <summary>
         /// Animate hand movement (inventory to equipment slot)
         /// </summary>
-        private IEnumerator AnimateHand()
+        private IEnumerator AnimateHandDragging()
         {
             if (handTransform == null) yield break;
 
