@@ -17,24 +17,24 @@ MonoBehaviour:
   - Today the weather smells a bit bad...
   - The air feels unclean today.
   - A strange odor lingers in the atmosphere.
-  - Everything seems a bit grimy today.
-  - The streets are dirtier than usual.
+  - I should clean this place sometime, it smells like someone died here.
+  - 'Did I shower this week? I can''t quite remember... '
   magicHints:
   - Strange arcane energies fill the air...
-  - The stars align in mysterious ways today.
+  - I feel foreign forces at play today.
   - Magical disturbances are detected.
-  - Ancient runes glow faintly in the distance.
+  - You see this pen? Now you don't. -OR- I will make this pen disappear -- TADAA
   - The fabric of reality feels thin today.
   cateringHints:
   - Everyone seems extra hungry today...
   - The scent of fresh bread fills the air.
   - Stomachs are rumbling more than usual.
-  - Food supplies are running low in town.
-  - The tavern is busier than normal.
+  - 'Do I smell popcorn ? '
+  - 'Maybe I shouldn''t have skipped breakfast today... '
   lightingHints:
   - The day seems darker than usual...
-  - Shadows are deeper today.
-  - Storm clouds gather on the horizon.
+  - 'Maybe I need more lamps in the shop. '
+  - 'Bright new day, brave new heros to meet. '
   - The sun is obscured by dark clouds.
   - Night seems to arrive early today.
   normalDayMessage: Today everything feels normal.

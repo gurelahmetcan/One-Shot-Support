@@ -36,10 +36,10 @@ namespace OneShotSupport.Tutorial
         private readonly string[] stepMessages = new string[]
         {
             "", // None
-            "Welcome to One-Shot Support!\n\nEach day starts with a HINT that tells you which items might be useful.\n\nPay attention to these hints - they help you prepare for the heroes!",
+            "Welcome to One-Shot Sale!\n\nEach day starts with a HINT that tells you which items might be useful.\n\nPay attention to these hints - they help you prepare for the heroes!",
             "This is the MONSTER your hero will face.\n\nLook at the WEAKNESS - this tells you which item category is most effective!\n\nNow click the OPEN INVENTORY button to see your items.",
             "Here are your ITEMS.\n\nNotice the different CATEGORIES (Hygiene, Magic, Catering, Lighting).\n\nItems matching the monster's weakness are more effective!",
-            "Now, DRAG items from inventory to the EQUIPMENT SLOTS.\n\nTry dragging an item that MATCHES the monster's weakness!",
+            "Now, DRAG items from inventory to the HERO'S CART.\n\nTry dragging an item that MATCHES the monster's weakness!",
             "See the CONFIDENCE METER?\n\nIt shows your hero's chance of success.\n\nMatching items increase confidence. More items = better chance!",
             "Check your HERO'S STATS:\n\n- BASE CHANCE: Starting success percentage\n- SLOTS: How many items they can carry\n- PERK: Special ability\n\nDifferent heroes have different strengths!",
             "Great job! Now click SEND HERO to send them on their quest!\n\nGood luck!",

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edebb59fb2bc5480aa9b239e2db90de4, type: 3}
+  m_Name: TutorialData
+  m_EditorClassIdentifier: 
+  tutorialHero: {fileID: 11400000, guid: c17d83199e544418eb785a3f561a30d4, type: 2}
+  tutorialMonster: {fileID: 11400000, guid: b96635d785efe449f90a1453e40cdd82, type: 2}
+  tutorialItems:
+  - {fileID: 11400000, guid: a469ff78ab6124a19a9a35abf88312c1, type: 2}
+  - {fileID: 11400000, guid: 2a28be20c8a65417ab2d3466fd40a07a, type: 2}
+  - {fileID: 11400000, guid: c3fb4475da2354ff585d0850349f3cf0, type: 2}
+  - {fileID: 11400000, guid: 12803d20d38434fc0b8f1c79bdc5ba60, type: 2}
+  - {fileID: 11400000, guid: 41ca0c5e2939648ae955b86f9e3131ec, type: 2}
+  - {fileID: 11400000, guid: 761248941ee4c41dea2632eb0131c1a8, type: 2}
+  tutorialHint: Today, heroes seeking magical assistance might visit your shop!
