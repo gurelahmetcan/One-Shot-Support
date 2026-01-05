@@ -139,9 +139,14 @@ namespace OneShotSupport.Tutorial
         {
             if (handSprite != null && handTransform != null && targetTransform != null)
             {
+                // Stop any previous animations
+                StopAllCoroutines();
+
                 handSprite.SetActive(true);
                 // Position hand near target button
                 handTransform.position = targetTransform.position;
+                // Reset scale to normal in case it was pulsing
+                handTransform.localScale = Vector3.one;
                 // Start pulsing animation to draw attention
                 StartCoroutine(PulseHand());
             }
@@ -154,7 +159,12 @@ namespace OneShotSupport.Tutorial
         {
             if (handSprite != null)
             {
+                // Stop any previous animations
+                StopAllCoroutines();
+
                 handSprite.SetActive(true);
+                // Reset scale to normal in case it was pulsing
+                handTransform.localScale = Vector3.one;
                 StartCoroutine(AnimateHandDragging());
             }
         }
