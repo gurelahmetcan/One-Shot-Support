@@ -24,12 +24,13 @@ namespace OneShotSupport.Tutorial
         [Header("Highlight Overlay")]
         [SerializeField] private GameObject highlightOverlay;
 
-        [Header("UI Element References")]
-        [SerializeField] private RectTransform openInventoryButtonTransform;
-        [SerializeField] private RectTransform continueButtonTransform;
-        [SerializeField] private RectTransform closeInventoryButtonTransform;
-        [SerializeField] private RectTransform heroPanelButtonTransform;
-        [SerializeField] private RectTransform sendHeroButtonTransform;
+        [Header("Hand Target Positions")]
+        [Tooltip("Create empty GameObjects positioned exactly where hand should point for each step")]
+        [SerializeField] private RectTransform handTargetOpenInventory;
+        [SerializeField] private RectTransform handTargetContinueButton;
+        [SerializeField] private RectTransform handTargetCloseInventory;
+        [SerializeField] private RectTransform handTargetHeroPanel;
+        [SerializeField] private RectTransform handTargetSendHero;
 
         // Tutorial step messages
         private readonly string[] stepMessages = new string[]
@@ -88,12 +89,12 @@ namespace OneShotSupport.Tutorial
             if (step == TutorialStep.ExamineMonster)
             {
                 // Point to open inventory button
-                ShowHandPointingAt(openInventoryButtonTransform);
+                ShowHandPointingAt(handTargetOpenInventory);
             }
             else if (step == TutorialStep.CheckInventory)
             {
                 // Point to continue button
-                ShowHandPointingAt(continueButtonTransform);
+                ShowHandPointingAt(handTargetContinueButton);
             }
             else if (step == TutorialStep.DragItem)
             {
@@ -103,17 +104,17 @@ namespace OneShotSupport.Tutorial
             else if (step == TutorialStep.CheckConfidence)
             {
                 // Point to close inventory button
-                ShowHandPointingAt(closeInventoryButtonTransform);
+                ShowHandPointingAt(handTargetCloseInventory);
             }
             else if (step == TutorialStep.UnderstandHero)
             {
                 // Point to hero panel button
-                ShowHandPointingAt(heroPanelButtonTransform);
+                ShowHandPointingAt(handTargetHeroPanel);
             }
             else if (step == TutorialStep.SendHero)
             {
                 // Point to send hero button
-                ShowHandPointingAt(sendHeroButtonTransform);
+                ShowHandPointingAt(handTargetSendHero);
             }
             else
             {

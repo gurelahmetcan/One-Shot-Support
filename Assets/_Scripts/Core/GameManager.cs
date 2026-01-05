@@ -358,6 +358,13 @@ namespace OneShotSupport.Core
             // Roll for success
             currentHero.succeeded = OneShotCalculator.RollOneShot(currentHero.successChance);
 
+            // Tutorial: Force success during tutorial (always win)
+            if (tutorialManager != null && tutorialManager.IsTutorialActive())
+            {
+                currentHero.succeeded = true;
+                Debug.Log("[Tutorial] Forced hero success - tutorial hero always wins!");
+            }
+
             // Calculate review
             var (stars, repChange) = OneShotCalculator.CalculateReview(
                 currentHero.confidence,
