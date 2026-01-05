@@ -24,12 +24,15 @@ namespace OneShotSupport.Tutorial
         [Header("Highlight Overlay")]
         [SerializeField] private GameObject highlightOverlay;
 
+        [Header("UI Element References")]
+        [SerializeField] private RectTransform openInventoryButtonTransform;
+
         // Tutorial step messages
         private readonly string[] stepMessages = new string[]
         {
             "", // None
             "Welcome to One-Shot Support!\n\nEach day starts with a HINT that tells you which items might be useful.\n\nPay attention to these hints - they help you prepare for the heroes!",
-            "This is the MONSTER your hero will face.\n\nLook at the WEAKNESS - this tells you which item category is most effective!",
+            "This is the MONSTER your hero will face.\n\nLook at the WEAKNESS - this tells you which item category is most effective!\n\nNow click the OPEN INVENTORY button to see your items.",
             "Here are your ITEMS.\n\nNotice the different CATEGORIES (Hygiene, Magic, Catering, Lighting).\n\nItems matching the monster's weakness are more effective!",
             "Now, DRAG items from inventory to the EQUIPMENT SLOTS.\n\nTry dragging an item that MATCHES the monster's weakness!",
             "See the CONFIDENCE METER?\n\nIt shows your hero's chance of success.\n\nMatching items increase confidence. More items = better chance!",
@@ -70,20 +73,23 @@ namespace OneShotSupport.Tutorial
             }
 
             // Show/hide continue button based on step
+            // Only show for reading-only steps (no action required)
             if (continueButton != null)
             {
-                // Only show continue button for informational steps
-                bool showContinue = step == TutorialStep.DayStartHint ||
-                                   step == TutorialStep.ExamineMonster ||
-                                   step == TutorialStep.CheckInventory ||
-                                   step == TutorialStep.CheckConfidence ||
+                bool showContinue = step == TutorialStep.CheckConfidence ||
                                    step == TutorialStep.UnderstandHero;
                 continueButton.gameObject.SetActive(showContinue);
             }
 
-            // Show hand animation for drag step
-            if (step == TutorialStep.DragItem)
+            // Show hand animation for specific steps
+            if (step == TutorialStep.ExamineMonster)
             {
+                // Point to inventory button
+                ShowHandPointingAtInventoryButton();
+            }
+            else if (step == TutorialStep.DragItem)
+            {
+                // Animate dragging motion
                 ShowHandAnimation();
             }
             else
@@ -101,6 +107,21 @@ namespace OneShotSupport.Tutorial
                 instructionPanel.SetActive(false);
 
             HideHandAnimation();
+        }
+
+        /// <summary>
+        /// Show hand pointing at inventory button
+        /// </summary>
+        private void ShowHandPointingAtInventoryButton()
+        {
+            if (handSprite != null && handTransform != null && openInventoryButtonTransform != null)
+            {
+                handSprite.SetActive(true);
+                // Position hand near inventory button
+                handTransform.position = openInventoryButtonTransform.position;
+                // Start pulsing animation to draw attention
+                StartCoroutine(PulseHand());
+            }
         }
 
         /// <summary>
@@ -124,6 +145,34 @@ namespace OneShotSupport.Tutorial
             {
                 handSprite.SetActive(false);
                 StopAllCoroutines();
+            }
+        }
+
+        /// <summary>
+        /// Pulse hand to draw attention
+        /// </summary>
+        private IEnumerator PulseHand()
+        {
+            if (handTransform == null) yield break;
+
+            Vector3 originalScale = handTransform.localScale;
+
+            while (true)
+            {
+                // Scale up
+                float elapsed = 0f;
+                float pulseDuration = 0.5f;
+                while (elapsed < pulseDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = elapsed / pulseDuration;
+                    float scale = Mathf.Lerp(1f, 1.2f, Mathf.Sin(t * Mathf.PI));
+                    handTransform.localScale = originalScale * scale;
+                    yield return null;
+                }
+
+                handTransform.localScale = originalScale;
+                yield return new WaitForSeconds(0.3f);
             }
         }
 
