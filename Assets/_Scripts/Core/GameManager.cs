@@ -76,7 +76,7 @@ namespace OneShotSupport.Core
                 return;
             }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
 
             // Initialize systems
             reputationManager = new ReputationManager();
