@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,67 +7,91 @@ using TMPro;
 using OneShotSupport.Core;
 using OneShotSupport.Data;
 using OneShotSupport.ScriptableObjects;
+using OneShotSupport.UI.Components;
 
 namespace OneShotSupport.UI.Screens
 {
     /// <summary>
-    /// Screen for purchasing item crates at the start of each day
-    /// Players can buy up to 2 different crates
+    /// Data structure for tracking each item slot in the gacha restock system
+    /// </summary>
+    [System.Serializable]
+    public class ItemSlotRestock
+    {
+        public ItemData currentItem;
+        public bool isLocked;
+        public int timesRerolled;
+
+        public ItemSlotRestock()
+        {
+            currentItem = null;
+            isLocked = false;
+            timesRerolled = 0;
+        }
+
+        /// <summary>
+        /// Get the cost to reroll this slot
+        /// Formula: 5 + (timesRerolled * 2)
+        /// </summary>
+        public int GetRerollCost()
+        {
+            return 5 + (timesRerolled * 2);
+        }
+    }
+
+    /// <summary>
+    /// Screen for the gacha-style item restock system
+    /// Players get 6 random items and can reroll individual items for gold
     /// </summary>
     public class RestockScreen : MonoBehaviour
     {
-        [Header("Crate Buttons")]
-        [SerializeField] private Button cheapCrateButton;
-        [SerializeField] private Button mediumCrateButton;
-        [SerializeField] private Button premiumCrateButton;
+        [Header("Item Slot UI References")]
+        [SerializeField] private ItemSlotUI[] itemSlotUIs = new ItemSlotUI[6];
 
-        [Header("Crate Info Texts")]
-        [SerializeField] private TextMeshProUGUI cheapCrateText;
-        [SerializeField] private TextMeshProUGUI mediumCrateText;
-        [SerializeField] private TextMeshProUGUI premiumCrateText;
-
-        [Header("Category Selection (Premium Crate)")]
-        [SerializeField] private GameObject categorySelectionPanel;
-        [SerializeField] private Button[] categoryButtons; // 4 buttons for Hygiene, Magic, Catering, Lighting
-
-        [Header("Item Preview Slots")]
-        [SerializeField] private Image[] itemPreviewSlots = new Image[6]; // Bottom slots to show purchased items
-
-        [Header("Continue Button")]
+        [Header("Bottom Bar")]
+        [SerializeField] private TextMeshProUGUI goldText;
+        [SerializeField] private Button rerollAllButton;
+        [SerializeField] private TextMeshProUGUI rerollAllCostText;
         [SerializeField] private Button continueButton;
 
         [Header("References")]
         [SerializeField] private ItemDatabase itemDatabase;
 
+        [Header("Animation Settings")]
+        [SerializeField] private float flipDuration = 0.2f;
+
+        [Header("Costs")]
+        [SerializeField] private int rerollAllCost = 20;
+
         // Events
         public event Action<List<ItemData>> OnCratesPurchased;
 
         // State
-        private List<ItemData> purchasedItems = new List<ItemData>();
-        private HashSet<CrateType> purchasedCrates = new HashSet<CrateType>();
-        private ItemCategory mediumCrateCategory; // Single random category for medium crate
-        private const int MAX_CRATES = 2;
+        private ItemSlotRestock[] itemSlots = new ItemSlotRestock[6];
+        private ItemCategory? hintedCategory = null;
+        private bool isAnimating = false;
 
         private void Awake()
         {
-            // Setup button listeners
-            cheapCrateButton?.onClick.AddListener(() => OnCrateButtonClicked(CrateType.Cheap));
-            mediumCrateButton?.onClick.AddListener(() => OnCrateButtonClicked(CrateType.Medium));
-            premiumCrateButton?.onClick.AddListener(() => OnCrateButtonClicked(CrateType.Premium));
-            continueButton?.onClick.AddListener(OnContinueClicked);
-
-            // Setup category selection buttons
-            if (categoryButtons != null)
+            // Initialize slot data
+            for (int i = 0; i < 6; i++)
             {
-                for (int i = 0; i < categoryButtons.Length && i < 4; i++)
-                {
-                    int categoryIndex = i;
-                    categoryButtons[i]?.onClick.AddListener(() => OnCategorySelected((ItemCategory)categoryIndex));
-                }
+                itemSlots[i] = new ItemSlotRestock();
             }
 
-            if (categorySelectionPanel != null)
-                categorySelectionPanel.SetActive(false);
+            // Setup button listeners
+            continueButton?.onClick.AddListener(OnContinueClicked);
+            rerollAllButton?.onClick.AddListener(OnRerollAllClicked);
+
+            // Setup item slot callbacks
+            for (int i = 0; i < itemSlotUIs.Length; i++)
+            {
+                int slotIndex = i; // Capture for closure
+                if (itemSlotUIs[i] != null)
+                {
+                    itemSlotUIs[i].OnRerollClicked += () => OnSlotRerollClicked(slotIndex);
+                    itemSlotUIs[i].OnLockToggled += () => OnSlotLockToggled(slotIndex);
+                }
+            }
         }
 
         /// <summary>
@@ -74,231 +99,393 @@ namespace OneShotSupport.UI.Screens
         /// </summary>
         public void Setup()
         {
-            purchasedItems.Clear();
-            purchasedCrates.Clear();
+            // Get the daily hint if available
+            hintedCategory = null;
+            if (GameManager.Instance != null)
+            {
+                var hint = GameManager.Instance.CurrentDayHint;
+                if (hint != null && hint.hasHint && hint.hintedWeakness.HasValue)
+                {
+                    hintedCategory = hint.hintedWeakness.Value;
+                }
+            }
 
-            // Generate ONE random category for medium crate
-            mediumCrateCategory = (ItemCategory)UnityEngine.Random.Range(0, 4);
+            // Reset all slots
+            for (int i = 0; i < 6; i++)
+            {
+                itemSlots[i] = new ItemSlotRestock();
+            }
 
-            // Clear item preview slots
-            ClearItemPreview();
+            // Generate initial items
+            GenerateInitialItems();
 
-            UpdateUI();
+            // Subscribe to gold changes
+            if (GameManager.Instance?.goldManager != null)
+            {
+                GameManager.Instance.goldManager.OnGoldChanged -= OnGoldChanged;
+                GameManager.Instance.goldManager.OnGoldChanged += OnGoldChanged;
+            }
+
+            // Update UI
+            UpdateAllUI();
             gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// Generate the initial 6 items
+        /// If daily hint exists, guarantee 2 items from the hinted category
+        /// </summary>
+        private void GenerateInitialItems()
+        {
+            if (itemDatabase == null)
+            {
+                Debug.LogError("[RestockScreen] ItemDatabase is null!");
+                return;
+            }
+
+            int hintedItemCount = 0;
+            int maxHintedItems = 2;
+
+            for (int i = 0; i < 6; i++)
+            {
+                ItemData item;
+
+                // If we have a hint and haven't placed enough hinted items yet
+                if (hintedCategory.HasValue && hintedItemCount < maxHintedItems)
+                {
+                    item = itemDatabase.GetRandomItemOfCategory(hintedCategory.Value);
+                    hintedItemCount++;
+                }
+                else
+                {
+                    item = itemDatabase.GetRandomItem();
+                }
+
+                itemSlots[i].currentItem = item;
+                itemSlots[i].isLocked = false;
+                itemSlots[i].timesRerolled = 0;
+            }
+
+            Debug.Log($"[RestockScreen] Generated 6 items. Hinted category: {hintedCategory?.ToString() ?? "None"}");
+        }
+
+        /// <summary>
+        /// Handle individual slot reroll click
+        /// </summary>
+        private void OnSlotRerollClicked(int slotIndex)
+        {
+            if (isAnimating) return;
+            if (slotIndex < 0 || slotIndex >= 6) return;
+            if (itemSlots[slotIndex].isLocked) return;
+
+            int cost = itemSlots[slotIndex].GetRerollCost();
+
+            // Try to spend gold
+            if (!GameManager.Instance.goldManager.TrySpendGold(cost))
+            {
+                Debug.Log($"[RestockScreen] Not enough gold to reroll slot {slotIndex}. Need {cost}g");
+                return;
+            }
+
+            // Play reroll sound
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayButtonClickSound();
+            }
+
+            // Start flip animation and generate new item
+            StartCoroutine(FlipAndRerollSlot(slotIndex));
+        }
+
+        /// <summary>
+        /// Flip animation coroutine for a single slot
+        /// </summary>
+        private IEnumerator FlipAndRerollSlot(int slotIndex)
+        {
+            isAnimating = true;
+
+            var slotUI = itemSlotUIs[slotIndex];
+            if (slotUI != null)
+            {
+                // Flip backward (scale X from 1 to 0)
+                yield return StartCoroutine(AnimateFlip(slotUI.transform, 1f, 0f, flipDuration));
+
+                // Generate new item
+                itemSlots[slotIndex].currentItem = itemDatabase.GetRandomItem();
+                itemSlots[slotIndex].timesRerolled++;
+
+                // Update slot display (while flipped)
+                UpdateSlotUI(slotIndex);
+
+                // Flip forward (scale X from 0 to 1)
+                yield return StartCoroutine(AnimateFlip(slotUI.transform, 0f, 1f, flipDuration));
+            }
+
+            // Update UI to show new cost
+            UpdateAllUI();
+            isAnimating = false;
+        }
+
+        /// <summary>
+        /// Animate the flip by scaling X
+        /// </summary>
+        private IEnumerator AnimateFlip(Transform target, float fromScale, float toScale, float duration)
+        {
+            float elapsed = 0f;
+            Vector3 scale = target.localScale;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                // Use ease-in-out for smoother animation
+                t = t * t * (3f - 2f * t);
+                scale.x = Mathf.Lerp(fromScale, toScale, t);
+                target.localScale = scale;
+                yield return null;
+            }
+
+            scale.x = toScale;
+            target.localScale = scale;
+        }
+
+        /// <summary>
+        /// Handle slot lock toggle
+        /// </summary>
+        private void OnSlotLockToggled(int slotIndex)
+        {
+            if (isAnimating) return;
+            if (slotIndex < 0 || slotIndex >= 6) return;
+
+            // Toggle lock
+            itemSlots[slotIndex].isLocked = !itemSlots[slotIndex].isLocked;
+
+            // Play sound
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayButtonClickSound();
+            }
+
+            // Update UI
+            UpdateSlotUI(slotIndex);
+            UpdateRerollAllButton();
+        }
+
+        /// <summary>
+        /// Handle Reroll All button click
+        /// </summary>
+        private void OnRerollAllClicked()
+        {
+            if (isAnimating) return;
+
+            // Check if at least one item is unlocked
+            int unlockedCount = 0;
+            for (int i = 0; i < 6; i++)
+            {
+                if (!itemSlots[i].isLocked) unlockedCount++;
+            }
+
+            if (unlockedCount == 0)
+            {
+                Debug.Log("[RestockScreen] No unlocked items to reroll");
+                return;
+            }
+
+            // Try to spend gold
+            if (!GameManager.Instance.goldManager.TrySpendGold(rerollAllCost))
+            {
+                Debug.Log($"[RestockScreen] Not enough gold for Reroll All. Need {rerollAllCost}g");
+                return;
+            }
+
+            // Play sound
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayCratePurchaseSound();
+            }
+
+            // Start reroll all animation
+            StartCoroutine(RerollAllUnlocked());
+        }
+
+        /// <summary>
+        /// Coroutine to reroll all unlocked items simultaneously
+        /// </summary>
+        private IEnumerator RerollAllUnlocked()
+        {
+            isAnimating = true;
+
+            List<int> unlockedIndices = new List<int>();
+            for (int i = 0; i < 6; i++)
+            {
+                if (!itemSlots[i].isLocked)
+                {
+                    unlockedIndices.Add(i);
+                }
+            }
+
+            // Start all flip-back animations
+            List<Coroutine> flipCoroutines = new List<Coroutine>();
+            foreach (int index in unlockedIndices)
+            {
+                if (itemSlotUIs[index] != null)
+                {
+                    flipCoroutines.Add(StartCoroutine(AnimateFlip(itemSlotUIs[index].transform, 1f, 0f, flipDuration)));
+                }
+            }
+
+            // Wait for all to complete
+            yield return new WaitForSeconds(flipDuration);
+
+            // Generate new items for all unlocked slots
+            foreach (int index in unlockedIndices)
+            {
+                itemSlots[index].currentItem = itemDatabase.GetRandomItem();
+                itemSlots[index].timesRerolled++;
+                UpdateSlotUI(index);
+            }
+
+            // Start all flip-forward animations
+            foreach (int index in unlockedIndices)
+            {
+                if (itemSlotUIs[index] != null)
+                {
+                    StartCoroutine(AnimateFlip(itemSlotUIs[index].transform, 0f, 1f, flipDuration));
+                }
+            }
+
+            // Wait for animations
+            yield return new WaitForSeconds(flipDuration);
+
+            UpdateAllUI();
+            isAnimating = false;
+        }
+
+        /// <summary>
+        /// Handle continue button click
+        /// </summary>
+        private void OnContinueClicked()
+        {
+            if (isAnimating) return;
+
+            // Collect all current items
+            List<ItemData> collectedItems = new List<ItemData>();
+            for (int i = 0; i < 6; i++)
+            {
+                if (itemSlots[i].currentItem != null)
+                {
+                    collectedItems.Add(itemSlots[i].currentItem);
+                }
+            }
+
+            Debug.Log($"[RestockScreen] Continuing with {collectedItems.Count} items");
+
+            // Unsubscribe from gold changes
+            if (GameManager.Instance?.goldManager != null)
+            {
+                GameManager.Instance.goldManager.OnGoldChanged -= OnGoldChanged;
+            }
+
+            // Fire event
+            OnCratesPurchased?.Invoke(collectedItems);
+            gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Handle gold changes
+        /// </summary>
+        private void OnGoldChanged(int newGold)
+        {
+            UpdateGoldDisplay();
+            UpdateAllSlotButtons();
+            UpdateRerollAllButton();
         }
 
         /// <summary>
         /// Update all UI elements
         /// </summary>
-        private void UpdateUI()
+        private void UpdateAllUI()
         {
-            int cratesPurchased = purchasedCrates.Count;
-            bool canBuyMore = cratesPurchased < MAX_CRATES;
+            UpdateGoldDisplay();
 
-            // Cheap crate
-            UpdateCrateButton(cheapCrateButton, cheapCrateText, CrateType.Cheap,
-                "3 Random Items\n (Random Category)", canBuyMore);
+            for (int i = 0; i < 6; i++)
+            {
+                UpdateSlotUI(i);
+            }
 
-            // Medium crate (shows single random category)
-            string mediumDesc = $"3 Random Items\n ({mediumCrateCategory} Category)";
-            UpdateCrateButton(mediumCrateButton, mediumCrateText, CrateType.Medium, mediumDesc, canBuyMore);
-
-            // Premium crate
-            UpdateCrateButton(premiumCrateButton, premiumCrateText, CrateType.Premium,
-                "3 Random Items\n(Select Category)", canBuyMore);
-            
-            // Continue button
-            if (continueButton != null)
-                continueButton.interactable = cratesPurchased > 0;
+            UpdateRerollAllButton();
         }
 
         /// <summary>
-        /// Update individual crate button state
+        /// Update gold display
         /// </summary>
-        private void UpdateCrateButton(Button button, TextMeshProUGUI text, CrateType crateType, string description, bool canBuyMore)
+        private void UpdateGoldDisplay()
         {
-            if (button == null || text == null) return;
-
-            int cost = GameManager.Instance.goldManager.GetCrateCost(crateType);
-            bool alreadyPurchased = purchasedCrates.Contains(crateType);
-            bool canAfford = GameManager.Instance.goldManager.CanAffordCrate(crateType);
-
-            // Button state
-            button.interactable = !alreadyPurchased && canBuyMore && canAfford;
-
-            // Text
-            string statusText = "";
-            if (alreadyPurchased)
-                statusText = "\n[PURCHASED]";
-            else if (!canBuyMore)
-                statusText = "\n[MAX CRATES]";
-            else if (!canAfford)
-                statusText = "\n[NOT ENOUGH GOLD]";
-
-            text.text = $"{description} {statusText}";
-        }
-
-        /// <summary>
-        /// Handle crate button click
-        /// </summary>
-        private void OnCrateButtonClicked(CrateType crateType)
-        {
-            if (purchasedCrates.Count >= MAX_CRATES)
+            if (goldText != null && GameManager.Instance?.goldManager != null)
             {
-                Debug.LogWarning("[RestockScreen] Already purchased maximum crates!");
-                return;
-            }
-
-            if (purchasedCrates.Contains(crateType))
-            {
-                Debug.LogWarning($"[RestockScreen] Already purchased {crateType} crate!");
-                return;
-            }
-
-            // Premium crate needs category selection
-            if (crateType == CrateType.Premium)
-            {
-                ShowCategorySelection();
-                return;
-            }
-
-            // Try to purchase
-            PurchaseCrate(crateType, null);
-        }
-
-        /// <summary>
-        /// Show category selection panel for premium crate
-        /// </summary>
-        private void ShowCategorySelection()
-        {
-            if (categorySelectionPanel != null)
-                categorySelectionPanel.SetActive(true);
-
-            // Update category button labels
-            if (categoryButtons != null)
-            {
-                for (int i = 0; i < categoryButtons.Length && i < 4; i++)
-                {
-                    var buttonText = categoryButtons[i].GetComponentInChildren<TextMeshProUGUI>();
-                    if (buttonText != null)
-                    {
-                        ItemCategory category = (ItemCategory)i;
-                        buttonText.text = category.ToString();
-                    }
-                }
+                goldText.text = $"{GameManager.Instance.goldManager.CurrentGold}g";
             }
         }
 
         /// <summary>
-        /// Handle category selection for premium crate
+        /// Update a specific slot's UI
         /// </summary>
-        private void OnCategorySelected(ItemCategory category)
+        private void UpdateSlotUI(int slotIndex)
         {
-            if (categorySelectionPanel != null)
-                categorySelectionPanel.SetActive(false);
+            if (slotIndex < 0 || slotIndex >= itemSlotUIs.Length) return;
+            if (itemSlotUIs[slotIndex] == null) return;
 
-            PurchaseCrate(CrateType.Premium, category);
+            var slot = itemSlots[slotIndex];
+            var slotUI = itemSlotUIs[slotIndex];
+
+            int currentGold = GameManager.Instance?.goldManager?.CurrentGold ?? 0;
+            bool canAfford = currentGold >= slot.GetRerollCost();
+
+            slotUI.UpdateDisplay(
+                slot.currentItem,
+                slot.isLocked,
+                slot.GetRerollCost(),
+                canAfford && !slot.isLocked
+            );
         }
 
         /// <summary>
-        /// Purchase a crate and generate items
+        /// Update all slot buttons based on current gold
         /// </summary>
-        private void PurchaseCrate(CrateType crateType, ItemCategory? selectedCategory)
+        private void UpdateAllSlotButtons()
         {
-            if (itemDatabase == null) return;
-
-            // Try to spend gold
-            int cost = GameManager.Instance.goldManager.GetCrateCost(crateType);
-            if (!GameManager.Instance.goldManager.TrySpendGold(cost))
-                return;
-
-            // Mark as purchased
-            purchasedCrates.Add(crateType);
-
-            // Generate 3 items based on crate type
-            List<ItemData> crateItems = GenerateCrateItems(crateType, selectedCategory);
-            purchasedItems.AddRange(crateItems);
-
-            // Play crate purchase sound
-            if (Core.AudioManager.Instance != null)
+            for (int i = 0; i < 6; i++)
             {
-                Core.AudioManager.Instance.PlayCratePurchaseSound();
+                UpdateSlotUI(i);
             }
-
-            Debug.Log($"[RestockScreen] Purchased {crateType} crate for {cost}g. Got {crateItems.Count} items.");
-
-            // Update item preview display
-            UpdateItemPreview();
-
-            // Update UI
-            UpdateUI();
         }
 
         /// <summary>
-        /// Generate items for a purchased crate
+        /// Update the Reroll All button state
         /// </summary>
-        private List<ItemData> GenerateCrateItems(CrateType crateType, ItemCategory? selectedCategory)
+        private void UpdateRerollAllButton()
         {
-            List<ItemData> items = new List<ItemData>();
-            HashSet<ItemCategory> usedCategories = new HashSet<ItemCategory>(); // Track used categories for cheap crate
+            if (rerollAllButton == null) return;
 
-            for (int i = 0; i < 3; i++)
+            int currentGold = GameManager.Instance?.goldManager?.CurrentGold ?? 0;
+            bool canAfford = currentGold >= rerollAllCost;
+
+            // Count unlocked items
+            int unlockedCount = 0;
+            for (int i = 0; i < 6; i++)
             {
-                ItemData item = null;
-
-                switch (crateType)
-                {
-                    case CrateType.Cheap:
-                        // Get items from DIFFERENT categories
-                        // Try to get an item from a category we haven't used yet
-                        int attempts = 0;
-                        const int maxAttempts = 20; // Prevent infinite loop
-
-                        do
-                        {
-                            item = itemDatabase.GetRandomItem();
-                            attempts++;
-                        }
-                        while (item != null && usedCategories.Contains(item.category) && attempts < maxAttempts);
-
-                        if (item != null)
-                        {
-                            usedCategories.Add(item.category);
-                        }
-                        break;
-
-                    case CrateType.Medium:
-                        // Item from the single shown category
-                        item = itemDatabase.GetRandomItemOfCategory(mediumCrateCategory);
-                        break;
-
-                    case CrateType.Premium:
-                        // Item from selected category
-                        if (selectedCategory.HasValue)
-                            item = itemDatabase.GetRandomItemOfCategory(selectedCategory.Value);
-                        break;
-                }
-
-                if (item != null)
-                    items.Add(item);
+                if (!itemSlots[i].isLocked) unlockedCount++;
             }
 
-            return items;
-        }
+            bool hasUnlocked = unlockedCount > 0;
 
-        /// <summary>
-        /// Continue to consultation phase
-        /// </summary>
-        private void OnContinueClicked()
-        {
-            if (purchasedItems.Count == 0)
+            rerollAllButton.interactable = canAfford && hasUnlocked && !isAnimating;
+
+            if (rerollAllCostText != null)
             {
-                Debug.LogWarning("[RestockScreen] No items purchased!");
-                return;
+                rerollAllCostText.text = $"Reroll All ({rerollAllCost}g)";
+                rerollAllCostText.color = canAfford ? Color.white : Color.red;
             }
-
-            OnCratesPurchased?.Invoke(purchasedItems);
-            gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -307,50 +494,6 @@ namespace OneShotSupport.UI.Screens
         public void Hide()
         {
             gameObject.SetActive(false);
-        }
-
-        /// <summary>
-        /// Clear all item preview slots
-        /// </summary>
-        private void ClearItemPreview()
-        {
-            if (itemPreviewSlots == null) return;
-
-            for (int i = 0; i < itemPreviewSlots.Length; i++)
-            {
-                if (itemPreviewSlots[i] != null)
-                {
-                    itemPreviewSlots[i].sprite = null;
-                    itemPreviewSlots[i].enabled = false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Update item preview slots to show purchased items
-        /// </summary>
-        private void UpdateItemPreview()
-        {
-            if (itemPreviewSlots == null) return;
-
-            // Display all purchased items in the preview slots (max 6)
-            for (int i = 0; i < itemPreviewSlots.Length; i++)
-            {
-                if (itemPreviewSlots[i] == null) continue;
-
-                if (i < purchasedItems.Count && purchasedItems[i] != null)
-                {
-                    // Show item icon
-                    itemPreviewSlots[i].sprite = purchasedItems[i].icon;
-                    itemPreviewSlots[i].enabled = true;
-                }
-                else
-                {
-                    // Empty slot
-                    itemPreviewSlots[i].sprite = null;
-                    itemPreviewSlots[i].enabled = false;
-                }
-            }
         }
     }
 }

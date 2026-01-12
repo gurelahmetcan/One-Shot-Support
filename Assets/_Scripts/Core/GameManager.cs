@@ -497,5 +497,6 @@ namespace OneShotSupport.Core
         public ReputationManager Reputation => reputationManager;
         public DayData CurrentDay => currentDay;
         public int CurrentDayNumber => currentDayNumber;
+        public DailyHint CurrentDayHint => currentDayHint;
     }
 }
