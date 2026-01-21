@@ -7310,7 +7310,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dayText: {fileID: 794011745}
-  textFormat: Day {0}
+  dayFormat: Day {0}
+  seasonFormat: '{0}, Year {1}'
 --- !u!114 &794011745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12229,14 +12230,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2adece33d87bc4b0c891bf35a7dbc760, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  heroesPerDay: 3
-  itemsPerDay: 6
+  heroesPerTurn: 3
+  itemsPerTurn: 6
   itemDatabase: {fileID: 11400000, guid: a16f68b6999fa486d9f59012b24978df, type: 2}
   heroGenerator: {fileID: 11400000, guid: aeeaf3b416c7d4908ae83ba818690a04, type: 2}
   monsterGenerator: {fileID: 11400000, guid: a59b6228b86bf4a20bdc66a5159cfa3f, type: 2}
   hintSystem: {fileID: 11400000, guid: 3f15d4e3e0b8d435387f3c0d251e0afb, type: 2}
   goldManager: {fileID: 1389614754}
   tutorialManager: {fileID: 1310324710}
+  heroLifecycleManager: {fileID: 11400000, guid: 868dc5ef034c14b92bb3fbf7d217aefc, type: 2}
   consultationScreen: {fileID: 960943599}
 --- !u!4 &1389614753
 Transform:

@@ -46,7 +46,7 @@ namespace OneShotSupport.UI
 
             // Subscribe to game events
             gameManager.OnStateChanged += HandleStateChanged;
-            gameManager.OnDayHintGenerated += HandleDayHintGenerated; // Legacy support
+            //gameManager.OnDayHintGenerated += HandleDayHintGenerated; // Legacy support
             gameManager.OnSeasonHintGenerated += HandleSeasonHintGenerated; // New seasonal system
             gameManager.OnSeasonChanged += HandleSeasonChanged;
             gameManager.OnYearChanged += HandleYearChanged;
@@ -87,7 +87,7 @@ namespace OneShotSupport.UI
             if (gameManager != null)
             {
                 gameManager.OnStateChanged -= HandleStateChanged;
-                gameManager.OnDayHintGenerated -= HandleDayHintGenerated; // Legacy support
+                //gameManager.OnDayHintGenerated -= HandleDayHintGenerated; // Legacy support
                 gameManager.OnSeasonHintGenerated -= HandleSeasonHintGenerated; // New seasonal system
                 gameManager.OnSeasonChanged -= HandleSeasonChanged;
                 gameManager.OnYearChanged -= HandleYearChanged;
