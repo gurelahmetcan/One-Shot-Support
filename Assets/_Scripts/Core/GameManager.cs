@@ -382,7 +382,7 @@ namespace OneShotSupport.Core
             // Deduct cost
             if (goldManager != null)
             {
-                goldManager.SpendGold(baseRecruitmentCost);
+                goldManager.TrySpendGold(baseRecruitmentCost);
             }
 
             // Add to recruited heroes
