@@ -46,7 +46,10 @@ namespace OneShotSupport.UI
 
             // Subscribe to game events
             gameManager.OnStateChanged += HandleStateChanged;
-            gameManager.OnDayHintGenerated += HandleDayHintGenerated;
+            gameManager.OnDayHintGenerated += HandleDayHintGenerated; // Legacy support
+            gameManager.OnSeasonHintGenerated += HandleSeasonHintGenerated; // New seasonal system
+            gameManager.OnSeasonChanged += HandleSeasonChanged;
+            gameManager.OnYearChanged += HandleYearChanged;
             gameManager.OnHeroReady += HandleHeroReady;
             gameManager.OnDayEnded += HandleDayEnded;
             gameManager.OnGameOver += HandleGameOver;
@@ -84,7 +87,10 @@ namespace OneShotSupport.UI
             if (gameManager != null)
             {
                 gameManager.OnStateChanged -= HandleStateChanged;
-                gameManager.OnDayHintGenerated -= HandleDayHintGenerated;
+                gameManager.OnDayHintGenerated -= HandleDayHintGenerated; // Legacy support
+                gameManager.OnSeasonHintGenerated -= HandleSeasonHintGenerated; // New seasonal system
+                gameManager.OnSeasonChanged -= HandleSeasonChanged;
+                gameManager.OnYearChanged -= HandleYearChanged;
                 gameManager.OnHeroReady -= HandleHeroReady;
                 gameManager.OnDayEnded -= HandleDayEnded;
                 gameManager.OnGameOver -= HandleGameOver;
@@ -124,9 +130,10 @@ namespace OneShotSupport.UI
                 reputationBar.UpdateReputation(gameManager.Reputation.CurrentReputation);
             }
 
-            if (dayCounter != null)
+            if (dayCounter != null && gameManager.Calendar != null)
             {
-                dayCounter.UpdateDay(gameManager.CurrentDayNumber);
+                // Use new seasonal system
+                dayCounter.UpdateSeason(gameManager.Calendar.CurrentSeason, gameManager.Calendar.CurrentYear);
             }
         }
 
@@ -163,10 +170,10 @@ namespace OneShotSupport.UI
                     break;
             }
 
-            // Update day counter
-            if (dayCounter != null)
+            // Update day counter with seasonal data
+            if (dayCounter != null && gameManager.Calendar != null)
             {
-                dayCounter.UpdateDay(gameManager.CurrentDayNumber);
+                dayCounter.UpdateSeason(gameManager.Calendar.CurrentSeason, gameManager.Calendar.CurrentYear);
             }
         }
 
@@ -200,10 +207,10 @@ namespace OneShotSupport.UI
         /// </summary>
         private void HandleGameOver()
         {
-            if (gameOverScreen != null && gameManager.Reputation != null)
+            if (gameOverScreen != null && gameManager.Reputation != null && gameManager.Calendar != null)
             {
-                int daysSurvived = gameManager.CurrentDayNumber - 1;
-                gameOverScreen.DisplayGameOver(daysSurvived, gameManager.Reputation.CurrentReputation);
+                int turnsSurvived = gameManager.Calendar.CurrentTurn - 1;
+                gameOverScreen.DisplayGameOver(turnsSurvived, gameManager.Reputation.CurrentReputation);
             }
         }
 
@@ -231,11 +238,42 @@ namespace OneShotSupport.UI
         }
 
         /// <summary>
-        /// Handle day hint generated
+        /// Handle day hint generated (legacy support)
         /// </summary>
         private void HandleDayHintGenerated(int dayNumber, string hintMessage)
         {
             ShowDayStartScreen(dayNumber, hintMessage);
+        }
+
+        /// <summary>
+        /// Handle season hint generated (new seasonal system)
+        /// </summary>
+        private void HandleSeasonHintGenerated(Season season, int year, string hintMessage)
+        {
+            ShowDayStartScreen(season, year, hintMessage);
+        }
+
+        /// <summary>
+        /// Handle season changed
+        /// </summary>
+        private void HandleSeasonChanged(Season newSeason, int year)
+        {
+            Debug.Log($"[UIManager] Season changed to {newSeason}, Year {year}");
+
+            // Update day counter to show season
+            if (dayCounter != null && gameManager?.Calendar != null)
+            {
+                dayCounter.UpdateSeason(newSeason, year);
+            }
+        }
+
+        /// <summary>
+        /// Handle year changed
+        /// </summary>
+        private void HandleYearChanged(int newYear)
+        {
+            Debug.Log($"[UIManager] *** NEW YEAR: {newYear} ***");
+            // Could trigger special UI effects, celebrations, etc.
         }
 
         /// <summary>
@@ -277,6 +315,16 @@ namespace OneShotSupport.UI
             if (dayStartScreen != null)
             {
                 dayStartScreen.Setup(dayNumber, hintMessage);
+            }
+        }
+
+        private void ShowDayStartScreen(Season season, int year, string hintMessage)
+        {
+            HideAllScreens();
+
+            if (dayStartScreen != null)
+            {
+                dayStartScreen.Setup(season, year, hintMessage);
             }
         }
 

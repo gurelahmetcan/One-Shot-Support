@@ -15,13 +15,13 @@ namespace OneShotSupport.Core
     public class GameManager : MonoBehaviour
     {
         [Header("Game Configuration")]
-        [Tooltip("Number of heroes per day")]
+        [Tooltip("Number of heroes per season/turn")]
         [Range(1, 5)]
-        public int heroesPerDay = 3;
+        public int heroesPerTurn = 3;
 
-        [Tooltip("Number of items to restock each day")]
+        [Tooltip("Number of items to restock each season")]
         [Range(5, 10)]
-        public int itemsPerDay = 6;
+        public int itemsPerTurn = 6;
 
         [Header("References")]
         [Tooltip("Item database for daily restocking")]
@@ -43,6 +43,9 @@ namespace OneShotSupport.Core
         [Tooltip("Tutorial manager for Day 1 tutorial")]
         public TutorialManager tutorialManager;
 
+        [Tooltip("Hero lifecycle manager for aging system")]
+        public HeroLifecycleManager heroLifecycleManager;
+
         [Header("UI References (Internal)")]
         [Tooltip("Consultation screen reference for item recycling")]
         [HideInInspector]
@@ -51,18 +54,20 @@ namespace OneShotSupport.Core
         // State machine
         private GameState currentState;
         private ReputationManager reputationManager;
-        private DayData currentDay;
-        private int currentDayNumber = 1;
-        private DailyHint currentDayHint;
+        private DayData currentDay; // Note: Still called "DayData" for now, represents current turn/season
+        private SeasonalCalendar seasonalCalendar;
+        private DailyHint currentDayHint; // Note: Still called "DailyHint" but represents seasonal hint
 
         // Events for UI
         public event Action<GameState> OnStateChanged;
-        public event Action<DayData> OnDayStarted;
-        public event Action<int, string> OnDayHintGenerated; // (dayNumber, hintMessage)
+        public event Action<DayData> OnDayStarted; // Called OnSeasonStarted conceptually
+        public event Action<Season, int, string> OnSeasonHintGenerated; // (season, year, hintMessage)
         public event Action<HeroResult> OnHeroReady;
         public event Action<HeroResult> OnHeroEquipped;
-        public event Action<List<HeroResult>> OnDayEnded;
+        public event Action<List<HeroResult>> OnDayEnded; // Called OnSeasonEnded conceptually
         public event Action OnGameOver;
+        public event Action<Season, int> OnSeasonChanged; // New event for season changes
+        public event Action<int> OnYearChanged; // New event for year changes
 
         // Singleton for easy access (game jam pattern)
         public static GameManager Instance { get; private set; }
@@ -80,17 +85,24 @@ namespace OneShotSupport.Core
 
             // Initialize systems
             reputationManager = new ReputationManager();
+            seasonalCalendar = new SeasonalCalendar();
         }
 
         private void Start()
         {
             // Start the game
             reputationManager.Initialize();
+            seasonalCalendar.Initialize();
+
+            // Subscribe to calendar events
+            seasonalCalendar.OnSeasonChanged += HandleSeasonChanged;
+            seasonalCalendar.OnYearChanged += HandleYearChanged;
+
             // BUG FIX: Don't subscribe to immediate game over - check in StartNextDay() instead
             // reputationManager.OnReputationDepleted += HandleGameOver;
 
-            // Check if tutorial should run (Day 1)
-            if (tutorialManager != null && tutorialManager.ShouldRunTutorial(currentDayNumber))
+            // Check if tutorial should run (Turn 1)
+            if (tutorialManager != null && tutorialManager.ShouldRunTutorial(seasonalCalendar.CurrentTurn))
             {
                 tutorialManager.StartTutorial();
             }
@@ -179,10 +191,10 @@ namespace OneShotSupport.Core
 
         private void EnterDayStart()
         {
-            Debug.Log($"=== DAY {currentDayNumber} START ===");
-            currentDay = new DayData(currentDayNumber);
+            Debug.Log($"=== {seasonalCalendar.GetDisplayString()} (Turn {seasonalCalendar.CurrentTurn}) START ===");
+            currentDay = new DayData(seasonalCalendar.CurrentTurn);
 
-            // Generate daily hint (or use tutorial hint if Day 1)
+            // Generate seasonal hint (or use tutorial hint if Turn 1)
             bool isTutorial = tutorialManager != null && tutorialManager.IsTutorialActive();
 
             if (isTutorial)
@@ -195,16 +207,16 @@ namespace OneShotSupport.Core
                     hintMessage = tutorialData.tutorialHint,
                     hintedWeakness = tutorialData.tutorialMonster.weakness
                 };
-                OnDayHintGenerated?.Invoke(currentDayNumber, currentDayHint.hintMessage);
+                OnSeasonHintGenerated?.Invoke(seasonalCalendar.CurrentSeason, seasonalCalendar.CurrentYear, currentDayHint.hintMessage);
             }
             else if (hintSystem != null)
             {
                 currentDayHint = hintSystem.GenerateHint();
-                OnDayHintGenerated?.Invoke(currentDayNumber, currentDayHint.hintMessage);
+                OnSeasonHintGenerated?.Invoke(seasonalCalendar.CurrentSeason, seasonalCalendar.CurrentYear, currentDayHint.hintMessage);
             }
             else
             {
-                currentDayHint = new DailyHint { hasHint = false, hintMessage = "Today everything feels normal." };
+                currentDayHint = new DailyHint { hasHint = false, hintMessage = "This season feels calm and uneventful." };
             }
 
             OnDayStarted?.Invoke(currentDay);
@@ -271,8 +283,8 @@ namespace OneShotSupport.Core
         {
             Debug.Log("[Restock] Starting restock phase...");
 
-            // Generate heroes for the day
-            for (int i = 0; i < heroesPerDay; i++)
+            // Generate heroes for the season/turn
+            for (int i = 0; i < heroesPerTurn; i++)
             {
                 var heroResult = new HeroResult
                 {
@@ -285,13 +297,13 @@ namespace OneShotSupport.Core
             // If there's a hint, assign hinted monster to random hero
             if (currentDayHint.hasHint && currentDayHint.hintedWeakness.HasValue && monsterGenerator != null)
             {
-                int randomHeroIndex = Random.Range(0, heroesPerDay);
+                int randomHeroIndex = Random.Range(0, heroesPerTurn);
                 currentDay.heroResults[randomHeroIndex].monster =
                     monsterGenerator.GenerateMonsterWithWeakness(currentDayHint.hintedWeakness.Value);
                 Debug.Log($"[Hint] Hero {randomHeroIndex} assigned monster with {currentDayHint.hintedWeakness.Value} weakness");
             }
 
-            Debug.Log($"[Restock] Generated {heroesPerDay} heroes");
+            Debug.Log($"[Restock] Generated {heroesPerTurn} heroes");
 
             // UI will show restock screen via UIManager
         }
@@ -320,7 +332,7 @@ namespace OneShotSupport.Core
             var currentHero = currentDay.GetCurrentHero();
             if (currentHero != null)
             {
-                Debug.Log($"[Consultation] Hero {currentDay.currentHeroIndex + 1}/{heroesPerDay}: {currentHero.hero.heroName}");
+                Debug.Log($"[Consultation] Hero {currentDay.currentHeroIndex + 1}/{heroesPerTurn}: {currentHero.hero.heroName}");
                 OnHeroReady?.Invoke(currentHero);
             }
             else
@@ -438,7 +450,7 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Called by UI when player is ready for next day (after day end animations)
+        /// Called by UI when player is ready for next turn/season (after day end animations)
         /// </summary>
         public void StartNextDay()
         {
@@ -454,8 +466,14 @@ namespace OneShotSupport.Core
                 }
             }
 
-            Debug.Log($"[Day End] Final Reputation: {reputationManager.CurrentReputation}/100 ({reputationManager.GetReputationStatus()})");
-            Debug.Log($"[Day End] Final Gold: {goldManager?.CurrentGold ?? 0}");
+            Debug.Log($"[Season End] Final Reputation: {reputationManager.CurrentReputation}/100 ({reputationManager.GetReputationStatus()})");
+            Debug.Log($"[Season End] Final Gold: {goldManager?.CurrentGold ?? 0}");
+
+            // Age heroes if lifecycle manager is available
+            if (heroLifecycleManager != null)
+            {
+                AgeAllHeroes();
+            }
 
             // Check for game over AFTER applying reputation changes
             if (reputationManager.IsGameOver)
@@ -464,7 +482,8 @@ namespace OneShotSupport.Core
             }
             else
             {
-                currentDayNumber++;
+                // Advance to next season
+                seasonalCalendar.AdvanceSeason();
                 ChangeState(GameState.DayStart);
             }
         }
@@ -474,7 +493,7 @@ namespace OneShotSupport.Core
         private void EnterGameOver()
         {
             Debug.Log("=== GAME OVER ===");
-            Debug.Log($"Survived {currentDayNumber - 1} days");
+            Debug.Log($"Survived {seasonalCalendar.CurrentTurn - 1} turns ({seasonalCalendar.CurrentYear} years)");
             OnGameOver?.Invoke();
         }
 
@@ -491,12 +510,54 @@ namespace OneShotSupport.Core
             }
         }
 
+        /// <summary>
+        /// Handle season change event from SeasonalCalendar
+        /// </summary>
+        private void HandleSeasonChanged(Season newSeason, int year)
+        {
+            Debug.Log($"[Calendar] Season changed to {newSeason}, Year {year}");
+            OnSeasonChanged?.Invoke(newSeason, year);
+        }
+
+        /// <summary>
+        /// Handle year change event from SeasonalCalendar
+        /// </summary>
+        private void HandleYearChanged(int newYear)
+        {
+            Debug.Log($"[Calendar] *** NEW YEAR: {newYear} ***");
+            OnYearChanged?.Invoke(newYear);
+        }
+
+        /// <summary>
+        /// Age all heroes in the current roster by one turn
+        /// </summary>
+        private void AgeAllHeroes()
+        {
+            if (currentDay == null || currentDay.heroResults == null) return;
+
+            foreach (var result in currentDay.heroResults)
+            {
+                if (result.hero != null && heroLifecycleManager != null)
+                {
+                    var oldStage = result.hero.lifecycleStage;
+                    var newStage = heroLifecycleManager.AgeHero(ref result.hero.age);
+                    result.hero.lifecycleStage = newStage;
+
+                    if (oldStage != newStage)
+                    {
+                        Debug.Log($"[Lifecycle] {result.hero.heroName} aged to {heroLifecycleManager.GetStageDisplayName(newStage)} (age {Mathf.FloorToInt(result.hero.age)})");
+                    }
+                }
+            }
+        }
+
         // === PUBLIC ACCESSORS ===
 
         public GameState CurrentState => currentState;
         public ReputationManager Reputation => reputationManager;
         public DayData CurrentDay => currentDay;
-        public int CurrentDayNumber => currentDayNumber;
+        public SeasonalCalendar Calendar => seasonalCalendar;
+        public int CurrentDayNumber => seasonalCalendar?.CurrentTurn ?? 1; // Backward compatibility
         public DailyHint CurrentDayHint => currentDayHint;
     }
 }

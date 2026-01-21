@@ -87,4 +87,26 @@ namespace OneShotSupport.Data
         Medium,     // 30 gold - 3 items from 2 shown random categories
         Premium     // 50 gold - 3 items from 1 player-selected category
     }
+
+    /// <summary>
+    /// Seasons in the game year (4 turns = 1 year)
+    /// </summary>
+    public enum Season
+    {
+        Spring,     // Turn 1 of the year
+        Summer,     // Turn 2 of the year
+        Autumn,     // Turn 3 of the year
+        Winter      // Turn 4 of the year
+    }
+
+    /// <summary>
+    /// Hero lifecycle stages based on age
+    /// </summary>
+    public enum HeroLifecycleStage
+    {
+        Rookie,     // Young hero (default: 20-25)
+        Prime,      // Peak performance (default: 26-35)
+        Veteran,    // Experienced but aging (default: 36-45)
+        Retired     // No longer available for missions (46+)
+    }
 }

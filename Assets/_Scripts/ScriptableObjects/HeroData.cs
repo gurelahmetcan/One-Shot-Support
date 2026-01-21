@@ -33,6 +33,13 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Hero's perk (personality trait)")]
         public Perk perk = Perk.None;
 
+        [Header("Lifecycle (Guild Merchant System)")]
+        [Tooltip("Hero's current age (can have decimals for fractional aging)")]
+        public float age = 20f;
+
+        [Tooltip("Hero's current lifecycle stage (Rookie/Prime/Veteran/Retired)")]
+        public HeroLifecycleStage lifecycleStage = HeroLifecycleStage.Rookie;
+
         [Header("Visual")]
         [Tooltip("Hero portrait for UI display")]
         public Sprite portrait;
