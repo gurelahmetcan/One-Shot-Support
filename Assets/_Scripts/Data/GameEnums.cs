@@ -109,4 +109,26 @@ namespace OneShotSupport.Data
         Veteran,    // Experienced but aging (default: 36-45)
         Retired     // No longer available for missions (46+)
     }
+
+    /// <summary>
+    /// Mission danger levels (1-5 stars)
+    /// </summary>
+    public enum MissionDanger
+    {
+        OneStar = 1,
+        TwoStar = 2,
+        ThreeStar = 3,
+        FourStar = 4,
+        FiveStar = 5
+    }
+
+    /// <summary>
+    /// Mission stances that affect hero behavior during missions
+    /// </summary>
+    public enum MissionStance
+    {
+        Safe,       // Hero flees if HP low, 50% less loot, lower risk
+        Bold,       // Standard mission, balanced risk/reward
+        Grand       // High fame gain, increased gear damage, showboating
+    }
 }

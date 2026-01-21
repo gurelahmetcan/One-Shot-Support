@@ -33,6 +33,14 @@ namespace OneShotSupport.Core
         [Tooltip("Monster generator for procedural monsters")]
         public MonsterGenerator monsterGenerator;
 
+        [Tooltip("Mission generator for procedural missions")]
+        public MissionGenerator missionGenerator;
+
+        [Header("Mission Configuration")]
+        [Tooltip("Number of missions available per season")]
+        [Range(1, 5)]
+        public int missionsPerSeason = 3;
+
         [Header("Managers")]
         [Tooltip("Gold manager for currency system")]
         public GoldManager goldManager;
@@ -51,6 +59,8 @@ namespace OneShotSupport.Core
         private PropagandaManager propagandaManager;
         private DayData currentDay; // Note: Still called "DayData" for now, represents current turn/season
         private SeasonalCalendar seasonalCalendar;
+        private List<MissionData> availableMissions;
+        private MissionData selectedMission;
 
         // Events for UI
         public event Action<GameState> OnStateChanged;
@@ -66,6 +76,8 @@ namespace OneShotSupport.Core
         public event Action<int> OnTrustChanged; // Propagate trust changes to UI
         public event Action<FameMilestone> OnFameMilestoneReached; // Propagate milestone events
         public event Action<TrustThreshold> OnTrustThresholdCrossed; // Propagate trust threshold events
+        public event Action<List<MissionData>> OnMissionsGenerated; // (missions) - when missions are available
+        public event Action<MissionData> OnMissionSelected; // (mission) - when a mission is selected
 
         // Singleton for easy access (game jam pattern)
         public static GameManager Instance { get; private set; }
@@ -140,6 +152,10 @@ namespace OneShotSupport.Core
                     EnterDayStart();
                     break;
 
+                case GameState.MissionBoard:
+                    EnterMissionBoard();
+                    break;
+
                 case GameState.Restock:
                     EnterRestock();
                     break;
@@ -167,6 +183,10 @@ namespace OneShotSupport.Core
             {
                 case GameState.DayStart:
                     UpdateDayStart();
+                    break;
+
+                case GameState.MissionBoard:
+                    UpdateMissionBoard();
                     break;
 
                 case GameState.Restock:
@@ -198,7 +218,7 @@ namespace OneShotSupport.Core
             OnSeasonStarted?.Invoke(seasonalCalendar.CurrentSeason, seasonalCalendar.CurrentYear);
             OnDayStarted?.Invoke(currentDay);
 
-            // Transition to restock will happen after DayStartScreen is dismissed via UIManager
+            // Transition to mission board will happen after DayStartScreen is dismissed via UIManager
         }
 
         private void UpdateDayStart()
@@ -209,11 +229,66 @@ namespace OneShotSupport.Core
         /// <summary>
         /// Called by UIManager when player dismisses day start screen
         /// </summary>
+        public void StartMissionBoard()
+        {
+            if (currentState == GameState.DayStart)
+            {
+                ChangeState(GameState.MissionBoard);
+            }
+        }
+
+        // === MISSION BOARD STATE ===
+
+        private void EnterMissionBoard()
+        {
+            Debug.Log("[MissionBoard] Generating available missions...");
+
+            // Generate missions for this season
+            if (missionGenerator != null)
+            {
+                availableMissions = missionGenerator.GenerateMissions(missionsPerSeason);
+                Debug.Log($"[MissionBoard] Generated {availableMissions.Count} missions");
+                OnMissionsGenerated?.Invoke(availableMissions);
+            }
+            else
+            {
+                Debug.LogError("[MissionBoard] MissionGenerator is null!");
+                availableMissions = new List<MissionData>();
+            }
+
+            selectedMission = null;
+
+            // UI will show mission board via UIManager
+        }
+
+        private void UpdateMissionBoard()
+        {
+            // Waiting for player to select a mission via UIManager
+        }
+
+        /// <summary>
+        /// Called by UIManager when player selects a mission
+        /// </summary>
+        public void SelectMission(MissionData mission)
+        {
+            if (currentState != GameState.MissionBoard) return;
+
+            selectedMission = mission;
+            Debug.Log($"[MissionBoard] Mission selected: {mission.missionName}");
+            OnMissionSelected?.Invoke(mission);
+
+            // Transition to restock after mission selection
+            ChangeState(GameState.Restock);
+        }
+
+        /// <summary>
+        /// Called by UIManager when player dismisses day start screen (legacy, redirects to mission board)
+        /// </summary>
         public void StartRestock()
         {
             if (currentState == GameState.DayStart)
             {
-                ChangeState(GameState.Restock);
+                StartMissionBoard();
             }
         }
 
@@ -483,5 +558,7 @@ namespace OneShotSupport.Core
         public DayData CurrentDay => currentDay;
         public SeasonalCalendar Calendar => seasonalCalendar;
         public int CurrentDayNumber => seasonalCalendar?.CurrentTurn ?? 1; // Backward compatibility
+        public List<MissionData> AvailableMissions => availableMissions;
+        public MissionData SelectedMission => selectedMission;
     }
 }

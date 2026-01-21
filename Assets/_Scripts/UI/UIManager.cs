@@ -17,6 +17,7 @@ namespace OneShotSupport.UI
     {
         [Header("Screens")]
         public DayStartScreen dayStartScreen;
+        public Screens.MissionBoardScreen missionBoardScreen;
         public RestockScreen restockScreen;
         public ConsultationScreen consultationScreen;
         public DayEndScreen dayEndScreen;
@@ -51,6 +52,8 @@ namespace OneShotSupport.UI
             gameManager.OnSeasonStarted += HandleSeasonStarted;
             gameManager.OnSeasonChanged += HandleSeasonChanged;
             gameManager.OnYearChanged += HandleYearChanged;
+            gameManager.OnMissionsGenerated += HandleMissionsGenerated;
+            gameManager.OnMissionSelected += HandleMissionSelected;
             gameManager.OnHeroReady += HandleHeroReady;
             gameManager.OnDayEnded += HandleDayEnded;
             gameManager.OnGameOver += HandleGameOver;
@@ -71,6 +74,12 @@ namespace OneShotSupport.UI
             if (dayStartScreen != null)
             {
                 dayStartScreen.OnContinueClicked += HandleDayStartContinue;
+            }
+
+            if (missionBoardScreen != null)
+            {
+                missionBoardScreen.OnMissionSelected += HandleMissionBoardSelection;
+                missionBoardScreen.OnBackClicked += HandleMissionBoardBack;
             }
 
             if (restockScreen != null)
@@ -97,6 +106,8 @@ namespace OneShotSupport.UI
                 gameManager.OnSeasonStarted -= HandleSeasonStarted;
                 gameManager.OnSeasonChanged -= HandleSeasonChanged;
                 gameManager.OnYearChanged -= HandleYearChanged;
+                gameManager.OnMissionsGenerated -= HandleMissionsGenerated;
+                gameManager.OnMissionSelected -= HandleMissionSelected;
                 gameManager.OnHeroReady -= HandleHeroReady;
                 gameManager.OnDayEnded -= HandleDayEnded;
                 gameManager.OnGameOver -= HandleGameOver;
@@ -117,6 +128,12 @@ namespace OneShotSupport.UI
             if (dayStartScreen != null)
             {
                 dayStartScreen.OnContinueClicked -= HandleDayStartContinue;
+            }
+
+            if (missionBoardScreen != null)
+            {
+                missionBoardScreen.OnMissionSelected -= HandleMissionBoardSelection;
+                missionBoardScreen.OnBackClicked -= HandleMissionBoardBack;
             }
 
             if (restockScreen != null)
@@ -172,7 +189,11 @@ namespace OneShotSupport.UI
             switch (newState)
             {
                 case GameState.DayStart:
-                    // Day start hint is handled by OnDayHintGenerated event
+                    // Day start is handled by OnSeasonStarted event
+                    break;
+
+                case GameState.MissionBoard:
+                    // Mission board will be shown when missions are generated
                     break;
 
                 case GameState.Restock:
@@ -342,12 +363,55 @@ namespace OneShotSupport.UI
             // TODO: Show notification UI when trust threshold is crossed
         }
 
+        /// <summary>
+        /// Handle missions generated
+        /// </summary>
+        private void HandleMissionsGenerated(List<ScriptableObjects.MissionData> missions)
+        {
+            Debug.Log($"[UIManager] Missions generated: {missions.Count}");
+            ShowMissionBoardScreen(missions);
+        }
+
+        /// <summary>
+        /// Handle mission selected from mission board
+        /// </summary>
+        private void HandleMissionBoardSelection(ScriptableObjects.MissionData mission)
+        {
+            Debug.Log($"[UIManager] Mission selected from UI: {mission.missionName}");
+            // Notify game manager
+            if (gameManager != null)
+            {
+                gameManager.SelectMission(mission);
+            }
+        }
+
+        /// <summary>
+        /// Handle mission board back button (currently unused, but could allow skipping mission selection)
+        /// </summary>
+        private void HandleMissionBoardBack()
+        {
+            Debug.Log($"[UIManager] Mission board back clicked");
+            // For now, do nothing - mission selection is mandatory
+        }
+
+        /// <summary>
+        /// Handle mission selected (from game manager)
+        /// </summary>
+        private void HandleMissionSelected(ScriptableObjects.MissionData mission)
+        {
+            Debug.Log($"[UIManager] Mission confirmed by GameManager: {mission.missionName}");
+            // Mission selected, game will transition to Restock
+        }
+
         // === Screen Management ===
 
         private void HideAllScreens()
         {
             if (dayStartScreen != null)
                 dayStartScreen.gameObject.SetActive(false);
+
+            if (missionBoardScreen != null)
+                missionBoardScreen.gameObject.SetActive(false);
 
             if (restockScreen != null)
                 restockScreen.gameObject.SetActive(false);
@@ -369,6 +433,16 @@ namespace OneShotSupport.UI
             if (dayStartScreen != null)
             {
                 dayStartScreen.Setup(season, year);
+            }
+        }
+
+        private void ShowMissionBoardScreen(List<ScriptableObjects.MissionData> missions)
+        {
+            HideAllScreens();
+
+            if (missionBoardScreen != null)
+            {
+                missionBoardScreen.Setup(missions);
             }
         }
 
