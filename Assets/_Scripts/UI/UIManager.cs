@@ -17,7 +17,9 @@ namespace OneShotSupport.UI
     {
         [Header("Screens")]
         public DayStartScreen dayStartScreen;
+        public Screens.VillageHubScreen villageHubScreen;
         public Screens.MissionBoardScreen missionBoardScreen;
+        public Screens.TavernScreen tavernScreen;
         public RestockScreen restockScreen;
         public ConsultationScreen consultationScreen;
         public DayEndScreen dayEndScreen;
@@ -54,6 +56,8 @@ namespace OneShotSupport.UI
             gameManager.OnYearChanged += HandleYearChanged;
             gameManager.OnMissionsGenerated += HandleMissionsGenerated;
             gameManager.OnMissionSelected += HandleMissionSelected;
+            gameManager.OnTavernHeroesGenerated += HandleTavernHeroesGenerated;
+            gameManager.OnHeroRecruited += HandleHeroRecruited;
             gameManager.OnHeroReady += HandleHeroReady;
             gameManager.OnDayEnded += HandleDayEnded;
             gameManager.OnGameOver += HandleGameOver;
@@ -76,10 +80,22 @@ namespace OneShotSupport.UI
                 dayStartScreen.OnContinueClicked += HandleDayStartContinue;
             }
 
+            if (villageHubScreen != null)
+            {
+                villageHubScreen.OnTavernClicked += () => gameManager.OpenTavern();
+                villageHubScreen.OnMissionBoardClicked += () => gameManager.OpenMissionBoard();
+            }
+
             if (missionBoardScreen != null)
             {
                 missionBoardScreen.OnMissionSelected += HandleMissionBoardSelection;
-                missionBoardScreen.OnBackClicked += HandleMissionBoardBack;
+                missionBoardScreen.OnBackClicked += () => gameManager.LeaveMissionBoard();
+            }
+
+            if (tavernScreen != null)
+            {
+                tavernScreen.OnHeroRecruited += (hero) => gameManager.RecruitHero(hero);
+                tavernScreen.OnBackClicked += () => gameManager.LeaveTavern();
             }
 
             if (restockScreen != null)
@@ -108,6 +124,8 @@ namespace OneShotSupport.UI
                 gameManager.OnYearChanged -= HandleYearChanged;
                 gameManager.OnMissionsGenerated -= HandleMissionsGenerated;
                 gameManager.OnMissionSelected -= HandleMissionSelected;
+                gameManager.OnTavernHeroesGenerated -= HandleTavernHeroesGenerated;
+                gameManager.OnHeroRecruited -= HandleHeroRecruited;
                 gameManager.OnHeroReady -= HandleHeroReady;
                 gameManager.OnDayEnded -= HandleDayEnded;
                 gameManager.OnGameOver -= HandleGameOver;
@@ -192,8 +210,16 @@ namespace OneShotSupport.UI
                     // Day start is handled by OnSeasonStarted event
                     break;
 
+                case GameState.VillageHub:
+                    ShowVillageHubScreen();
+                    break;
+
                 case GameState.MissionBoard:
                     // Mission board will be shown when missions are generated
+                    break;
+
+                case GameState.Tavern:
+                    // Tavern will be shown when heroes are generated
                     break;
 
                 case GameState.Restock:
@@ -316,11 +342,29 @@ namespace OneShotSupport.UI
         /// </summary>
         private void HandleDayStartContinue()
         {
-            // Notify GameManager to transition to Restock state
+            // Notify GameManager to transition to Village Hub
             if (gameManager != null)
             {
-                gameManager.StartRestock();
+                gameManager.StartVillageHub();
             }
+        }
+
+        /// <summary>
+        /// Handle tavern heroes generated
+        /// </summary>
+        private void HandleTavernHeroesGenerated(List<ScriptableObjects.HeroData> heroes, int cost)
+        {
+            Debug.Log($"[UIManager] Tavern heroes generated: {heroes.Count}, cost: {cost}");
+            ShowTavernScreen(heroes, cost);
+        }
+
+        /// <summary>
+        /// Handle hero recruited
+        /// </summary>
+        private void HandleHeroRecruited(ScriptableObjects.HeroData hero)
+        {
+            Debug.Log($"[UIManager] Hero recruited: {hero.heroName}");
+            // Could show a notification or update UI here
         }
 
         /// <summary>
@@ -410,8 +454,14 @@ namespace OneShotSupport.UI
             if (dayStartScreen != null)
                 dayStartScreen.gameObject.SetActive(false);
 
+            if (villageHubScreen != null)
+                villageHubScreen.gameObject.SetActive(false);
+
             if (missionBoardScreen != null)
                 missionBoardScreen.gameObject.SetActive(false);
+
+            if (tavernScreen != null)
+                tavernScreen.gameObject.SetActive(false);
 
             if (restockScreen != null)
                 restockScreen.gameObject.SetActive(false);
@@ -436,6 +486,16 @@ namespace OneShotSupport.UI
             }
         }
 
+        private void ShowVillageHubScreen()
+        {
+            HideAllScreens();
+
+            if (villageHubScreen != null)
+            {
+                villageHubScreen.Setup();
+            }
+        }
+
         private void ShowMissionBoardScreen(List<ScriptableObjects.MissionData> missions)
         {
             HideAllScreens();
@@ -443,6 +503,16 @@ namespace OneShotSupport.UI
             if (missionBoardScreen != null)
             {
                 missionBoardScreen.Setup(missions);
+            }
+        }
+
+        private void ShowTavernScreen(List<ScriptableObjects.HeroData> heroes, int cost)
+        {
+            HideAllScreens();
+
+            if (tavernScreen != null)
+            {
+                tavernScreen.Setup(heroes, cost);
             }
         }
 

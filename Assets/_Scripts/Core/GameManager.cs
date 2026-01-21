@@ -41,6 +41,18 @@ namespace OneShotSupport.Core
         [Range(1, 5)]
         public int missionsPerSeason = 3;
 
+        [Header("Tavern Configuration")]
+        [Tooltip("Number of heroes available in tavern")]
+        [Range(2, 6)]
+        public int heroesInTavern = 4;
+
+        [Tooltip("Base cost to recruit a hero")]
+        public int baseRecruitmentCost = 50;
+
+        [Tooltip("Maximum barracks capacity (recruited hero roster size)")]
+        [Range(4, 12)]
+        public int maxBarracksCapacity = 6;
+
         [Header("Managers")]
         [Tooltip("Gold manager for currency system")]
         public GoldManager goldManager;
@@ -62,6 +74,10 @@ namespace OneShotSupport.Core
         private List<MissionData> availableMissions;
         private MissionData selectedMission;
 
+        // Hero roster management
+        private List<HeroData> recruitedHeroes = new List<HeroData>(); // Heroes in barracks
+        private List<HeroData> tavernHeroes = new List<HeroData>(); // Heroes available for recruitment
+
         // Events for UI
         public event Action<GameState> OnStateChanged;
         public event Action<DayData> OnDayStarted; // Legacy support
@@ -78,6 +94,8 @@ namespace OneShotSupport.Core
         public event Action<TrustThreshold> OnTrustThresholdCrossed; // Propagate trust threshold events
         public event Action<List<MissionData>> OnMissionsGenerated; // (missions) - when missions are available
         public event Action<MissionData> OnMissionSelected; // (mission) - when a mission is selected
+        public event Action<List<HeroData>, int> OnTavernHeroesGenerated; // (heroes, cost) - when tavern heroes are available
+        public event Action<HeroData> OnHeroRecruited; // (hero) - when a hero is recruited
 
         // Singleton for easy access (game jam pattern)
         public static GameManager Instance { get; private set; }
@@ -152,8 +170,16 @@ namespace OneShotSupport.Core
                     EnterDayStart();
                     break;
 
+                case GameState.VillageHub:
+                    EnterVillageHub();
+                    break;
+
                 case GameState.MissionBoard:
                     EnterMissionBoard();
+                    break;
+
+                case GameState.Tavern:
+                    EnterTavern();
                     break;
 
                 case GameState.Restock:
@@ -185,8 +211,16 @@ namespace OneShotSupport.Core
                     UpdateDayStart();
                     break;
 
+                case GameState.VillageHub:
+                    UpdateVillageHub();
+                    break;
+
                 case GameState.MissionBoard:
                     UpdateMissionBoard();
+                    break;
+
+                case GameState.Tavern:
+                    UpdateTavern();
                     break;
 
                 case GameState.Restock:
@@ -218,7 +252,7 @@ namespace OneShotSupport.Core
             OnSeasonStarted?.Invoke(seasonalCalendar.CurrentSeason, seasonalCalendar.CurrentYear);
             OnDayStarted?.Invoke(currentDay);
 
-            // Transition to mission board will happen after DayStartScreen is dismissed via UIManager
+            // Transition to village hub will happen after DayStartScreen is dismissed via UIManager
         }
 
         private void UpdateDayStart()
@@ -229,11 +263,146 @@ namespace OneShotSupport.Core
         /// <summary>
         /// Called by UIManager when player dismisses day start screen
         /// </summary>
+        public void StartVillageHub()
+        {
+            if (currentState == GameState.DayStart)
+            {
+                ChangeState(GameState.VillageHub);
+            }
+        }
+
+        // === VILLAGE HUB STATE ===
+
+        private void EnterVillageHub()
+        {
+            Debug.Log("[VillageHub] Entering village hub (main navigation)");
+
+            // UI will show village hub via UIManager
+        }
+
+        private void UpdateVillageHub()
+        {
+            // Waiting for player to navigate to locations via UIManager
+        }
+
+        /// <summary>
+        /// Called by UIManager when player clicks Tavern button
+        /// </summary>
+        public void OpenTavern()
+        {
+            if (currentState == GameState.VillageHub)
+            {
+                ChangeState(GameState.Tavern);
+            }
+        }
+
+        /// <summary>
+        /// Called by UIManager when player clicks Mission Board button
+        /// </summary>
+        public void OpenMissionBoard()
+        {
+            if (currentState == GameState.VillageHub)
+            {
+                ChangeState(GameState.MissionBoard);
+            }
+        }
+
+        /// <summary>
+        /// Called by UIManager when player dismisses day start screen (legacy, redirects to village hub)
+        /// </summary>
         public void StartMissionBoard()
         {
             if (currentState == GameState.DayStart)
             {
-                ChangeState(GameState.MissionBoard);
+                StartVillageHub();
+            }
+        }
+
+        // === TAVERN STATE ===
+
+        private void EnterTavern()
+        {
+            Debug.Log("[Tavern] Entering tavern for hero recruitment");
+
+            // Generate heroes available for recruitment
+            if (heroGenerator != null)
+            {
+                tavernHeroes.Clear();
+                for (int i = 0; i < heroesInTavern; i++)
+                {
+                    var hero = heroGenerator.GenerateHero();
+
+                    // Set initial age and lifecycle if lifecycle manager is available
+                    if (heroLifecycleManager != null)
+                    {
+                        hero.age = heroLifecycleManager.GetRandomRookieAge();
+                        hero.lifecycleStage = heroLifecycleManager.GetLifecycleStage(Mathf.FloorToInt(hero.age));
+                    }
+
+                    tavernHeroes.Add(hero);
+                }
+
+                Debug.Log($"[Tavern] Generated {tavernHeroes.Count} heroes for recruitment");
+                OnTavernHeroesGenerated?.Invoke(tavernHeroes, baseRecruitmentCost);
+            }
+            else
+            {
+                Debug.LogError("[Tavern] HeroGenerator is null!");
+            }
+
+            // UI will show tavern via UIManager
+        }
+
+        private void UpdateTavern()
+        {
+            // Waiting for player to recruit heroes or leave tavern
+        }
+
+        /// <summary>
+        /// Called by UIManager when player recruits a hero from tavern
+        /// </summary>
+        public void RecruitHero(HeroData hero)
+        {
+            if (currentState != GameState.Tavern) return;
+
+            // Check if player can afford
+            if (goldManager != null && goldManager.CurrentGold < baseRecruitmentCost)
+            {
+                Debug.LogWarning($"[Tavern] Cannot afford hero! Need {baseRecruitmentCost}, have {goldManager.CurrentGold}");
+                return;
+            }
+
+            // Check if barracks is full
+            if (recruitedHeroes.Count >= maxBarracksCapacity)
+            {
+                Debug.LogWarning($"[Tavern] Barracks full! Cannot recruit more heroes (max {maxBarracksCapacity})");
+                return;
+            }
+
+            // Deduct cost
+            if (goldManager != null)
+            {
+                goldManager.SpendGold(baseRecruitmentCost);
+            }
+
+            // Add to recruited heroes
+            recruitedHeroes.Add(hero);
+
+            // Remove from tavern heroes
+            tavernHeroes.Remove(hero);
+
+            Debug.Log($"[Tavern] Recruited {hero.heroName}! Barracks: {recruitedHeroes.Count}/{maxBarracksCapacity}");
+            OnHeroRecruited?.Invoke(hero);
+        }
+
+        /// <summary>
+        /// Called by UIManager when player leaves tavern
+        /// </summary>
+        public void LeaveTavern()
+        {
+            if (currentState == GameState.Tavern)
+            {
+                ChangeState(GameState.VillageHub);
             }
         }
 
@@ -277,8 +446,20 @@ namespace OneShotSupport.Core
             Debug.Log($"[MissionBoard] Mission selected: {mission.missionName}");
             OnMissionSelected?.Invoke(mission);
 
-            // Transition to restock after mission selection
-            ChangeState(GameState.Restock);
+            // Transition back to village hub after mission selection
+            // Player can continue preparing (recruit heroes, etc.) before starting the mission
+            ChangeState(GameState.VillageHub);
+        }
+
+        /// <summary>
+        /// Called by UIManager when player leaves mission board without selecting
+        /// </summary>
+        public void LeaveMissionBoard()
+        {
+            if (currentState == GameState.MissionBoard)
+            {
+                ChangeState(GameState.VillageHub);
+            }
         }
 
         /// <summary>
@@ -560,5 +741,9 @@ namespace OneShotSupport.Core
         public int CurrentDayNumber => seasonalCalendar?.CurrentTurn ?? 1; // Backward compatibility
         public List<MissionData> AvailableMissions => availableMissions;
         public MissionData SelectedMission => selectedMission;
+        public List<HeroData> RecruitedHeroes => recruitedHeroes;
+        public List<HeroData> TavernHeroes => tavernHeroes;
+        public int BarracksCapacity => maxBarracksCapacity;
+        public int RecruitmentCost => baseRecruitmentCost;
     }
 }
