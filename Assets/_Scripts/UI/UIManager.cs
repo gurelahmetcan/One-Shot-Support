@@ -26,6 +26,8 @@ namespace OneShotSupport.UI
         public ReputationBar reputationBar;
         public DayCounter dayCounter;
         public GoldDisplay goldDisplay;
+        public Components.FameDisplay fameDisplay;
+        public Components.TrustMeter trustMeter;
         public Button mainMenuButton;
 
         [Header("Settings")]
@@ -58,6 +60,12 @@ namespace OneShotSupport.UI
             {
                 gameManager.Reputation.OnReputationChanged += HandleReputationChanged;
             }
+
+            // Subscribe to propaganda events (Fame & Trust)
+            gameManager.OnFameChanged += HandleFameChanged;
+            gameManager.OnTrustChanged += HandleTrustChanged;
+            gameManager.OnFameMilestoneReached += HandleFameMilestoneReached;
+            gameManager.OnTrustThresholdCrossed += HandleTrustThresholdCrossed;
 
             // Subscribe to screen events
             if (dayStartScreen != null)
@@ -97,6 +105,12 @@ namespace OneShotSupport.UI
                 {
                     gameManager.Reputation.OnReputationChanged -= HandleReputationChanged;
                 }
+
+                // Unsubscribe from propaganda events
+                gameManager.OnFameChanged -= HandleFameChanged;
+                gameManager.OnTrustChanged -= HandleTrustChanged;
+                gameManager.OnFameMilestoneReached -= HandleFameMilestoneReached;
+                gameManager.OnTrustThresholdCrossed -= HandleTrustThresholdCrossed;
             }
 
             // Unsubscribe from screen events
@@ -132,6 +146,16 @@ namespace OneShotSupport.UI
             {
                 // Use new seasonal system
                 dayCounter.UpdateSeason(gameManager.Calendar.CurrentSeason, gameManager.Calendar.CurrentYear);
+            }
+
+            if (fameDisplay != null && gameManager.Propaganda != null)
+            {
+                fameDisplay.UpdateFame(gameManager.Propaganda.CurrentFame);
+            }
+
+            if (trustMeter != null && gameManager.Propaganda != null)
+            {
+                trustMeter.UpdateTrust(gameManager.Propaganda.CurrentTrust);
             }
         }
 
@@ -276,6 +300,46 @@ namespace OneShotSupport.UI
             {
                 gameManager.StartRestock();
             }
+        }
+
+        /// <summary>
+        /// Handle fame changed
+        /// </summary>
+        private void HandleFameChanged(int newFame)
+        {
+            if (fameDisplay != null)
+            {
+                fameDisplay.UpdateFame(newFame);
+            }
+        }
+
+        /// <summary>
+        /// Handle trust changed
+        /// </summary>
+        private void HandleTrustChanged(int newTrust)
+        {
+            if (trustMeter != null)
+            {
+                trustMeter.UpdateTrust(newTrust);
+            }
+        }
+
+        /// <summary>
+        /// Handle fame milestone reached
+        /// </summary>
+        private void HandleFameMilestoneReached(FameMilestone milestone)
+        {
+            Debug.Log($"[UIManager] Fame Milestone Reached: {milestone}");
+            // TODO: Show celebration/notification UI when milestone is reached
+        }
+
+        /// <summary>
+        /// Handle trust threshold crossed
+        /// </summary>
+        private void HandleTrustThresholdCrossed(TrustThreshold threshold)
+        {
+            Debug.Log($"[UIManager] Trust Threshold Crossed: {threshold}");
+            // TODO: Show notification UI when trust threshold is crossed
         }
 
         // === Screen Management ===

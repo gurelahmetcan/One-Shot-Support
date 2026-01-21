@@ -48,6 +48,7 @@ namespace OneShotSupport.Core
         // State machine
         private GameState currentState;
         private ReputationManager reputationManager;
+        private PropagandaManager propagandaManager;
         private DayData currentDay; // Note: Still called "DayData" for now, represents current turn/season
         private SeasonalCalendar seasonalCalendar;
 
@@ -61,6 +62,10 @@ namespace OneShotSupport.Core
         public event Action OnGameOver;
         public event Action<Season, int> OnSeasonChanged; // New event for season changes
         public event Action<int> OnYearChanged; // New event for year changes
+        public event Action<int> OnFameChanged; // Propagate fame changes to UI
+        public event Action<int> OnTrustChanged; // Propagate trust changes to UI
+        public event Action<FameMilestone> OnFameMilestoneReached; // Propagate milestone events
+        public event Action<TrustThreshold> OnTrustThresholdCrossed; // Propagate trust threshold events
 
         // Singleton for easy access (game jam pattern)
         public static GameManager Instance { get; private set; }
@@ -78,6 +83,7 @@ namespace OneShotSupport.Core
 
             // Initialize systems
             reputationManager = new ReputationManager();
+            propagandaManager = new PropagandaManager();
             seasonalCalendar = new SeasonalCalendar();
         }
 
@@ -85,11 +91,18 @@ namespace OneShotSupport.Core
         {
             // Start the game
             reputationManager.Initialize();
+            propagandaManager.Initialize();
             seasonalCalendar.Initialize();
 
             // Subscribe to calendar events
             seasonalCalendar.OnSeasonChanged += HandleSeasonChanged;
             seasonalCalendar.OnYearChanged += HandleYearChanged;
+
+            // Subscribe to propaganda events
+            propagandaManager.OnFameChanged += (fame) => OnFameChanged?.Invoke(fame);
+            propagandaManager.OnTrustChanged += (trust) => OnTrustChanged?.Invoke(trust);
+            propagandaManager.OnFameMilestoneReached += (milestone) => OnFameMilestoneReached?.Invoke(milestone);
+            propagandaManager.OnTrustThresholdCrossed += (threshold) => OnTrustThresholdCrossed?.Invoke(threshold);
 
             // BUG FIX: Don't subscribe to immediate game over - check in StartNextDay() instead
             // reputationManager.OnReputationDepleted += HandleGameOver;
@@ -466,6 +479,7 @@ namespace OneShotSupport.Core
 
         public GameState CurrentState => currentState;
         public ReputationManager Reputation => reputationManager;
+        public PropagandaManager Propaganda => propagandaManager;
         public DayData CurrentDay => currentDay;
         public SeasonalCalendar Calendar => seasonalCalendar;
         public int CurrentDayNumber => seasonalCalendar?.CurrentTurn ?? 1; // Backward compatibility
