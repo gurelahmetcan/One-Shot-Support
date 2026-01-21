@@ -28,33 +28,17 @@ namespace OneShotSupport.UI.Screens
         }
 
         /// <summary>
-        /// Setup and show the day start screen (backward compatibility)
-        /// </summary>
-        public void Setup(int dayNumber, string hintMessage)
-        {
-            // Update day number
-            if (dayNumberText != null)
-                dayNumberText.text = $"{dayNumber}";
-
-            // Update hint message
-            if (hintMessageText != null)
-                hintMessageText.text = hintMessage;
-
-            gameObject.SetActive(true);
-        }
-
-        /// <summary>
         /// Setup and show the season start screen
         /// </summary>
-        public void Setup(Season season, int year, string hintMessage)
+        public void Setup(Season season, int year)
         {
             // Update season and year
             if (dayNumberText != null)
                 dayNumberText.text = $"{season}, Year {year}";
 
-            // Update hint message
+            // Hide or remove hint message text since we're not using hints
             if (hintMessageText != null)
-                hintMessageText.text = hintMessage;
+                hintMessageText.gameObject.SetActive(false);
 
             gameObject.SetActive(true);
         }
@@ -64,15 +48,6 @@ namespace OneShotSupport.UI.Screens
         /// </summary>
         private void HandleContinue()
         {
-            // Complete tutorial step if tutorial is active
-            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
-            {
-                if (TutorialManager.Instance.GetCurrentStep() == TutorialStep.DayStartHint)
-                {
-                    TutorialManager.Instance.CompleteCurrentStep();
-                }
-            }
-
             OnContinueClicked?.Invoke();
             Hide();
         }

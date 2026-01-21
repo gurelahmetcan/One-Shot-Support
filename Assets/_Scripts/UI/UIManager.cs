@@ -46,8 +46,7 @@ namespace OneShotSupport.UI
 
             // Subscribe to game events
             gameManager.OnStateChanged += HandleStateChanged;
-            //gameManager.OnDayHintGenerated += HandleDayHintGenerated; // Legacy support
-            gameManager.OnSeasonHintGenerated += HandleSeasonHintGenerated; // New seasonal system
+            gameManager.OnSeasonStarted += HandleSeasonStarted;
             gameManager.OnSeasonChanged += HandleSeasonChanged;
             gameManager.OnYearChanged += HandleYearChanged;
             gameManager.OnHeroReady += HandleHeroReady;
@@ -87,8 +86,7 @@ namespace OneShotSupport.UI
             if (gameManager != null)
             {
                 gameManager.OnStateChanged -= HandleStateChanged;
-                //gameManager.OnDayHintGenerated -= HandleDayHintGenerated; // Legacy support
-                gameManager.OnSeasonHintGenerated -= HandleSeasonHintGenerated; // New seasonal system
+                gameManager.OnSeasonStarted -= HandleSeasonStarted;
                 gameManager.OnSeasonChanged -= HandleSeasonChanged;
                 gameManager.OnYearChanged -= HandleYearChanged;
                 gameManager.OnHeroReady -= HandleHeroReady;
@@ -238,19 +236,11 @@ namespace OneShotSupport.UI
         }
 
         /// <summary>
-        /// Handle day hint generated (legacy support)
+        /// Handle season started event - show the season start screen
         /// </summary>
-        private void HandleDayHintGenerated(int dayNumber, string hintMessage)
+        private void HandleSeasonStarted(Season season, int year)
         {
-            ShowDayStartScreen(dayNumber, hintMessage);
-        }
-
-        /// <summary>
-        /// Handle season hint generated (new seasonal system)
-        /// </summary>
-        private void HandleSeasonHintGenerated(Season season, int year, string hintMessage)
-        {
-            ShowDayStartScreen(season, year, hintMessage);
+            ShowDayStartScreen(season, year);
         }
 
         /// <summary>
@@ -308,23 +298,13 @@ namespace OneShotSupport.UI
                 gameOverScreen.gameObject.SetActive(false);
         }
 
-        private void ShowDayStartScreen(int dayNumber, string hintMessage)
+        private void ShowDayStartScreen(Season season, int year)
         {
             HideAllScreens();
 
             if (dayStartScreen != null)
             {
-                dayStartScreen.Setup(dayNumber, hintMessage);
-            }
-        }
-
-        private void ShowDayStartScreen(Season season, int year, string hintMessage)
-        {
-            HideAllScreens();
-
-            if (dayStartScreen != null)
-            {
-                dayStartScreen.Setup(season, year, hintMessage);
+                dayStartScreen.Setup(season, year);
             }
         }
 

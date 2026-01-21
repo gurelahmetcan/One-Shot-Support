@@ -33,15 +33,9 @@ namespace OneShotSupport.Core
         [Tooltip("Monster generator for procedural monsters")]
         public MonsterGenerator monsterGenerator;
 
-        [Tooltip("Hint system for daily hints")]
-        public HintSystem hintSystem;
-
         [Header("Managers")]
         [Tooltip("Gold manager for currency system")]
         public GoldManager goldManager;
-
-        [Tooltip("Tutorial manager for Day 1 tutorial")]
-        public TutorialManager tutorialManager;
 
         [Tooltip("Hero lifecycle manager for aging system")]
         public HeroLifecycleManager heroLifecycleManager;
@@ -56,12 +50,11 @@ namespace OneShotSupport.Core
         private ReputationManager reputationManager;
         private DayData currentDay; // Note: Still called "DayData" for now, represents current turn/season
         private SeasonalCalendar seasonalCalendar;
-        private DailyHint currentDayHint; // Note: Still called "DailyHint" but represents seasonal hint
 
         // Events for UI
         public event Action<GameState> OnStateChanged;
-        public event Action<DayData> OnDayStarted; // Called OnSeasonStarted conceptually
-        public event Action<Season, int, string> OnSeasonHintGenerated; // (season, year, hintMessage)
+        public event Action<DayData> OnDayStarted; // Legacy support
+        public event Action<Season, int> OnSeasonStarted; // (season, year) - replaces day start
         public event Action<HeroResult> OnHeroReady;
         public event Action<HeroResult> OnHeroEquipped;
         public event Action<List<HeroResult>> OnDayEnded; // Called OnSeasonEnded conceptually
@@ -100,12 +93,6 @@ namespace OneShotSupport.Core
 
             // BUG FIX: Don't subscribe to immediate game over - check in StartNextDay() instead
             // reputationManager.OnReputationDepleted += HandleGameOver;
-
-            // Check if tutorial should run (Turn 1)
-            if (tutorialManager != null && tutorialManager.ShouldRunTutorial(seasonalCalendar.CurrentTurn))
-            {
-                tutorialManager.StartTutorial();
-            }
 
             ChangeState(GameState.DayStart);
         }
@@ -194,31 +181,8 @@ namespace OneShotSupport.Core
             Debug.Log($"=== {seasonalCalendar.GetDisplayString()} (Turn {seasonalCalendar.CurrentTurn}) START ===");
             currentDay = new DayData(seasonalCalendar.CurrentTurn);
 
-            // Generate seasonal hint (or use tutorial hint if Turn 1)
-            bool isTutorial = tutorialManager != null && tutorialManager.IsTutorialActive();
-
-            if (isTutorial)
-            {
-                // Use tutorial hint
-                var tutorialData = tutorialManager.GetTutorialData();
-                currentDayHint = new DailyHint
-                {
-                    hasHint = true,
-                    hintMessage = tutorialData.tutorialHint,
-                    hintedWeakness = tutorialData.tutorialMonster.weakness
-                };
-                OnSeasonHintGenerated?.Invoke(seasonalCalendar.CurrentSeason, seasonalCalendar.CurrentYear, currentDayHint.hintMessage);
-            }
-            else if (hintSystem != null)
-            {
-                currentDayHint = hintSystem.GenerateHint();
-                OnSeasonHintGenerated?.Invoke(seasonalCalendar.CurrentSeason, seasonalCalendar.CurrentYear, currentDayHint.hintMessage);
-            }
-            else
-            {
-                currentDayHint = new DailyHint { hasHint = false, hintMessage = "This season feels calm and uneventful." };
-            }
-
+            // Trigger season started event
+            OnSeasonStarted?.Invoke(seasonalCalendar.CurrentSeason, seasonalCalendar.CurrentYear);
             OnDayStarted?.Invoke(currentDay);
 
             // Transition to restock will happen after DayStartScreen is dismissed via UIManager
@@ -236,45 +200,8 @@ namespace OneShotSupport.Core
         {
             if (currentState == GameState.DayStart)
             {
-                // Skip restock if tutorial is active
-                bool isTutorial = tutorialManager != null && tutorialManager.IsTutorialActive();
-
-                if (isTutorial)
-                {
-                    // Skip restock, load tutorial items directly
-                    SkipRestockForTutorial();
-                }
-                else
-                {
-                    ChangeState(GameState.Restock);
-                }
+                ChangeState(GameState.Restock);
             }
-        }
-
-        /// <summary>
-        /// Skip restock and load tutorial data directly
-        /// </summary>
-        private void SkipRestockForTutorial()
-        {
-            Debug.Log("[Tutorial] Skipping restock, loading tutorial data...");
-
-            var tutorialData = tutorialManager.GetTutorialData();
-
-            // Create tutorial hero result
-            var tutorialHeroResult = new HeroResult
-            {
-                hero = tutorialData.tutorialHero,
-                monster = tutorialData.tutorialMonster
-            };
-            currentDay.heroResults.Add(tutorialHeroResult);
-
-            // Load tutorial items
-            currentDay.availableItems = tutorialData.GetTutorialItems();
-
-            Debug.Log($"[Tutorial] Loaded tutorial hero and {currentDay.availableItems.Count} items");
-
-            // Transition directly to consultation
-            ChangeState(GameState.Consultation);
         }
 
         // === RESTOCK STATE ===
@@ -292,15 +219,6 @@ namespace OneShotSupport.Core
                     monster = monsterGenerator != null ? monsterGenerator.GenerateMonster() : null
                 };
                 currentDay.heroResults.Add(heroResult);
-            }
-
-            // If there's a hint, assign hinted monster to random hero
-            if (currentDayHint.hasHint && currentDayHint.hintedWeakness.HasValue && monsterGenerator != null)
-            {
-                int randomHeroIndex = Random.Range(0, heroesPerTurn);
-                currentDay.heroResults[randomHeroIndex].monster =
-                    monsterGenerator.GenerateMonsterWithWeakness(currentDayHint.hintedWeakness.Value);
-                Debug.Log($"[Hint] Hero {randomHeroIndex} assigned monster with {currentDayHint.hintedWeakness.Value} weakness");
             }
 
             Debug.Log($"[Restock] Generated {heroesPerTurn} heroes");
@@ -558,6 +476,5 @@ namespace OneShotSupport.Core
         public DayData CurrentDay => currentDay;
         public SeasonalCalendar Calendar => seasonalCalendar;
         public int CurrentDayNumber => seasonalCalendar?.CurrentTurn ?? 1; // Backward compatibility
-        public DailyHint CurrentDayHint => currentDayHint;
     }
 }
