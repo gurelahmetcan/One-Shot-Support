@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7decd58c8526441cbb658dad66e1e12, type: 3}
+  m_Name: MissionGenerator
+  m_EditorClassIdentifier: 
+  missionVisuals:
+  - missionNames: []
+    sprite: {fileID: 21300000, guid: f67563552e67b492e94025fdd6558b9d, type: 3}
+  - missionNames: []
+    sprite: {fileID: 21300000, guid: bc97c5ce8545745e4a8db1aa65f802bb, type: 3}
+  - missionNames: []
+    sprite: {fileID: 21300000, guid: 9a8bef3a0ac934644aaa58d1208785fb, type: 3}
+  - missionNames: []
+    sprite: {fileID: 21300000, guid: 962ea061465cc445f958e6e6bba15acd, type: 3}
+  oneStarChance: 0.3
+  twoStarChance: 0.3
+  threeStarChance: 0.25
+  fourStarChance: 0.1
+  fiveStarChance: 0.05
+  oneStarGoldRange: {x: 20, y: 50}
+  twoStarGoldRange: {x: 40, y: 80}
+  threeStarGoldRange: {x: 70, y: 120}
+  fourStarGoldRange: {x: 100, y: 180}
+  fiveStarGoldRange: {x: 150, y: 250}
+  oneStarThreat: 5
+  twoStarThreat: 15
+  threeStarThreat: 25
+  fourStarThreat: 35
+  fiveStarThreat: 45
+  intelChance: 0.5
+  intelHints:
+  - Sharp weapons recommended
+  - Bring magical items
+  - Catering supplies needed
+  - Lighting equipment required
