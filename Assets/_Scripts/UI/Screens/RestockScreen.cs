@@ -99,17 +99,6 @@ namespace OneShotSupport.UI.Screens
         /// </summary>
         public void Setup()
         {
-            // Get the daily hint if available
-            hintedCategory = null;
-            if (GameManager.Instance != null)
-            {
-                var hint = GameManager.Instance.CurrentDayHint;
-                if (hint != null && hint.hasHint && hint.hintedWeakness.HasValue)
-                {
-                    hintedCategory = hint.hintedWeakness.Value;
-                }
-            }
-
             // Reset all slots
             for (int i = 0; i < 6; i++)
             {
