@@ -22,7 +22,6 @@ namespace OneShotSupport.UI
         public Screens.TavernScreen tavernScreen;
         public Screens.BarracksScreen barracksScreen;
         public RestockScreen restockScreen;
-        public ConsultationScreen consultationScreen;
         public DayEndScreen dayEndScreen;
         public GameOverScreen gameOverScreen;
 
@@ -60,7 +59,6 @@ namespace OneShotSupport.UI
             gameManager.OnTavernHeroesGenerated += HandleTavernHeroesGenerated;
             gameManager.OnHeroRecruited += HandleHeroRecruited;
             gameManager.OnBarracksOpened += HandleBarracksOpened;
-            gameManager.OnHeroReady += HandleHeroReady;
             gameManager.OnDayEnded += HandleDayEnded;
             gameManager.OnGameOver += HandleGameOver;
 
@@ -135,7 +133,6 @@ namespace OneShotSupport.UI
                 gameManager.OnTavernHeroesGenerated -= HandleTavernHeroesGenerated;
                 gameManager.OnHeroRecruited -= HandleHeroRecruited;
                 gameManager.OnBarracksOpened -= HandleBarracksOpened;
-                gameManager.OnHeroReady -= HandleHeroReady;
                 gameManager.OnDayEnded -= HandleDayEnded;
                 gameManager.OnGameOver -= HandleGameOver;
 
@@ -238,11 +235,7 @@ namespace OneShotSupport.UI
                 case GameState.Restock:
                     ShowRestockScreen();
                     break;
-
-                case GameState.Consultation:
-                    ShowConsultationScreen();
-                    break;
-
+                
                 case GameState.DayEnd:
                     ShowDayEndScreen();
                     break;
@@ -256,20 +249,6 @@ namespace OneShotSupport.UI
             if (dayCounter != null && gameManager.Calendar != null)
             {
                 dayCounter.UpdateSeason(gameManager.Calendar.CurrentSeason, gameManager.Calendar.CurrentYear);
-            }
-        }
-
-        /// <summary>
-        /// Handle hero ready for consultation
-        /// </summary>
-        private void HandleHeroReady(HeroResult heroResult)
-        {
-            if (consultationScreen != null && gameManager.CurrentDay != null)
-            {
-                consultationScreen.SetupConsultation(
-                    heroResult,
-                    gameManager.CurrentDay.availableItems
-                );
             }
         }
 
@@ -500,10 +479,7 @@ namespace OneShotSupport.UI
 
             if (restockScreen != null)
                 restockScreen.gameObject.SetActive(false);
-
-            if (consultationScreen != null)
-                consultationScreen.gameObject.SetActive(false);
-
+            
             if (dayEndScreen != null)
                 dayEndScreen.gameObject.SetActive(false);
 
@@ -570,14 +546,6 @@ namespace OneShotSupport.UI
                 restockScreen.Setup();
                 restockScreen.gameObject.SetActive(true);
             }
-        }
-
-        private void ShowConsultationScreen()
-        {
-            HideAllScreens();
-
-            if (consultationScreen != null)
-                consultationScreen.gameObject.SetActive(true);
         }
 
         private void ShowDayEndScreen()

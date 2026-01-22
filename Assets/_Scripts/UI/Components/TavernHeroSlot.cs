@@ -97,7 +97,7 @@ namespace OneShotSupport.UI.Components
             }
 
             if (costText != null)
-                costText.text = $"Recruitment Cost: {cost} Gold";
+                costText.text = $"{cost} Gold";
 
             if (heroPortrait != null && hero.portrait != null)
             {

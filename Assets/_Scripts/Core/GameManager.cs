@@ -59,12 +59,7 @@ namespace OneShotSupport.Core
 
         [Tooltip("Hero lifecycle manager for aging system")]
         public HeroLifecycleManager heroLifecycleManager;
-
-        [Header("UI References (Internal)")]
-        [Tooltip("Consultation screen reference for item recycling")]
-        [HideInInspector]
-        public UI.Screens.ConsultationScreen consultationScreen;
-
+        
         // State machine
         private GameState currentState;
         private ReputationManager reputationManager;
@@ -596,95 +591,13 @@ namespace OneShotSupport.Core
         {
             // Waiting for player to equip items and call CompleteConsultation()
         }
-
-        /// <summary>
-        /// Called by UI when player finishes equipping a hero
-        /// </summary>
-        public void CompleteConsultation(List<ItemData> equippedItems)
-        {
-            var currentHero = currentDay.GetCurrentHero();
-            if (currentHero == null) return;
-
-            // Store equipped items
-            currentHero.equippedItems = equippedItems;
-
-            // Calculate success chance with inspiring bonus
-            currentHero.successChance = OneShotCalculator.CalculateSuccessChance(
-                currentHero.hero,
-                currentHero.monster,
-                equippedItems,
-                currentDay.inspiringBonus
-            );
-
-            currentHero.confidence = OneShotCalculator.GetConfidenceLevel(currentHero.successChance);
-
-            // Roll for success
-            currentHero.succeeded = OneShotCalculator.RollOneShot(currentHero.successChance);
-
-            // Calculate review
-            var (stars, repChange) = OneShotCalculator.CalculateReview(
-                currentHero.confidence,
-                currentHero.succeeded,
-                currentHero.hero.perk
-            );
-
-            currentHero.stars = stars;
-            currentHero.reputationChange = repChange;
-
-            // BUG FIX: Calculate money change but DON'T apply it yet (apply in StartNextDay after animations)
-            if (currentHero.succeeded && goldManager != null)
-            {
-                currentHero.moneyChange = goldManager.GetMonsterReward(currentHero.monster.rank);
-            }
-            else
-            {
-                currentHero.moneyChange = 0;
-            }
-
-            Debug.Log($"[Consultation] {currentHero.hero.heroName}: {currentHero.successChance}% → {(currentHero.succeeded ? "SUCCESS" : "FAILED")} ({stars}★, {repChange:+0;-0} rep, {currentHero.moneyChange} gold)");
-
-            // Check for inspiring bonus for next hero
-            int inspiringBonus = OneShotCalculator.GetInspiringBonusForNextHero(
-                currentHero.hero.perk,
-                currentHero.succeeded
-            );
-            currentDay.inspiringBonus = inspiringBonus;
-
-            OnHeroEquipped?.Invoke(currentHero);
-
-            // Move to next hero or end day
-            if (currentDay.MoveToNextHero())
-            {
-                // Next hero
-                ChangeState(GameState.Consultation);
-            }
-            else
-            {
-                // All heroes done, go to day end
-                ChangeState(GameState.DayEnd);
-            }
-        }
-
+        
         // === DAY END STATE ===
 
         private void EnterDayEnd()
         {
             Debug.Log("=== DAY END ===");
-
-            // Recycle leftover items for gold
-            if (goldManager != null && consultationScreen != null)
-            {
-                int leftoverItems = consultationScreen.GetLeftoverItemCount();
-                if (leftoverItems > 0)
-                {
-                    goldManager.RecycleItems(leftoverItems);
-                    Debug.Log($"[Day End] Recycled {leftoverItems} leftover items for gold");
-                }
-            }
-
-            // BUG FIX: DON'T apply reputation changes here - wait for day end screen animations
-            // Reputation will be applied in StartNextDay() after animations
-
+            
             OnDayEnded?.Invoke(currentDay.heroResults);
         }
 
@@ -698,7 +611,6 @@ namespace OneShotSupport.Core
         /// </summary>
         public void StartNextDay()
         {
-            // BUG FIX: Apply reputation and money changes AFTER day end screen animations complete
             foreach (var result in currentDay.heroResults)
             {
                 reputationManager.AddReputation(result.reputationChange);
@@ -713,11 +625,7 @@ namespace OneShotSupport.Core
             Debug.Log($"[Season End] Final Reputation: {reputationManager.CurrentReputation}/100 ({reputationManager.GetReputationStatus()})");
             Debug.Log($"[Season End] Final Gold: {goldManager?.CurrentGold ?? 0}");
 
-            // Age heroes if lifecycle manager is available
-            if (heroLifecycleManager != null)
-            {
-                AgeAllHeroes();
-            }
+            AgeAllHeroes();
 
             // Check for game over AFTER applying reputation changes
             if (reputationManager.IsGameOver)
@@ -782,21 +690,9 @@ namespace OneShotSupport.Core
         /// </summary>
         private void AgeAllHeroes()
         {
-            if (currentDay == null || currentDay.heroResults == null) return;
-
-            foreach (var result in currentDay.heroResults)
+            foreach (var hero in recruitedHeroes)
             {
-                if (result.hero != null && heroLifecycleManager != null)
-                {
-                    var oldStage = result.hero.lifecycleStage;
-                    var newStage = heroLifecycleManager.AgeHero(ref result.hero.age);
-                    result.hero.lifecycleStage = newStage;
-
-                    if (oldStage != newStage)
-                    {
-                        Debug.Log($"[Lifecycle] {result.hero.heroName} aged to {heroLifecycleManager.GetStageDisplayName(newStage)} (age {Mathf.FloorToInt(result.hero.age)})");
-                    }
-                }
+                hero.TickTurn();
             }
         }
 
