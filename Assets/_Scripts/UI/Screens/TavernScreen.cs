@@ -17,9 +17,11 @@ namespace OneShotSupport.UI.Screens
 
         [Header("UI References")]
         [SerializeField] private Button backButton;
+        [SerializeField] private Components.NegotiationPanel negotiationPanel;
 
         // Events
-        public event Action<HeroData> OnHeroRecruited;
+        public event Action<HeroData, Core.ContractOffer> OnHeroRecruited;
+        public event Action<HeroData> OnHeroWalkedAway;
         public event Action OnBackClicked;
 
         private List<HeroData> availableHeroes;
@@ -32,7 +34,7 @@ namespace OneShotSupport.UI.Screens
                 backButton.onClick.AddListener(HandleBackClicked);
             }
 
-            // Setup hero slot callbacks
+            // Setup hero slot callbacks (now opens negotiation instead of direct recruit)
             if (heroSlots != null)
             {
                 for (int i = 0; i < heroSlots.Length; i++)
@@ -40,9 +42,18 @@ namespace OneShotSupport.UI.Screens
                     int index = i; // Capture index for closure
                     if (heroSlots[i] != null)
                     {
-                        heroSlots[i].OnRecruitClicked += () => HandleHeroRecruit(index);
+                        heroSlots[i].OnRecruitClicked += () => HandleNegotiateClicked(index);
                     }
                 }
+            }
+
+            // Setup negotiation panel callbacks
+            if (negotiationPanel != null)
+            {
+                negotiationPanel.OnNegotiationAccepted += HandleNegotiationAccepted;
+                negotiationPanel.OnHeroWalkedAway += HandleHeroWalkedAway;
+                negotiationPanel.OnNegotiationCancelled += HandleNegotiationCancelled;
+                negotiationPanel.gameObject.SetActive(false); // Start hidden
             }
         }
 
@@ -72,21 +83,66 @@ namespace OneShotSupport.UI.Screens
         }
 
         /// <summary>
-        /// Handle hero recruit button clicked
+        /// Handle hero negotiate button clicked
+        /// Opens negotiation panel instead of directly recruiting
         /// </summary>
-        private void HandleHeroRecruit(int slotIndex)
+        private void HandleNegotiateClicked(int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= availableHeroes.Count) return;
 
             HeroData hero = availableHeroes[slotIndex];
 
-            // Notify listeners (GameManager will handle removal from the list)
-            OnHeroRecruited?.Invoke(hero);
+            // Get player's current gold (need to get this from GameManager)
+            // For now, we'll pass 0 and update it in the next integration step
+            int playerGold = Core.GoldManager.Instance != null ? Core.GoldManager.Instance.CurrentGold : 0;
 
-            Debug.Log($"[Tavern] Recruited hero: {hero.heroName}");
+            // Open negotiation panel
+            if (negotiationPanel != null)
+            {
+                negotiationPanel.Setup(hero, playerGold);
+                Debug.Log($"[Tavern] Opened negotiation with: {hero.heroName}");
+            }
+            else
+            {
+                Debug.LogError("[Tavern] NegotiationPanel reference is missing!");
+            }
+        }
 
-            // NOTE: Don't modify availableHeroes here - it's a reference to GameManager's tavernHeroes
-            // GameManager will remove the hero, then we refresh via the public Refresh method
+        /// <summary>
+        /// Handle successful negotiation - hero accepts offer
+        /// </summary>
+        private void HandleNegotiationAccepted(HeroData hero, Core.ContractOffer offer)
+        {
+            Debug.Log($"[Tavern] Negotiation successful! Recruiting {hero.heroName}");
+
+            // Notify listeners (GameManager will handle gold deduction and hero recruitment)
+            OnHeroRecruited?.Invoke(hero, offer);
+
+            // Refresh display
+            Refresh();
+        }
+
+        /// <summary>
+        /// Handle hero walking away from negotiation
+        /// </summary>
+        private void HandleHeroWalkedAway(HeroData hero)
+        {
+            Debug.LogWarning($"[Tavern] {hero.heroName} walked away from negotiations!");
+
+            // Notify listeners (GameManager will mark hero as walked away)
+            OnHeroWalkedAway?.Invoke(hero);
+
+            // Refresh display (hero should now show as grayed out/locked)
+            Refresh();
+        }
+
+        /// <summary>
+        /// Handle negotiation cancelled by player
+        /// </summary>
+        private void HandleNegotiationCancelled()
+        {
+            Debug.Log("[Tavern] Negotiation cancelled");
+            // Nothing special to do - just back to tavern view
         }
 
         /// <summary>

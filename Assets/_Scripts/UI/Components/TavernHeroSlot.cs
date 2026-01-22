@@ -72,9 +72,8 @@ namespace OneShotSupport.UI.Components
 
             if (contractText != null)
             {
-                // Display contract info
-                contractText.text = $"Contract: {hero.contractLengthInYears}yr | Salary: {hero.dailySalary:F0}g/turn\n" +
-                                   $"Loot Cut: {hero.lootCutPercentage:F0}%";
+                // Display contract info (simplified - no loot cut)
+                contractText.text = $"Contract: {hero.contractLengthInYears}yr | Salary: {hero.dailySalary}g/turn";
             }
 
             if (traitsText != null)
