@@ -6,8 +6,9 @@ using System.Text;
 namespace OneShotSupport.Core
 {
     /// <summary>
-    /// Test and debug script for Contract Negotiation mechanics
+    /// Test and debug script for Contract Negotiation mechanics (SIMPLIFIED SYSTEM)
     /// Add this to a GameObject to test value calculations, tension mechanics, and walk-away logic
+    /// Tests the simplified 3-variable system: Signing Bonus, Salary, Contract Length
     /// </summary>
     public class ContractNegotiationTester : MonoBehaviour
     {
@@ -18,10 +19,9 @@ namespace OneShotSupport.Core
         [Tooltip("Test hero for negotiation")]
         [SerializeField] private HeroData testHero;
 
-        [Header("Test Offer Parameters")]
-        [SerializeField] private float testSigningBonus = 50f;
-        [SerializeField] private float testDailySalary = 15f;
-        [SerializeField] private float testLootCutPercentage = 25f;
+        [Header("Test Offer Parameters (Integers Only)")]
+        [SerializeField] private int testSigningBonus = 50;
+        [SerializeField] private int testDailySalary = 15;
         [SerializeField] private int testContractLength = 2;
 
         private ContractNegotiationManager negotiationManager;
@@ -61,7 +61,7 @@ namespace OneShotSupport.Core
             }
 
             Debug.Log("========================================");
-            Debug.Log("STARTING CONTRACT NEGOTIATION TEST");
+            Debug.Log("STARTING CONTRACT NEGOTIATION TEST (SIMPLIFIED SYSTEM)");
             Debug.Log("========================================\n");
 
             // Test 1: Hero Information
@@ -70,19 +70,25 @@ namespace OneShotSupport.Core
             // Test 2: Expected Value Calculation
             TestExpectedValue();
 
-            // Test 3: Ideal Offer Calculation
+            // Test 3: Payment Preference
+            TestPaymentPreference();
+
+            // Test 4: Ideal Offer Calculation
             TestIdealOffer();
 
-            // Test 4: Custom Offer Evaluation
+            // Test 5: Custom Offer Evaluation
             TestCustomOffer();
 
-            // Test 5: Starting Tension
+            // Test 6: Starting Tension
             TestStartingTension();
 
-            // Test 6: Tension Delta Calculation
+            // Test 7: Tension Delta Calculation
             TestTensionDelta();
 
-            // Test 7: Walk-Away Simulation
+            // Test 8: Payment Preference Violation
+            TestPaymentPreferenceViolation();
+
+            // Test 9: Walk-Away Simulation
             TestWalkAwayMechanics();
 
             Debug.Log("\n========================================");
@@ -106,7 +112,7 @@ namespace OneShotSupport.Core
             sb.AppendLine($"  Charisma: {testHero.charisma}");
             sb.AppendLine($"  Vitality: {testHero.maxVitality}");
             sb.AppendLine($"  Greed: {testHero.greed}");
-            sb.AppendLine($"\nTrust Level: {testHero.trustLevel:F0}%");
+            sb.AppendLine($"\nTrust Level: {testHero.trustLevel}%");
             sb.AppendLine($"Bond Level: {testHero.bondLevel}");
 
             if (testHero.traits.Count > 0)
@@ -133,157 +139,191 @@ namespace OneShotSupport.Core
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("\n--- TEST 2: EXPECTED VALUE (Vexp) ---");
 
-            float vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
+            int vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
 
-            float coreStats = testHero.prowess + testHero.charisma + testHero.maxVitality;
-            float baseValue = coreStats * 2f;
+            int coreStats = testHero.prowess + testHero.charisma + testHero.maxVitality;
+            int baseValue = coreStats * 2;
 
-            sb.AppendLine($"Core Stats Sum: {coreStats:F1}");
-            sb.AppendLine($"Base Value (Core × 2): {baseValue:F1}");
+            sb.AppendLine($"Core Stats Sum: {coreStats}");
+            sb.AppendLine($"Base Value (Core × 2): {baseValue}g");
             sb.AppendLine($"Lifecycle Stage: {testHero.lifeStage}");
             sb.AppendLine($"Greed Premium: {testHero.greed}%");
-            sb.AppendLine($"\n>>> TOTAL Vexp: {vexp:F1} gold <<<");
+            sb.AppendLine($"\n>>> TOTAL Vexp: {vexp}g <<<");
 
             Debug.Log(sb.ToString());
         }
 
         /// <summary>
-        /// Test 3: Calculate ideal offer where Voff = Vexp
+        /// Test 3: Determine payment preference
         /// </summary>
-        [ContextMenu("Test 3: Ideal Offer")]
+        [ContextMenu("Test 3: Payment Preference")]
+        private void TestPaymentPreference()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("\n--- TEST 3: PAYMENT PREFERENCE ---");
+
+            PaymentPreference preference = negotiationManager.GetPaymentPreference(testHero);
+
+            sb.AppendLine($"Hero: {testHero.heroName}");
+            sb.AppendLine($"Payment Preference: {preference}");
+
+            switch (preference)
+            {
+                case PaymentPreference.PrefersSigningBonus:
+                    sb.AppendLine("  → Wants HIGH signing bonus (≥30% upfront)");
+                    sb.AppendLine("  → Traits: Greedy, Impulsive, or Impatient detected");
+                    break;
+                case PaymentPreference.PrefersSalary:
+                    sb.AppendLine("  → Wants STEADY salary (≤20% upfront)");
+                    sb.AppendLine("  → Traits: Cautious, Patient, or Steady detected");
+                    break;
+                case PaymentPreference.Neutral:
+                    sb.AppendLine("  → No strong preference");
+                    sb.AppendLine("  → ~20% signing, ~80% salary is fine");
+                    break;
+            }
+
+            Debug.Log(sb.ToString());
+        }
+
+        /// <summary>
+        /// Test 4: Calculate ideal offer where Voff = Vexp
+        /// </summary>
+        [ContextMenu("Test 4: Ideal Offer")]
         private void TestIdealOffer()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("\n--- TEST 3: IDEAL OFFER (Voff = Vexp) ---");
+            sb.AppendLine("\n--- TEST 4: IDEAL OFFER (Voff = Vexp) ---");
 
             ContractOffer idealOffer = negotiationManager.CalculateIdealOffer(testHero, testContractLength);
-            float vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
-            float voff = negotiationManager.CalculateOfferValue(testHero, idealOffer);
+            int vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
+            int voff = negotiationManager.CalculateOfferValue(idealOffer);
 
-            sb.AppendLine($"Hero Vexp: {vexp:F1} gold");
+            sb.AppendLine($"Hero Vexp: {vexp}g");
+            sb.AppendLine($"Payment Preference: {negotiationManager.GetPaymentPreference(testHero)}");
             sb.AppendLine("\nIdeal Offer Components:");
-            sb.AppendLine($"  Signing Bonus: {idealOffer.signingBonus:F1} gold");
-            sb.AppendLine($"  Daily Salary: {idealOffer.dailySalary:F1} gold/turn");
-            sb.AppendLine($"  Loot Cut: {idealOffer.lootCutPercentage:F1}%");
+            sb.AppendLine($"  Signing Bonus: {idealOffer.signingBonus}g");
+            sb.AppendLine($"  Daily Salary: {idealOffer.dailySalary}g/turn");
             sb.AppendLine($"  Contract Length: {idealOffer.contractLengthYears} years");
-            sb.AppendLine($"\n>>> TOTAL Voff: {voff:F1} gold <<<");
-            sb.AppendLine($"Difference: {(voff - vexp):+0.0;-0.0} gold ({((voff / vexp - 1f) * 100f):+0.0;-0.0}%)");
+            sb.AppendLine($"\n  Calculation:");
+            sb.AppendLine($"  Salary Total: {idealOffer.dailySalary}g × 4 turns × {idealOffer.contractLengthYears}yr = {idealOffer.dailySalary * 4 * idealOffer.contractLengthYears}g");
+            sb.AppendLine($"\n>>> TOTAL Voff: {voff}g <<<");
+            sb.AppendLine($"Difference: {(voff - vexp):+0;-0}g");
 
             Debug.Log(sb.ToString());
         }
 
         /// <summary>
-        /// Test 4: Evaluate custom offer
+        /// Test 5: Evaluate custom offer
         /// </summary>
-        [ContextMenu("Test 4: Custom Offer")]
+        [ContextMenu("Test 5: Custom Offer")]
         private void TestCustomOffer()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("\n--- TEST 4: CUSTOM OFFER EVALUATION ---");
+            sb.AppendLine("\n--- TEST 5: CUSTOM OFFER EVALUATION ---");
 
             ContractOffer customOffer = new ContractOffer(
                 testSigningBonus,
                 testDailySalary,
-                testLootCutPercentage,
                 testContractLength
             );
 
-            float vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
-            float voff = negotiationManager.CalculateOfferValue(testHero, customOffer);
+            int vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
+            int voff = negotiationManager.CalculateOfferValue(customOffer);
 
-            sb.AppendLine($"Hero Vexp: {vexp:F1} gold");
+            sb.AppendLine($"Hero Vexp: {vexp}g");
             sb.AppendLine("\nCustom Offer Components:");
-            sb.AppendLine($"  Signing Bonus: {customOffer.signingBonus:F1} gold");
-            sb.AppendLine($"  Daily Salary: {customOffer.dailySalary:F1} gold/turn");
-            sb.AppendLine($"  Loot Cut: {customOffer.lootCutPercentage:F1}%");
+            sb.AppendLine($"  Signing Bonus: {customOffer.signingBonus}g");
+            sb.AppendLine($"  Daily Salary: {customOffer.dailySalary}g/turn");
             sb.AppendLine($"  Contract Length: {customOffer.contractLengthYears} years");
-            sb.AppendLine($"\n>>> TOTAL Voff: {voff:F1} gold <<<");
+            sb.AppendLine($"\n  Calculation:");
+            sb.AppendLine($"  {customOffer.signingBonus}g + ({customOffer.dailySalary}g × 4 × {customOffer.contractLengthYears}yr)");
+            sb.AppendLine($"  = {customOffer.signingBonus}g + {customOffer.dailySalary * 4 * customOffer.contractLengthYears}g");
+            sb.AppendLine($"\n>>> TOTAL Voff: {voff}g <<<");
 
-            float difference = voff - vexp;
-            float percentageDiff = (difference / vexp) * 100f;
+            int difference = voff - vexp;
+            float percentageDiff = ((float)difference / vexp) * 100f;
 
-            sb.AppendLine($"\nValue Difference: {difference:+0.0;-0.0} gold ({percentageDiff:+0.0;-0.0}%)");
+            sb.AppendLine($"\nValue Difference: {difference:+0;-0}g ({percentageDiff:+0.0;-0.0}%)");
 
             if (difference < 0)
             {
-                sb.AppendLine("Status: LOWBALL - Hero will be unhappy!");
+                sb.AppendLine("Status: ⚠️ LOWBALL - Hero will be unhappy!");
             }
             else if (difference > vexp * 0.2f)
             {
-                sb.AppendLine("Status: OVERPAYING - Player loses profit margin!");
+                sb.AppendLine("Status: 💰 OVERPAYING - Player loses profit margin!");
             }
             else
             {
-                sb.AppendLine("Status: FAIR - Good negotiation range");
+                sb.AppendLine("Status: ✅ FAIR - Good negotiation range");
             }
 
             Debug.Log(sb.ToString());
         }
 
         /// <summary>
-        /// Test 5: Calculate starting tension from trust
+        /// Test 6: Calculate starting tension from trust
         /// </summary>
-        [ContextMenu("Test 5: Starting Tension")]
+        [ContextMenu("Test 6: Starting Tension")]
         private void TestStartingTension()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("\n--- TEST 5: STARTING TENSION ---");
+            sb.AppendLine("\n--- TEST 6: STARTING TENSION ---");
 
             sb.AppendLine("Testing different trust levels:\n");
 
-            float[] trustLevels = { 100f, 75f, 50f, 25f, 0f };
-            foreach (float trust in trustLevels)
+            int[] trustLevels = { 100, 75, 50, 25, 0 };
+            foreach (int trust in trustLevels)
             {
-                float tension = negotiationManager.CalculateStartingTension(trust);
-                sb.AppendLine($"Trust {trust:F0}% => Starting Tension: {tension:F1}%");
+                int tension = negotiationManager.CalculateStartingTension(trust);
+                sb.AppendLine($"Trust {trust}% => Starting Tension: {tension}%");
             }
 
             sb.AppendLine($"\nCurrent Hero ({testHero.heroName}):");
-            sb.AppendLine($"Trust: {testHero.trustLevel:F0}%");
-            float currentTension = negotiationManager.CalculateStartingTension(testHero.trustLevel);
-            sb.AppendLine($"Starting Tension: {currentTension:F1}%");
+            sb.AppendLine($"Trust: {testHero.trustLevel}%");
+            int currentTension = negotiationManager.CalculateStartingTension(testHero.trustLevel);
+            sb.AppendLine($"Starting Tension: {currentTension}%");
 
             Debug.Log(sb.ToString());
         }
 
         /// <summary>
-        /// Test 6: Calculate tension delta from different offers
+        /// Test 7: Calculate tension delta from different offers
         /// </summary>
-        [ContextMenu("Test 6: Tension Delta")]
+        [ContextMenu("Test 7: Tension Delta")]
         private void TestTensionDelta()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("\n--- TEST 6: TENSION DELTA ---");
+            sb.AppendLine("\n--- TEST 7: TENSION DELTA ---");
 
             ContractOffer idealOffer = negotiationManager.CalculateIdealOffer(testHero, testContractLength);
             ContractOffer lowballOffer = new ContractOffer(
-                idealOffer.signingBonus * 0.5f,
-                idealOffer.dailySalary * 0.7f,
-                idealOffer.lootCutPercentage * 0.7f,
+                Mathf.RoundToInt(idealOffer.signingBonus * 0.5f),
+                Mathf.RoundToInt(idealOffer.dailySalary * 0.7f),
                 testContractLength
             );
             ContractOffer generousOffer = new ContractOffer(
-                idealOffer.signingBonus * 1.5f,
-                idealOffer.dailySalary * 1.2f,
-                idealOffer.lootCutPercentage * 1.2f,
+                Mathf.RoundToInt(idealOffer.signingBonus * 1.5f),
+                Mathf.RoundToInt(idealOffer.dailySalary * 1.2f),
                 testContractLength
             );
 
-            float currentTension = 0f;
+            int currentTension = 0;
 
             sb.AppendLine("Offer Scenarios:\n");
 
             // Ideal offer
-            float idealDelta = negotiationManager.CalculateTensionDelta(testHero, idealOffer, currentTension);
-            sb.AppendLine($"1. IDEAL OFFER: Tension Delta = {idealDelta:+0.0;-0.0}%");
+            int idealDelta = negotiationManager.CalculateTensionDelta(testHero, idealOffer, currentTension);
+            sb.AppendLine($"1. IDEAL OFFER: Tension Delta = {idealDelta:+0;-0}%");
 
             // Lowball offer
-            float lowballDelta = negotiationManager.CalculateTensionDelta(testHero, lowballOffer, currentTension);
-            sb.AppendLine($"2. LOWBALL OFFER (70% value): Tension Delta = {lowballDelta:+0.0;-0.0}%");
+            int lowballDelta = negotiationManager.CalculateTensionDelta(testHero, lowballOffer, currentTension);
+            sb.AppendLine($"2. LOWBALL OFFER (~70% value): Tension Delta = {lowballDelta:+0;-0}%");
 
             // Generous offer
-            float generousDelta = negotiationManager.CalculateTensionDelta(testHero, generousOffer, currentTension);
-            sb.AppendLine($"3. GENEROUS OFFER (120% value): Tension Delta = {generousDelta:+0.0;-0.0}%");
+            int generousDelta = negotiationManager.CalculateTensionDelta(testHero, generousOffer, currentTension);
+            sb.AppendLine($"3. GENEROUS OFFER (~120% value): Tension Delta = {generousDelta:+0;-0}%");
 
             // Contract length mitigation
             sb.AppendLine("\nContract Length Mitigation:");
@@ -297,13 +337,52 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Test 7: Simulate walk-away mechanics
+        /// Test 8: Check payment preference violations
         /// </summary>
-        [ContextMenu("Test 7: Walk-Away Mechanics")]
+        [ContextMenu("Test 8: Payment Preference Violation")]
+        private void TestPaymentPreferenceViolation()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("\n--- TEST 8: PAYMENT PREFERENCE VIOLATION ---");
+
+            PaymentPreference preference = negotiationManager.GetPaymentPreference(testHero);
+            int vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
+
+            sb.AppendLine($"Hero: {testHero.heroName}");
+            sb.AppendLine($"Preference: {preference}");
+            sb.AppendLine($"Vexp: {vexp}g\n");
+
+            // Test different payment structures
+            ContractOffer[] testOffers = new ContractOffer[]
+            {
+                new ContractOffer(0, 50, 2),              // 0% signing, 100% salary
+                new ContractOffer(100, 37, 2),            // ~20% signing, 80% salary
+                new ContractOffer(200, 25, 2),            // ~40% signing, 60% salary
+                new ContractOffer(300, 12, 2),            // ~60% signing, 40% salary
+            };
+
+            foreach (var offer in testOffers)
+            {
+                int voff = negotiationManager.CalculateOfferValue(offer);
+                float signingPercentage = voff > 0 ? ((float)offer.signingBonus / voff) * 100f : 0f;
+                int penalty = negotiationManager.CheckPaymentPreferenceViolation(testHero, offer, vexp);
+
+                sb.AppendLine($"Offer: {offer.signingBonus}g signing + {offer.dailySalary}g/turn × 2yr = {voff}g");
+                sb.AppendLine($"  Signing: {signingPercentage:F0}% | Penalty: {penalty:+0;-0}%");
+                sb.AppendLine();
+            }
+
+            Debug.Log(sb.ToString());
+        }
+
+        /// <summary>
+        /// Test 9: Simulate walk-away mechanics
+        /// </summary>
+        [ContextMenu("Test 9: Walk-Away Mechanics")]
         private void TestWalkAwayMechanics()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("\n--- TEST 7: WALK-AWAY MECHANICS ---");
+            sb.AppendLine("\n--- TEST 9: WALK-AWAY MECHANICS ---");
 
             sb.AppendLine($"Initial State:");
             sb.AppendLine($"  Has Walked Away: {testHero.hasWalkedAway}");
@@ -324,7 +403,7 @@ namespace OneShotSupport.Core
             {
                 bool canRecruit = testHero.CanBeReRecruited(turn, 4);
                 int turnsSince = turn - currentTurn;
-                sb.AppendLine($"  Turn {turn} (+ {turnsSince} turns): {(canRecruit ? "AVAILABLE" : "LOCKED")}");
+                sb.AppendLine($"  Turn {turn} (+ {turnsSince} turns): {(canRecruit ? "✅ AVAILABLE" : "🔒 LOCKED")}");
             }
 
             // Reset status
@@ -353,12 +432,14 @@ namespace OneShotSupport.Core
             sb.AppendLine($"QUICK TEST: {testHero.heroName}");
             sb.AppendLine("========================================");
 
-            float vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
+            int vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
             ContractOffer ideal = negotiationManager.CalculateIdealOffer(testHero, 2);
+            PaymentPreference pref = negotiationManager.GetPaymentPreference(testHero);
 
-            sb.AppendLine($"\nExpected Value (Vexp): {vexp:F1} gold");
-            sb.AppendLine($"Ideal Offer: {ideal.dailySalary:F1}g/turn, {ideal.lootCutPercentage:F1}% loot");
-            sb.AppendLine($"Starting Tension: {negotiationManager.CalculateStartingTension(testHero.trustLevel):F1}%");
+            sb.AppendLine($"\nExpected Value (Vexp): {vexp}g");
+            sb.AppendLine($"Payment Preference: {pref}");
+            sb.AppendLine($"Ideal Offer: {ideal.signingBonus}g signing + {ideal.dailySalary}g/turn × 2yr");
+            sb.AppendLine($"Starting Tension: {negotiationManager.CalculateStartingTension(testHero.trustLevel)}%");
 
             Debug.Log(sb.ToString());
         }

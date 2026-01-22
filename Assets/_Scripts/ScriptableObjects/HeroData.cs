@@ -49,12 +49,8 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Turns remaining in current contract (decreases each turn)")]
         public int turnsRemainingInContract = 8; // 2 years * 4 turns/year
 
-        [Tooltip("Daily salary cost in gold")]
-        public float dailySalary = 10f;
-
-        [Tooltip("Percentage of mission loot hero demands (0-100)")]
-        [Range(0f, 100f)]
-        public float lootCutPercentage = 20f;
+        [Tooltip("Daily salary cost in gold per turn")]
+        public int dailySalary = 10;
 
         [Tooltip("Bond level with the guild (affects negotiations and loyalty)")]
         [Range(0, 10)]
@@ -72,12 +68,12 @@ namespace OneShotSupport.ScriptableObjects
         public bool isLockedFromRecruitment = false;
 
         [Tooltip("Current tension level during negotiation (0-100%)")]
-        [Range(0f, 100f)]
-        public float currentTension = 0f;
+        [Range(0, 100)]
+        public int currentTension = 0;
 
         [Tooltip("Trust level with the guild (0-100%, affects starting tension)")]
-        [Range(0f, 100f)]
-        public float trustLevel = 50f;
+        [Range(0, 100)]
+        public int trustLevel = 50;
 
         // === GROWTH DATA ===
         [Header("Growth & Experience")]
@@ -351,22 +347,6 @@ namespace OneShotSupport.ScriptableObjects
         }
 
         /// <summary>
-        /// Get modified loot cut after trait modifiers
-        /// </summary>
-        public float GetEffectiveLootCut()
-        {
-            float lootCut = lootCutPercentage;
-            foreach (var trait in traits)
-            {
-                if (trait != null)
-                {
-                    lootCut = trait.ApplyLootCutModifier(lootCut);
-                }
-            }
-            return Mathf.Clamp(lootCut, 0f, 100f);
-        }
-
-        /// <summary>
         /// Initialize a new hero with random stats (for procedural generation)
         /// </summary>
         public void InitializeRandom(string name, int age, HeroAptitudes randomAptitudes, int contractYears = 2)
@@ -389,9 +369,8 @@ namespace OneShotSupport.ScriptableObjects
             contractLengthInYears = contractYears;
             turnsRemainingInContract = contractYears * 4; // 4 turns per year
 
-            // Random salary and loot cut based on stats
-            dailySalary = UnityEngine.Random.Range(8f, 20f);
-            lootCutPercentage = UnityEngine.Random.Range(15f, 30f);
+            // Random salary based on stats
+            dailySalary = UnityEngine.Random.Range(8, 21); // 8-20 gold per turn
 
             // Start at level 1
             level = 1;
@@ -402,8 +381,8 @@ namespace OneShotSupport.ScriptableObjects
             hasWalkedAway = false;
             walkAwayTurn = -1;
             isLockedFromRecruitment = false;
-            currentTension = 0f;
-            trustLevel = UnityEngine.Random.Range(40f, 60f); // Random initial trust
+            currentTension = 0;
+            trustLevel = UnityEngine.Random.Range(40, 61); // Random initial trust 40-60
 
             Debug.Log($"[HeroData] Initialized random hero: {heroName}, Age: {currentAge}, Stage: {lifeStage}");
         }
@@ -442,7 +421,7 @@ namespace OneShotSupport.ScriptableObjects
             hasWalkedAway = false;
             walkAwayTurn = -1;
             isLockedFromRecruitment = false;
-            currentTension = 0f;
+            currentTension = 0;
             Debug.Log($"[HeroData] {heroName} walk-away status reset");
         }
 
@@ -455,12 +434,12 @@ namespace OneShotSupport.ScriptableObjects
             if (ContractNegotiationManager.Instance != null)
             {
                 currentTension = ContractNegotiationManager.Instance.CalculateStartingTension(trustLevel);
-                Debug.Log($"[HeroData] {heroName} negotiation started with {currentTension:F1}% tension (Trust: {trustLevel:F0}%)");
+                Debug.Log($"[HeroData] {heroName} negotiation started with {currentTension}% tension (Trust: {trustLevel}%)");
             }
             else
             {
                 Debug.LogWarning("[HeroData] ContractNegotiationManager not found, using default tension");
-                currentTension = 0f;
+                currentTension = 0;
             }
         }
     }
