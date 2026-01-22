@@ -59,6 +59,25 @@ namespace OneShotSupport.ScriptableObjects
         [Range(0, 10)]
         public int bondLevel = 1;
 
+        // === NEGOTIATION STATE ===
+        [Header("Negotiation State")]
+        [Tooltip("Whether this hero has walked away from negotiations")]
+        public bool hasWalkedAway = false;
+
+        [Tooltip("Turn number when hero walked away (for re-recruitment lockout)")]
+        public int walkAwayTurn = -1;
+
+        [Tooltip("Whether hero is locked from recruitment (walked away recently or other reason)")]
+        public bool isLockedFromRecruitment = false;
+
+        [Tooltip("Current tension level during negotiation (0-100%)")]
+        [Range(0f, 100f)]
+        public float currentTension = 0f;
+
+        [Tooltip("Trust level with the guild (0-100%, affects starting tension)")]
+        [Range(0f, 100f)]
+        public float trustLevel = 50f;
+
         // === GROWTH DATA ===
         [Header("Growth & Experience")]
         [Tooltip("Current experience points")]
@@ -378,7 +397,70 @@ namespace OneShotSupport.ScriptableObjects
             currentXP = 0;
             bondLevel = 1;
 
+            // Initialize negotiation state
+            hasWalkedAway = false;
+            walkAwayTurn = -1;
+            isLockedFromRecruitment = false;
+            currentTension = 0f;
+            trustLevel = UnityEngine.Random.Range(40f, 60f); // Random initial trust
+
             Debug.Log($"[HeroData] Initialized random hero: {heroName}, Age: {currentAge}, Stage: {lifeStage}");
+        }
+
+        // === NEGOTIATION METHODS ===
+
+        /// <summary>
+        /// Mark hero as walked away from negotiations
+        /// </summary>
+        public void MarkAsWalkedAway(int currentTurn)
+        {
+            hasWalkedAway = true;
+            walkAwayTurn = currentTurn;
+            isLockedFromRecruitment = true;
+            Debug.LogWarning($"[HeroData] {heroName} walked away on turn {currentTurn}");
+        }
+
+        /// <summary>
+        /// Check if enough turns have passed to allow re-recruitment
+        /// Heroes disappear during Annual Refresh (every 4 turns)
+        /// </summary>
+        public bool CanBeReRecruited(int currentTurn, int lockoutTurns = 4)
+        {
+            if (!hasWalkedAway)
+                return true;
+
+            int turnsSinceWalkAway = currentTurn - walkAwayTurn;
+            return turnsSinceWalkAway >= lockoutTurns;
+        }
+
+        /// <summary>
+        /// Reset walk-away status (called during annual refresh)
+        /// </summary>
+        public void ResetWalkAwayStatus()
+        {
+            hasWalkedAway = false;
+            walkAwayTurn = -1;
+            isLockedFromRecruitment = false;
+            currentTension = 0f;
+            Debug.Log($"[HeroData] {heroName} walk-away status reset");
+        }
+
+        /// <summary>
+        /// Initialize negotiation state based on trust level
+        /// </summary>
+        public void InitializeNegotiation()
+        {
+            // Calculate starting tension based on trust
+            if (ContractNegotiationManager.Instance != null)
+            {
+                currentTension = ContractNegotiationManager.Instance.CalculateStartingTension(trustLevel);
+                Debug.Log($"[HeroData] {heroName} negotiation started with {currentTension:F1}% tension (Trust: {trustLevel:F0}%)");
+            }
+            else
+            {
+                Debug.LogWarning("[HeroData] ContractNegotiationManager not found, using default tension");
+                currentTension = 0f;
+            }
         }
     }
 }
