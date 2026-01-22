@@ -78,6 +78,10 @@ namespace OneShotSupport.Core
         private List<HeroData> recruitedHeroes = new List<HeroData>(); // Heroes in barracks
         private List<HeroData> tavernHeroes = new List<HeroData>(); // Heroes available for recruitment
 
+        // Season refresh tracking
+        private bool missionsGeneratedThisSeason = false;
+        private bool tavernHeroesGeneratedThisSeason = false;
+
         // Events for UI
         public event Action<GameState> OnStateChanged;
         public event Action<DayData> OnDayStarted; // Legacy support
@@ -324,31 +328,42 @@ namespace OneShotSupport.Core
         {
             Debug.Log("[Tavern] Entering tavern for hero recruitment");
 
-            // Generate heroes available for recruitment
-            if (heroGenerator != null)
+            // Only generate heroes if not already generated this season
+            if (!tavernHeroesGeneratedThisSeason)
             {
-                tavernHeroes.Clear();
-                for (int i = 0; i < heroesInTavern; i++)
+                // Generate heroes available for recruitment
+                if (heroGenerator != null)
                 {
-                    var hero = heroGenerator.GenerateHero();
-
-                    // Set initial age and lifecycle if lifecycle manager is available
-                    if (heroLifecycleManager != null)
+                    tavernHeroes.Clear();
+                    for (int i = 0; i < heroesInTavern; i++)
                     {
-                        hero.age = heroLifecycleManager.GetRandomRookieAge();
-                        hero.lifecycleStage = heroLifecycleManager.GetLifecycleStage(Mathf.FloorToInt(hero.age));
+                        var hero = heroGenerator.GenerateHero();
+
+                        // Set initial age and lifecycle if lifecycle manager is available
+                        if (heroLifecycleManager != null)
+                        {
+                            hero.age = heroLifecycleManager.GetRandomRookieAge();
+                            hero.lifecycleStage = heroLifecycleManager.GetLifecycleStage(Mathf.FloorToInt(hero.age));
+                        }
+
+                        tavernHeroes.Add(hero);
                     }
 
-                    tavernHeroes.Add(hero);
+                    tavernHeroesGeneratedThisSeason = true;
+                    Debug.Log($"[Tavern] Generated {tavernHeroes.Count} heroes for recruitment (new season)");
                 }
-
-                Debug.Log($"[Tavern] Generated {tavernHeroes.Count} heroes for recruitment");
-                OnTavernHeroesGenerated?.Invoke(tavernHeroes, baseRecruitmentCost);
+                else
+                {
+                    Debug.LogError("[Tavern] HeroGenerator is null!");
+                }
             }
             else
             {
-                Debug.LogError("[Tavern] HeroGenerator is null!");
+                Debug.Log($"[Tavern] Using existing heroes from this season ({tavernHeroes.Count} available)");
             }
+
+            // Always invoke event to show tavern UI
+            OnTavernHeroesGenerated?.Invoke(tavernHeroes, baseRecruitmentCost);
 
             // UI will show tavern via UIManager
         }
@@ -410,22 +425,33 @@ namespace OneShotSupport.Core
 
         private void EnterMissionBoard()
         {
-            Debug.Log("[MissionBoard] Generating available missions...");
+            Debug.Log("[MissionBoard] Entering mission board...");
 
-            // Generate missions for this season
-            if (missionGenerator != null)
+            // Only generate missions if not already generated this season
+            if (!missionsGeneratedThisSeason)
             {
-                availableMissions = missionGenerator.GenerateMissions(missionsPerSeason);
-                Debug.Log($"[MissionBoard] Generated {availableMissions.Count} missions");
-                OnMissionsGenerated?.Invoke(availableMissions);
+                // Generate missions for this season
+                if (missionGenerator != null)
+                {
+                    availableMissions = missionGenerator.GenerateMissions(missionsPerSeason);
+                    missionsGeneratedThisSeason = true;
+                    Debug.Log($"[MissionBoard] Generated {availableMissions.Count} missions (new season)");
+                }
+                else
+                {
+                    Debug.LogError("[MissionBoard] MissionGenerator is null!");
+                    availableMissions = new List<MissionData>();
+                }
+
+                selectedMission = null;
             }
             else
             {
-                Debug.LogError("[MissionBoard] MissionGenerator is null!");
-                availableMissions = new List<MissionData>();
+                Debug.Log($"[MissionBoard] Using existing missions from this season ({availableMissions.Count} available, selected: {(selectedMission != null ? selectedMission.missionName : "none")})");
             }
 
-            selectedMission = null;
+            // Always invoke event to show mission board UI
+            OnMissionsGenerated?.Invoke(availableMissions);
 
             // UI will show mission board via UIManager
         }
@@ -664,6 +690,11 @@ namespace OneShotSupport.Core
             {
                 // Advance to next season
                 seasonalCalendar.AdvanceSeason();
+
+                // Reset season refresh flags for new content
+                missionsGeneratedThisSeason = false;
+                tavernHeroesGeneratedThisSeason = false;
+
                 ChangeState(GameState.DayStart);
             }
         }

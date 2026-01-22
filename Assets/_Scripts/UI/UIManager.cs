@@ -364,7 +364,11 @@ namespace OneShotSupport.UI
         private void HandleHeroRecruited(ScriptableObjects.HeroData hero)
         {
             Debug.Log($"[UIManager] Hero recruited: {hero.heroName}");
-            // Could show a notification or update UI here
+            // Refresh tavern screen to show updated hero list
+            if (tavernScreen != null && tavernScreen.gameObject.activeSelf)
+            {
+                tavernScreen.Refresh();
+            }
         }
 
         /// <summary>

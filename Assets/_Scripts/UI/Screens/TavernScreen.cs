@@ -80,22 +80,20 @@ namespace OneShotSupport.UI.Screens
 
             HeroData hero = availableHeroes[slotIndex];
 
-            // Notify listeners
+            // Notify listeners (GameManager will handle removal from the list)
             OnHeroRecruited?.Invoke(hero);
 
             Debug.Log($"[Tavern] Recruited hero: {hero.heroName}");
 
-            // Remove hero from available list
-            availableHeroes.RemoveAt(slotIndex);
-
-            // Refresh display
-            RefreshHeroSlots();
+            // NOTE: Don't modify availableHeroes here - it's a reference to GameManager's tavernHeroes
+            // GameManager will remove the hero, then we refresh via the public Refresh method
         }
 
         /// <summary>
         /// Refresh hero slot displays after recruitment
+        /// Called by UIManager after GameManager removes a hero
         /// </summary>
-        private void RefreshHeroSlots()
+        public void Refresh()
         {
             for (int i = 0; i < heroSlots.Length; i++)
             {
