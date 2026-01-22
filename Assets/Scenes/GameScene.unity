@@ -13764,6 +13764,81 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1205247428}
   m_CullTransparentMesh: 1
+--- !u!1 &1210745145
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1210745148}
+  - component: {fileID: 1210745147}
+  - component: {fileID: 1210745146}
+  m_Layer: 0
+  m_Name: ContractNegotiationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1210745146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210745145}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a85d6f0f3d5c149bc86823e10068b5a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  runTestOnStart: 0
+  testHero: {fileID: 0}
+  testSigningBonus: 50
+  testDailySalary: 15
+  testLootCutPercentage: 25
+  testContractLength: 2
+--- !u!114 &1210745147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210745145}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc45b76aea70b42d9978d76eb61c2a70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rookieMultiplier: 0.8
+  primeMultiplier: 1.2
+  veteranMultiplier: 1.5
+  rookieLootCutValue: 50
+  primeLootCutValue: 125
+  veteranLootCutValue: 200
+  tensionReductionPerYear: 0.1
+  zeroTensionTrustThreshold: 75
+  maxTensionTrustThreshold: 25
+  maxStartingTension: 25
+  walkAwayThreshold: 100
+  reRecruitmentLockoutTurns: 4
+--- !u!4 &1210745148
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210745145}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1214161367
 GameObject:
   m_ObjectHideFlags: 0
@@ -23605,3 +23680,4 @@ SceneRoots:
   - {fileID: 694348529}
   - {fileID: 1739621185}
   - {fileID: 1310324711}
+  - {fileID: 1210745148}
