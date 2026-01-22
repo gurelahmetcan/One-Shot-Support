@@ -149,8 +149,7 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Randomly assign traits to the hero
-        /// Each trait has a 20% chance of being assigned
+        /// Randomly assign exactly 1 trait to the hero
         /// </summary>
         private void AssignRandomTraits(HeroData hero)
         {
@@ -159,12 +158,11 @@ namespace OneShotSupport.Core
                 return;
             }
 
-            foreach (var trait in possibleTraits)
+            // Pick exactly 1 random trait from the pool
+            HeroTrait randomTrait = possibleTraits[Random.Range(0, possibleTraits.Count)];
+            if (randomTrait != null)
             {
-                if (trait != null && Random.value < 0.2f) // 20% chance per trait
-                {
-                    hero.AddTrait(trait);
-                }
+                hero.AddTrait(randomTrait);
             }
         }
 
