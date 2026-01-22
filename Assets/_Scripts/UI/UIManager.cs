@@ -20,6 +20,7 @@ namespace OneShotSupport.UI
         public Screens.VillageHubScreen villageHubScreen;
         public Screens.MissionBoardScreen missionBoardScreen;
         public Screens.TavernScreen tavernScreen;
+        public Screens.BarracksScreen barracksScreen;
         public RestockScreen restockScreen;
         public ConsultationScreen consultationScreen;
         public DayEndScreen dayEndScreen;
@@ -58,6 +59,7 @@ namespace OneShotSupport.UI
             gameManager.OnMissionSelected += HandleMissionSelected;
             gameManager.OnTavernHeroesGenerated += HandleTavernHeroesGenerated;
             gameManager.OnHeroRecruited += HandleHeroRecruited;
+            gameManager.OnBarracksOpened += HandleBarracksOpened;
             gameManager.OnHeroReady += HandleHeroReady;
             gameManager.OnDayEnded += HandleDayEnded;
             gameManager.OnGameOver += HandleGameOver;
@@ -84,6 +86,7 @@ namespace OneShotSupport.UI
             {
                 villageHubScreen.OnTavernClicked += () => gameManager.OpenTavern();
                 villageHubScreen.OnMissionBoardClicked += () => gameManager.OpenMissionBoard();
+                villageHubScreen.OnBarracksClicked += () => gameManager.OpenBarracks();
             }
 
             if (missionBoardScreen != null)
@@ -96,6 +99,11 @@ namespace OneShotSupport.UI
             {
                 tavernScreen.OnHeroRecruited += (hero) => gameManager.RecruitHero(hero);
                 tavernScreen.OnBackClicked += () => gameManager.LeaveTavern();
+            }
+
+            if (barracksScreen != null)
+            {
+                barracksScreen.OnBackClicked += () => gameManager.LeaveBarracks();
             }
 
             if (restockScreen != null)
@@ -126,6 +134,7 @@ namespace OneShotSupport.UI
                 gameManager.OnMissionSelected -= HandleMissionSelected;
                 gameManager.OnTavernHeroesGenerated -= HandleTavernHeroesGenerated;
                 gameManager.OnHeroRecruited -= HandleHeroRecruited;
+                gameManager.OnBarracksOpened -= HandleBarracksOpened;
                 gameManager.OnHeroReady -= HandleHeroReady;
                 gameManager.OnDayEnded -= HandleDayEnded;
                 gameManager.OnGameOver -= HandleGameOver;
@@ -220,6 +229,10 @@ namespace OneShotSupport.UI
 
                 case GameState.Tavern:
                     // Tavern will be shown when heroes are generated
+                    break;
+
+                case GameState.Barracks:
+                    // Barracks will be shown when OnBarracksOpened event fires
                     break;
 
                 case GameState.Restock:
@@ -369,6 +382,21 @@ namespace OneShotSupport.UI
             {
                 tavernScreen.Refresh();
             }
+
+            // Refresh barracks screen if it's open
+            if (barracksScreen != null && barracksScreen.gameObject.activeSelf)
+            {
+                barracksScreen.Refresh();
+            }
+        }
+
+        /// <summary>
+        /// Handle barracks opened
+        /// </summary>
+        private void HandleBarracksOpened(List<ScriptableObjects.HeroData> heroes, int maxCapacity)
+        {
+            Debug.Log($"[UIManager] Barracks opened: {heroes.Count}/{maxCapacity} heroes");
+            ShowBarracksScreen(heroes, maxCapacity);
         }
 
         /// <summary>
@@ -467,6 +495,9 @@ namespace OneShotSupport.UI
             if (tavernScreen != null)
                 tavernScreen.gameObject.SetActive(false);
 
+            if (barracksScreen != null)
+                barracksScreen.gameObject.SetActive(false);
+
             if (restockScreen != null)
                 restockScreen.gameObject.SetActive(false);
 
@@ -517,6 +548,16 @@ namespace OneShotSupport.UI
             if (tavernScreen != null)
             {
                 tavernScreen.Setup(heroes, cost);
+            }
+        }
+
+        private void ShowBarracksScreen(List<ScriptableObjects.HeroData> heroes, int maxCapacity)
+        {
+            HideAllScreens();
+
+            if (barracksScreen != null)
+            {
+                barracksScreen.Setup(heroes, maxCapacity);
             }
         }
 

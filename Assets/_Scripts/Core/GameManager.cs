@@ -100,6 +100,7 @@ namespace OneShotSupport.Core
         public event Action<MissionData> OnMissionSelected; // (mission) - when a mission is selected
         public event Action<List<HeroData>, int> OnTavernHeroesGenerated; // (heroes, cost) - when tavern heroes are available
         public event Action<HeroData> OnHeroRecruited; // (hero) - when a hero is recruited
+        public event Action<List<HeroData>, int> OnBarracksOpened; // (heroes, maxCapacity) - when barracks is opened
 
         // Singleton for easy access (game jam pattern)
         public static GameManager Instance { get; private set; }
@@ -186,6 +187,10 @@ namespace OneShotSupport.Core
                     EnterTavern();
                     break;
 
+                case GameState.Barracks:
+                    EnterBarracks();
+                    break;
+
                 case GameState.Restock:
                     EnterRestock();
                     break;
@@ -225,6 +230,10 @@ namespace OneShotSupport.Core
 
                 case GameState.Tavern:
                     UpdateTavern();
+                    break;
+
+                case GameState.Barracks:
+                    UpdateBarracks();
                     break;
 
                 case GameState.Restock:
@@ -416,6 +425,42 @@ namespace OneShotSupport.Core
         public void LeaveTavern()
         {
             if (currentState == GameState.Tavern)
+            {
+                ChangeState(GameState.VillageHub);
+            }
+        }
+
+        // === BARRACKS STATE ===
+
+        private void EnterBarracks()
+        {
+            Debug.Log("[Barracks] Entering barracks to view recruited heroes");
+
+            // Show recruited heroes
+            OnBarracksOpened?.Invoke(recruitedHeroes, maxBarracksCapacity);
+
+            // UI will show barracks via UIManager
+        }
+
+        private void UpdateBarracks()
+        {
+            // Waiting for player to view heroes or leave barracks
+        }
+
+        /// <summary>
+        /// Called by UIManager when player opens barracks from village hub
+        /// </summary>
+        public void OpenBarracks()
+        {
+            ChangeState(GameState.Barracks);
+        }
+
+        /// <summary>
+        /// Called by UIManager when player leaves barracks
+        /// </summary>
+        public void LeaveBarracks()
+        {
+            if (currentState == GameState.Barracks)
             {
                 ChangeState(GameState.VillageHub);
             }

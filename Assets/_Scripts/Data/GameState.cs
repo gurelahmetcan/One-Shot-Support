@@ -9,6 +9,7 @@ namespace OneShotSupport.Data
         VillageHub,     // Main navigation hub (like Darkest Dungeon village)
         MissionBoard,   // Select mission for the season
         Tavern,         // Recruit heroes
+        Barracks,       // View recruited heroes
         Restock,        // Generate items for the day
         Consultation,   // Equipping a hero (one at a time)
         DayEnd,         // Show results, update reputation
