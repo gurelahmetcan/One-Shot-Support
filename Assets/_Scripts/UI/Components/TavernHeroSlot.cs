@@ -9,15 +9,18 @@ namespace OneShotSupport.UI.Components
 {
     /// <summary>
     /// UI component representing a hero available for recruitment in the tavern
+    /// Displays hero stats, contract info, and recruitment cost
     /// </summary>
     public class TavernHeroSlot : MonoBehaviour
     {
         [Header("UI References")]
         [SerializeField] private TextMeshProUGUI heroNameText;
-        [SerializeField] private TextMeshProUGUI tierText;
+        [SerializeField] private TextMeshProUGUI levelText;
         [SerializeField] private TextMeshProUGUI ageText;
         [SerializeField] private TextMeshProUGUI lifecycleText;
-        [SerializeField] private TextMeshProUGUI perkText;
+        [SerializeField] private TextMeshProUGUI statsText;
+        [SerializeField] private TextMeshProUGUI contractText;
+        [SerializeField] private TextMeshProUGUI traitsText;
         [SerializeField] private TextMeshProUGUI costText;
         [SerializeField] private Image heroPortrait;
         [SerializeField] private Button recruitButton;
@@ -48,28 +51,53 @@ namespace OneShotSupport.UI.Components
             if (heroNameText != null)
                 heroNameText.text = hero.heroName;
 
-            if (tierText != null)
-                tierText.text = $"Tier: {hero.tier}";
+            if (levelText != null)
+                levelText.text = $"Level {hero.level}";
 
             if (ageText != null)
-                ageText.text = $"Age: {Mathf.FloorToInt(hero.age)}";
+                ageText.text = $"Age: {hero.currentAge}";
 
             if (lifecycleText != null)
             {
-                lifecycleText.text = $"Stage: {hero.lifecycleStage}";
-                lifecycleText.color = GetLifecycleColor(hero.lifecycleStage);
+                lifecycleText.text = $"{hero.lifeStage}";
+                lifecycleText.color = GetLifecycleColor(hero.lifeStage);
             }
 
-            if (perkText != null)
+            if (statsText != null)
             {
-                if (hero.perk == Perk.None)
-                    perkText.text = "Perk: None";
+                // Display core stats
+                statsText.text = $"Prowess: {hero.prowess} | Charisma: {hero.charisma}\n" +
+                                $"Vitality: {hero.maxVitality} | Discipline: {hero.discipline}";
+            }
+
+            if (contractText != null)
+            {
+                // Display contract info
+                contractText.text = $"Contract: {hero.contractLengthInYears}yr | Salary: {hero.dailySalary:F0}g/turn\n" +
+                                   $"Loot Cut: {hero.lootCutPercentage:F0}%";
+            }
+
+            if (traitsText != null)
+            {
+                // Display traits
+                if (hero.traits != null && hero.traits.Count > 0)
+                {
+                    string traitNames = "";
+                    foreach (var trait in hero.traits)
+                    {
+                        if (trait != null)
+                            traitNames += trait.traitName + ", ";
+                    }
+                    traitsText.text = $"Traits: {traitNames.TrimEnd(',', ' ')}";
+                }
                 else
-                    perkText.text = $"Perk: {hero.perk}";
+                {
+                    traitsText.text = "Traits: None";
+                }
             }
 
             if (costText != null)
-                costText.text = $"Cost: {cost} Gold";
+                costText.text = $"Recruitment Cost: {cost} Gold";
 
             if (heroPortrait != null && hero.portrait != null)
             {

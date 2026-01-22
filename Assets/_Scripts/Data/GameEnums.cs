@@ -131,4 +131,15 @@ namespace OneShotSupport.Data
         Bold,       // Standard mission, balanced risk/reward
         Grand       // High fame gain, increased gear damage, showboating
     }
+
+    /// <summary>
+    /// Education focus types for hero leveling and training
+    /// </summary>
+    public enum EducationFocus
+    {
+        Prowess,    // Combat effectiveness
+        Charisma,   // Social skills and reputation gains
+        Vitality,   // Health and durability
+        Discipline  // Reduces greed, improves reliability
+    }
 }

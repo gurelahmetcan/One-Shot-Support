@@ -347,14 +347,7 @@ namespace OneShotSupport.Core
                     for (int i = 0; i < heroesInTavern; i++)
                     {
                         var hero = heroGenerator.GenerateHero();
-
-                        // Set initial age and lifecycle if lifecycle manager is available
-                        if (heroLifecycleManager != null)
-                        {
-                            hero.age = heroLifecycleManager.GetRandomRookieAge();
-                            hero.lifecycleStage = heroLifecycleManager.GetLifecycleStage(Mathf.FloorToInt(hero.age));
-                        }
-
+                        // Hero is fully initialized by HeroGenerator with random stats, age, and traits
                         tavernHeroes.Add(hero);
                     }
 

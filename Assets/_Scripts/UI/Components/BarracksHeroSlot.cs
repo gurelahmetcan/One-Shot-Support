@@ -2,18 +2,23 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using OneShotSupport.ScriptableObjects;
+using OneShotSupport.Data;
 
 namespace OneShotSupport.UI.Components
 {
     /// <summary>
     /// UI component representing a recruited hero in the barracks
+    /// Displays hero identity, stats, and contract status
     /// </summary>
     public class BarracksHeroSlot : MonoBehaviour
     {
         [Header("UI References")]
         [SerializeField] private Image heroPortrait;
         [SerializeField] private TextMeshProUGUI heroNameText;
-        [SerializeField] private TextMeshProUGUI tierText;
+        [SerializeField] private TextMeshProUGUI levelText;
+        [SerializeField] private TextMeshProUGUI lifecycleText;
+        [SerializeField] private TextMeshProUGUI statsText;
+        [SerializeField] private TextMeshProUGUI contractText;
 
         private HeroData hero;
 
@@ -39,9 +44,30 @@ namespace OneShotSupport.UI.Components
             if (heroNameText != null)
                 heroNameText.text = hero.heroName;
 
-            // Update tier/rank
-            if (tierText != null)
-                tierText.text = $"Tier {hero.tier}";
+            // Update level
+            if (levelText != null)
+                levelText.text = $"Level {hero.level}";
+
+            // Update lifecycle
+            if (lifecycleText != null)
+            {
+                lifecycleText.text = $"{hero.lifeStage} (Age {hero.currentAge})";
+                lifecycleText.color = GetLifecycleColor(hero.lifeStage);
+            }
+
+            // Update stats
+            if (statsText != null)
+            {
+                statsText.text = $"Prowess: {hero.prowess} | Charisma: {hero.charisma}\n" +
+                                $"HP: {hero.currentVitality}/{hero.maxVitality} | Discipline: {hero.discipline}";
+            }
+
+            // Update contract
+            if (contractText != null)
+            {
+                int yearsRemaining = Mathf.CeilToInt(hero.turnsRemainingInContract / 4f);
+                contractText.text = $"Contract: {hero.turnsRemainingInContract} turns ({yearsRemaining}yr)";
+            }
         }
 
         /// <summary>
@@ -55,10 +81,34 @@ namespace OneShotSupport.UI.Components
             if (heroNameText != null)
                 heroNameText.text = "";
 
-            if (tierText != null)
-                tierText.text = "";
+            if (levelText != null)
+                levelText.text = "";
+
+            if (lifecycleText != null)
+                lifecycleText.text = "";
+
+            if (statsText != null)
+                statsText.text = "";
+
+            if (contractText != null)
+                contractText.text = "";
 
             hero = null;
+        }
+
+        /// <summary>
+        /// Get color for lifecycle stage
+        /// </summary>
+        private Color GetLifecycleColor(HeroLifecycleStage stage)
+        {
+            return stage switch
+            {
+                HeroLifecycleStage.Rookie => new Color(0.3f, 0.8f, 0.3f), // Green
+                HeroLifecycleStage.Prime => new Color(0.9f, 0.7f, 0.2f),  // Gold
+                HeroLifecycleStage.Veteran => new Color(0.7f, 0.3f, 0.9f), // Purple
+                HeroLifecycleStage.Retired => new Color(0.5f, 0.5f, 0.5f), // Gray
+                _ => Color.white
+            };
         }
     }
 }

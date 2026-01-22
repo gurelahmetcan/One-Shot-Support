@@ -1,12 +1,12 @@
 using UnityEngine;
 using OneShotSupport.Data;
 using OneShotSupport.ScriptableObjects;
-using OneShotSupport.Utils;
+using System.Collections.Generic;
 
 namespace OneShotSupport.Core
 {
     /// <summary>
-    /// Pairs a hero's portrait sprite with their character card sprite, name, and voiceline
+    /// Pairs a hero's portrait sprite with their name and voiceline
     /// </summary>
     [System.Serializable]
     public class HeroVisuals
@@ -19,139 +19,111 @@ namespace OneShotSupport.Core
 
         [Tooltip("Hero portrait sprite")]
         public Sprite portrait;
-
-        [Tooltip("Character card sprite (must match portrait)")]
-        public Sprite characterCard;
     }
 
     /// <summary>
     /// Configuration for procedural hero generation
+    /// Generates heroes with random stats, aptitudes, and traits
     /// </summary>
     [CreateAssetMenu(fileName = "HeroGenerator", menuName = "One-Shot Support/Hero Generator")]
     public class HeroGenerator : ScriptableObject
     {
         [Header("Hero Visuals")]
-        [Tooltip("Visual pool for Noob tier heroes (randomly selected)")]
-        public HeroVisuals[] noobVisuals;
+        [Tooltip("Visual pool for heroes (randomly selected)")]
+        public HeroVisuals[] visualPool;
 
-        [Tooltip("Visual pool for Knight tier heroes (randomly selected)")]
-        public HeroVisuals[] knightVisuals;
+        [Header("Trait Pools")]
+        [Tooltip("Pool of possible traits heroes can spawn with (20% chance per trait)")]
+        public List<HeroTrait> possibleTraits = new List<HeroTrait>();
 
-        [Tooltip("Visual pool for Legend tier heroes (randomly selected)")]
-        public HeroVisuals[] legendVisuals;
+        [Header("Age Configuration")]
+        [Tooltip("Minimum starting age")]
+        public int minAge = 20;
 
-        [Header("Hero Stats")]
-        [Tooltip("Base chance range for Noob tier")]
-        public Vector2Int noobBaseChanceRange = new Vector2Int(5, 15);
+        [Tooltip("Maximum starting age")]
+        public int maxAge = 30;
 
-        [Tooltip("Base chance range for Knight tier")]
-        public Vector2Int knightBaseChanceRange = new Vector2Int(15, 25);
+        [Header("Contract Configuration")]
+        [Tooltip("Minimum contract length in years")]
+        public int minContractYears = 1;
 
-        [Tooltip("Base chance range for Legend tier")]
-        public Vector2Int legendBaseChanceRange = new Vector2Int(25, 35);
+        [Tooltip("Maximum contract length in years")]
+        public int maxContractYears = 3;
 
-        [Header("Slot Distribution")]
-        [Tooltip("Number of slots for each tier")]
-        public int noobSlots = 1;
-        public int knightSlots = 2;
-        public int legendSlots = 3;
+        [Header("Aptitude Configuration")]
+        [Tooltip("Minimum aptitude multiplier (0.5 = slow learner)")]
+        [Range(0.5f, 1.5f)]
+        public float minAptitude = 0.6f;
 
-        [Header("Perk Probabilities")]
-        [Range(0f, 1f)]
-        [Tooltip("Chance for common perks")]
-        public float commonPerkChance = 0.6f;
-
-        [Range(0f, 1f)]
-        [Tooltip("Chance for rare perks")]
-        public float rarePerkChance = 0.3f;
-
-        [Range(0f, 1f)]
-        [Tooltip("Chance for legendary perks")]
-        public float legendaryPerkChance = 0.1f;
+        [Tooltip("Maximum aptitude multiplier (2.0 = fast learner)")]
+        [Range(0.8f, 2.0f)]
+        public float maxAptitude = 1.6f;
 
         /// <summary>
-        /// Generate a random hero
+        /// Generate a random hero with random stats, aptitudes, and traits
         /// </summary>
         public HeroData GenerateHero()
         {
             // Create runtime instance
             var hero = ScriptableObject.CreateInstance<HeroData>();
 
-            // Random tier
-            HeroTier tier = (HeroTier)Random.Range(0, 3);
-            hero.tier = tier;
+            // Random age
+            int age = Random.Range(minAge, maxAge + 1);
 
-            // Set stats based on tier (name assigned in AssignVisuals)
-            switch (tier)
-            {
-                case HeroTier.Noob:
-                    hero.baseChance = Random.Range(noobBaseChanceRange.x, noobBaseChanceRange.y + 1);
-                    hero.slots = noobSlots;
-                    AssignVisuals(hero, noobVisuals);
-                    break;
+            // Random aptitudes (different for each stat)
+            HeroAptitudes aptitudes = new HeroAptitudes(
+                Random.Range(minAptitude, maxAptitude), // prowess
+                Random.Range(minAptitude, maxAptitude), // charisma
+                Random.Range(minAptitude, maxAptitude), // vitality
+                Random.Range(minAptitude, maxAptitude)  // discipline
+            );
 
-                case HeroTier.Knight:
-                    hero.baseChance = Random.Range(knightBaseChanceRange.x, knightBaseChanceRange.y + 1);
-                    hero.slots = knightSlots;
-                    AssignVisuals(hero, knightVisuals);
-                    break;
+            // Random contract length
+            int contractYears = Random.Range(minContractYears, maxContractYears + 1);
 
-                case HeroTier.Legend:
-                    hero.baseChance = Random.Range(legendBaseChanceRange.x, legendBaseChanceRange.y + 1);
-                    hero.slots = legendSlots;
-                    AssignVisuals(hero, legendVisuals);
-                    break;
-            }
+            // Select random name from visual pool
+            string heroName = GenerateHeroName();
 
-            // Generate random perk
-            hero.perk = GenerateRandomPerk();
+            // Initialize hero with random stats
+            hero.InitializeRandom(heroName, age, aptitudes, contractYears);
 
-            // Description
-            hero.description = $"A {tier} tier hero with {PerkModifier.GetDescription(hero.perk)}";
+            // Assign visuals
+            AssignVisuals(hero);
+
+            // Randomly assign traits (20% chance per trait)
+            AssignRandomTraits(hero);
+
+            Debug.Log($"[HeroGenerator] Generated hero: {hero.heroName}, Age: {hero.currentAge}, Level: {hero.level}");
 
             return hero;
         }
 
         /// <summary>
-        /// Generate a hero name
+        /// Generate a hero name from visual pool
         /// </summary>
-        private string GenerateHeroName(string prefix)
+        private string GenerateHeroName()
         {
-            string[] names = { "Bob", "Alice", "Charlie", "Diana", "Eric", "Fiona", "Greg", "Hannah", "Ivan", "Julia" };
-            return $"{names[Random.Range(0, names.Length)]}";
+            if (visualPool == null || visualPool.Length == 0)
+            {
+                Debug.LogWarning("[HeroGenerator] Visual pool is empty!");
+                return "Unknown Hero";
+            }
+
+            // Get random visual set
+            HeroVisuals visuals = visualPool[Random.Range(0, visualPool.Length)];
+
+            if (visuals.heroNames != null && visuals.heroNames.Length > 0)
+            {
+                return visuals.heroNames[Random.Range(0, visuals.heroNames.Length)];
+            }
+
+            return "Unnamed Hero";
         }
 
         /// <summary>
-        /// Generate a random perk based on rarity probabilities
+        /// Assign random visuals (portrait + voiceline) from the visual pool
         /// </summary>
-        private Perk GenerateRandomPerk()
-        {
-            float roll = Random.value;
-
-            if (roll < legendaryPerkChance)
-            {
-                // Legendary perk
-                return Perk.Cursed;
-            }
-            else if (roll < legendaryPerkChance + rarePerkChance)
-            {
-                // Rare perk
-                Perk[] rarePerks = { Perk.GlassCannon, Perk.SocialMediaStar, Perk.Lucky, Perk.Fearless, Perk.Inspiring };
-                return rarePerks[Random.Range(0, rarePerks.Length)];
-            }
-            else
-            {
-                // Common perk (or None)
-                Perk[] commonPerks = { Perk.None, Perk.Clumsy, Perk.Overconfident, Perk.Prepared, Perk.Honest };
-                return commonPerks[Random.Range(0, commonPerks.Length)];
-            }
-        }
-
-        /// <summary>
-        /// Assign random visuals (portrait + character card + name + voiceline) from the provided pool
-        /// Ensures portrait, card, name, and voiceline all match the same character
-        /// </summary>
-        private void AssignVisuals(HeroData hero, HeroVisuals[] visualPool)
+        private void AssignVisuals(HeroData hero)
         {
             if (visualPool == null || visualPool.Length == 0)
             {
@@ -162,23 +134,8 @@ namespace OneShotSupport.Core
             // Get random visual set from pool
             HeroVisuals visuals = visualPool[Random.Range(0, visualPool.Length)];
 
-            // Assign portrait and character card
+            // Assign portrait
             hero.portrait = visuals.portrait;
-            hero.characterCard = visuals.characterCard;
-
-            // Randomly select one name from the available names for this visual
-            if (visuals.heroNames != null && visuals.heroNames.Length > 0)
-            {
-                string randomName = visuals.heroNames[Random.Range(0, visuals.heroNames.Length)];
-                if (!string.IsNullOrEmpty(randomName))
-                {
-                    hero.heroName = randomName;
-                }
-            }
-            else
-            {
-                Debug.LogWarning("[HeroGenerator] Hero visual has no names assigned!");
-            }
 
             // Randomly select one voiceline from the available voicelines for this visual
             if (visuals.heroVoicelines != null && visuals.heroVoicelines.Length > 0)
@@ -189,10 +146,48 @@ namespace OneShotSupport.Core
                     hero.heroVoiceline = randomVoiceline;
                 }
             }
-            else
+        }
+
+        /// <summary>
+        /// Randomly assign traits to the hero
+        /// Each trait has a 20% chance of being assigned
+        /// </summary>
+        private void AssignRandomTraits(HeroData hero)
+        {
+            if (possibleTraits == null || possibleTraits.Count == 0)
             {
-                Debug.LogWarning("[HeroGenerator] Hero visual has no voicelines assigned!");
+                return;
             }
+
+            foreach (var trait in possibleTraits)
+            {
+                if (trait != null && Random.value < 0.2f) // 20% chance per trait
+                {
+                    hero.AddTrait(trait);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generate a hero with specific parameters (for testing/debugging)
+        /// </summary>
+        public HeroData GenerateHero(string name, int age, int contractYears)
+        {
+            var hero = ScriptableObject.CreateInstance<HeroData>();
+
+            // Random aptitudes
+            HeroAptitudes aptitudes = new HeroAptitudes(
+                Random.Range(minAptitude, maxAptitude),
+                Random.Range(minAptitude, maxAptitude),
+                Random.Range(minAptitude, maxAptitude),
+                Random.Range(minAptitude, maxAptitude)
+            );
+
+            hero.InitializeRandom(name, age, aptitudes, contractYears);
+            AssignVisuals(hero);
+            AssignRandomTraits(hero);
+
+            return hero;
         }
     }
 }
