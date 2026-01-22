@@ -59,7 +59,7 @@ namespace OneShotSupport.UI.Components
             if (statsText != null)
             {
                 statsText.text = $"Prowess: {hero.prowess} | Charisma: {hero.charisma}\n" +
-                                $"HP: {hero.currentVitality}/{hero.maxVitality} | Discipline: {hero.discipline}";
+                                $"HP: {hero.currentVitality}/{hero.maxVitality} | Greed: {hero.greed}";
             }
 
             // Update contract

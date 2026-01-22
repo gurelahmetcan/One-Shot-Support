@@ -28,9 +28,6 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Flat bonus/penalty to Max Vitality")]
         public int vitalityModifier = 0;
 
-        [Tooltip("Flat bonus/penalty to Discipline")]
-        public int disciplineModifier = 0;
-
         [Header("Contract Modifiers")]
         [Tooltip("Percentage modifier to daily salary (e.g., -0.1 = 10% cheaper)")]
         [Range(-0.5f, 0.5f)]
@@ -56,12 +53,11 @@ namespace OneShotSupport.ScriptableObjects
         /// <summary>
         /// Apply this trait's stat modifiers to the provided stats
         /// </summary>
-        public void ApplyStatModifiers(ref int prowess, ref int charisma, ref int maxVitality, ref int discipline)
+        public void ApplyStatModifiers(ref int prowess, ref int charisma, ref int maxVitality)
         {
             prowess += prowessModifier;
             charisma += charismaModifier;
             maxVitality += vitalityModifier;
-            discipline += disciplineModifier;
         }
 
         /// <summary>

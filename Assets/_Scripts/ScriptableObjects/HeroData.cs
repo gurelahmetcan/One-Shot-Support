@@ -37,11 +37,8 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Maximum hit points")]
         public int maxVitality = 50;
 
-        [Tooltip("Greediness - affects loot demands (reduced by Discipline)")]
+        [Tooltip("Greediness - affects loot demands (reduced by Discipline training)")]
         public int greed = 50;
-
-        [Tooltip("Self-control - reduces greed effects")]
-        public int discipline = 10;
 
         // === CONTRACT INFO ===
         [Header("Contract Information")]
@@ -94,15 +91,6 @@ namespace OneShotSupport.ScriptableObjects
         // === CALCULATED PROPERTIES ===
 
         /// <summary>
-        /// Get effective greed after discipline reduction
-        /// Formula: greed - (discipline * 2)
-        /// </summary>
-        public int EffectiveGreed
-        {
-            get { return Mathf.Max(0, greed - (discipline * 2)); }
-        }
-
-        /// <summary>
         /// Check if hero is alive
         /// </summary>
         public bool IsAlive
@@ -122,23 +110,21 @@ namespace OneShotSupport.ScriptableObjects
         /// <summary>
         /// Get total stat modifiers from all traits
         /// </summary>
-        public void GetTotalStatModifiers(out int prowessMod, out int charismaMod, out int vitalityMod, out int disciplineMod)
+        public void GetTotalStatModifiers(out int prowessMod, out int charismaMod, out int vitalityMod)
         {
             prowessMod = 0;
             charismaMod = 0;
             vitalityMod = 0;
-            disciplineMod = 0;
 
             foreach (var trait in traits)
             {
                 if (trait != null)
                 {
-                    int p = prowess, c = charisma, v = maxVitality, d = discipline;
-                    trait.ApplyStatModifiers(ref p, ref c, ref v, ref d);
+                    int p = prowess, c = charisma, v = maxVitality;
+                    trait.ApplyStatModifiers(ref p, ref c, ref v);
                     prowessMod += (p - prowess);
                     charismaMod += (c - charisma);
                     vitalityMod += (v - maxVitality);
-                    disciplineMod += (d - discipline);
                 }
             }
         }
@@ -177,10 +163,13 @@ namespace OneShotSupport.ScriptableObjects
                     break;
 
                 case EducationFocus.Discipline:
-                    discipline += Mathf.FloorToInt(focusedStatGain * aptitudes.disciplineAptitude);
-                    // Discipline also slightly increases all stats
+                    // Discipline training reduces greed
+                    int greedReduction = Mathf.FloorToInt(focusedStatGain * aptitudes.disciplineAptitude);
+                    greed = Mathf.Max(0, greed - greedReduction);
+                    // Discipline training also slightly improves self-control stats
                     prowess += Mathf.FloorToInt(baseStatGain * aptitudes.prowessAptitude * 0.3f);
                     charisma += Mathf.FloorToInt(baseStatGain * aptitudes.charismaAptitude * 0.3f);
+                    Debug.Log($"[HeroData] {heroName} reduced greed by {greedReduction} (now {greed})");
                     break;
             }
 
@@ -372,7 +361,6 @@ namespace OneShotSupport.ScriptableObjects
             maxVitality = UnityEngine.Random.Range(40, 60);
             currentVitality = maxVitality;
             greed = UnityEngine.Random.Range(30, 70);
-            discipline = UnityEngine.Random.Range(5, 15);
 
             // Set aptitudes
             aptitudes = randomAptitudes;

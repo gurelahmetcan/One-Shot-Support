@@ -21,7 +21,7 @@ namespace OneShotSupport.Data
         [Range(0.5f, 2.0f)]
         public float vitalityAptitude = 1.0f;
 
-        [Tooltip("Multiplier for Discipline growth (0.5 to 2.0)")]
+        [Tooltip("Multiplier for Discipline training effectiveness (greed reduction)")]
         [Range(0.5f, 2.0f)]
         public float disciplineAptitude = 1.0f;
 
