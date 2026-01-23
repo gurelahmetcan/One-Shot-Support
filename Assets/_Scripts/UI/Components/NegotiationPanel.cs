@@ -22,8 +22,8 @@ namespace OneShotSupport.UI.Components
         [SerializeField] private TextMeshProUGUI paymentPreferenceText;
 
         [Header("Tension Display")]
-        [SerializeField] private Slider tensionBar;
-        [SerializeField] private TextMeshProUGUI tensionText;
+        [SerializeField] private ConfidenceMeter tensionMeter;
+        [SerializeField] private TextMeshProUGUI tensionLabelText;
 
         [Header("Contract Sliders")]
         [SerializeField] private Slider signingBonusSlider;
@@ -97,14 +97,6 @@ namespace OneShotSupport.UI.Components
                 offerButton.onClick.AddListener(HandleOfferClicked);
             if (cancelButton != null)
                 cancelButton.onClick.AddListener(HandleCancelClicked);
-
-            // Setup tension bar
-            if (tensionBar != null)
-            {
-                tensionBar.minValue = 0;
-                tensionBar.maxValue = 100;
-                tensionBar.wholeNumbers = true;
-            }
         }
 
         /// <summary>
@@ -266,15 +258,17 @@ namespace OneShotSupport.UI.Components
         }
 
         /// <summary>
-        /// Update tension display
+        /// Update tension display using confidence meter style
         /// </summary>
         private void UpdateTensionDisplay(int tensionValue)
         {
-            if (tensionBar != null)
-                tensionBar.value = tensionValue;
+            // Update tension meter (uses confidence meter component with fill and handle)
+            if (tensionMeter != null)
+                tensionMeter.UpdateConfidence(tensionValue);
 
-            if (tensionText != null)
-                tensionText.text = $"Tension: {tensionValue}%";
+            // Update tension label (separate from the meter's percentage text)
+            if (tensionLabelText != null)
+                tensionLabelText.text = "Tension";
         }
 
         /// <summary>

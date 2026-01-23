@@ -45,8 +45,11 @@ Canvas
     │   ├── CurrentOfferText (TextMeshProUGUI) → "Your Offer: 380g"
     │   └── PaymentPreferenceText (TextMeshProUGUI) → "💰 Prefers Signing Bonus"
     ├── TensionDisplay
-    │   ├── TensionBar (Slider - 0 to 100)
-    │   └── TensionText (TextMeshProUGUI) → "Tension: 45%"
+    │   ├── TensionMeter (GameObject with ConfidenceMeter component)
+    │   │   ├── FillImage (Image - fill type, 0 to 1)
+    │   │   ├── Handle (RectTransform - black line that moves)
+    │   │   └── PercentageText (TextMeshProUGUI) → "45%"
+    │   └── TensionLabelText (TextMeshProUGUI) → "Tension"
     ├── ContractControls
     │   ├── SigningBonusSlider (Slider - 0 to 200)
     │   ├── SigningBonusValueText (TextMeshProUGUI) → "50g"
@@ -77,8 +80,8 @@ Canvas
 - Payment Preference Text → PaymentPreferenceText TMP
 
 **Tension Display:**
-- Tension Bar → TensionBar Slider
-- Tension Text → TensionText TMP
+- Tension Meter → TensionMeter GameObject (with ConfidenceMeter component)
+- Tension Label Text → TensionLabelText TMP
 
 **Contract Sliders:**
 - Signing Bonus Slider → SigningBonusSlider Slider
@@ -117,21 +120,35 @@ For each TavernHeroSlot in your scene:
 
 ## UI Element Details
 
-### Tension Bar
+### Tension Meter (ConfidenceMeter Style)
 
 **Setup:**
-- Type: Slider
-- Min Value: 0
-- Max Value: 100
-- Whole Numbers: ✓ Checked
-- Fill Rect: Create a child Image for the fill
-- Background: Optional gray bar
+1. Create a GameObject named "TensionMeter"
+2. Add Component → ConfidenceMeter
+3. Create child objects:
+   - **FillImage**: Image component with Fill Type set to "Filled" (Horizontal)
+   - **Handle**: Empty GameObject with RectTransform (black vertical line sprite)
+   - **PercentageText**: TextMeshProUGUI for displaying "45%"
 
-**Visual Feedback (Optional):**
-- 0-25%: Green fill
-- 25-50%: Yellow fill
-- 50-75%: Orange fill
-- 75-100%: Red fill
+**ConfidenceMeter Component Configuration:**
+- Confidence Fill Image → FillImage
+- Handle Transform → Handle RectTransform
+- Percentage Text → PercentageText TMP
+- Handle Left Position: 0 (left edge X position for 0%)
+- Handle Right Position: 100 (right edge X position for 100%)
+
+**Visual Styling:**
+- Fill Image: Use gradient or color that represents tension
+  - Suggested: Start red (low tension) → Yellow (medium) → Red (high tension)
+  - Or solid color that changes based on value
+- Handle: Black vertical line that moves with the fill
+- Background: Optional dark bar behind the fill
+
+**How it Works:**
+- The fill image fills from left to right as tension increases
+- The handle (black line) moves along with the fill edge
+- Percentage text displays the exact tension value
+- Identical visual style to the mission confidence meter
 
 ### Sliders (Signing Bonus & Salary)
 
