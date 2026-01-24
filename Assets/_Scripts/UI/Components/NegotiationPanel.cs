@@ -61,7 +61,8 @@ namespace OneShotSupport.UI.Components
 
         private void Awake()
         {
-            negotiationManager = ContractNegotiationManager.Instance;
+            // Don't get Instance here - it might not be ready yet
+            // We'll get it in Setup() instead
 
             // Setup slider listeners (update display values only, not tension)
             if (signingBonusSlider != null)
@@ -104,9 +105,15 @@ namespace OneShotSupport.UI.Components
         /// </summary>
         public void Setup(HeroData hero, int currentGold)
         {
+            // Get instance lazily (in case it wasn't ready during Awake)
             if (negotiationManager == null)
             {
-                Debug.LogError("[NegotiationPanel] ContractNegotiationManager not found!");
+                negotiationManager = ContractNegotiationManager.Instance;
+            }
+
+            if (negotiationManager == null)
+            {
+                Debug.LogError("[NegotiationPanel] ContractNegotiationManager not found in scene!");
                 return;
             }
 
