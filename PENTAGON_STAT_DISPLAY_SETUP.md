@@ -21,8 +21,11 @@ In the Inspector for `PentagonDisplay`:
 - Line Thickness: `3`
 - Stats: Set all to `30` (Might, Charm, Wit, Agility, Fortitude)
 - Fill Pentagon: ✓ (checked)
-- Fill Color: Blue with some transparency (R:0.2, G:0.6, B:1, A:0.3)
-- Outline Color: Bright blue (R:0.2, G:0.6, B:1, A:1)
+- Fill Color: Orange/Yellow with transparency (R:1, G:0.7, B:0.2, A:0.4)
+- Outline Color: Bright orange (R:1, G:0.6, B:0, A:1)
+- **Show Base Pentagon: ✓ (checked)** - This shows the background outline
+- Base Pentagon Color: Dark gray (R:0.3, G:0.3, B:0.3, A:0.5)
+- Base Pentagon Thickness: `2`
 
 **PentagonStatDisplayTester Settings:**
 - Pentagon Display: Drag the same GameObject here (self-reference)
@@ -123,13 +126,18 @@ Now the labels will update automatically when you test different scenarios!
 ### Pentagon Layout (Clockwise from Top):
 ```
          [Might]
-            △
+            ▲
            ╱ ╲
     [Charm]   [Wit]
          ╱     ╲
         ╱       ╲
   [Fortitude]—[Agility]
 ```
+
+**NEW: Base Pentagon Background**
+- The outer gray outline shows the MAXIMUM possible stat range (60 for all stats)
+- The inner filled/outlined pentagon shows ACTUAL stat values
+- Easy to see at a glance how close stats are to maximum
 
 ### What Each Stat Means:
 - **Might** (Top): Physical combat strength

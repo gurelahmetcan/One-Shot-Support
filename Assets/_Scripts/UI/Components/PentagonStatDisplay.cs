@@ -51,6 +51,17 @@ namespace OneShotSupport.UI.Components
         [Tooltip("Outline color")]
         public Color outlineColor = new Color(0.2f, 0.6f, 1f, 1f);
 
+        [Header("Base Pentagon (Background)")]
+        [Tooltip("Show base pentagon outline at maximum stat range")]
+        public bool showBasePentagon = true;
+
+        [Tooltip("Base pentagon outline color")]
+        public Color basePentagonColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+
+        [Tooltip("Base pentagon line thickness")]
+        [Range(1f, 10f)]
+        public float basePentagonThickness = 2f;
+
         [Header("Overlay (Optional)")]
         [Tooltip("Show overlay pentagon (for comparing requirements vs hero stats)")]
         public bool showOverlay = false;
@@ -115,7 +126,13 @@ namespace OneShotSupport.UI.Components
         {
             vh.Clear();
 
-            // Draw base pentagon (requirements or main stats)
+            // Draw base pentagon background (max stat outline)
+            if (showBasePentagon)
+            {
+                DrawBasePentagon(vh);
+            }
+
+            // Draw main pentagon (requirements or main stats)
             DrawPentagon(vh, might, charm, wit, agility, fortitude, fillColor, outlineColor);
 
             // Draw overlay pentagon if enabled (hero stats)
@@ -124,6 +141,28 @@ namespace OneShotSupport.UI.Components
                 DrawPentagon(vh, overlayMight, overlayCharm, overlayWit, overlayAgility, overlayFortitude,
                            overlayFillColor, overlayOutlineColor);
             }
+        }
+
+        /// <summary>
+        /// Draw base pentagon background at maximum size
+        /// </summary>
+        private void DrawBasePentagon(VertexHelper vh)
+        {
+            Vector2[] points = new Vector2[5];
+
+            // Draw pentagon at maximum size (60 for all stats)
+            for (int i = 0; i < 5; i++)
+            {
+                float angle = (i * 72f + 90f) * Mathf.Deg2Rad; // Start at top (90°), rotate clockwise
+
+                points[i] = new Vector2(
+                    Mathf.Cos(angle) * radius,
+                    Mathf.Sin(angle) * radius
+                );
+            }
+
+            // Draw outline only (no fill for base)
+            DrawPentagonOutline(vh, points, basePentagonColor, basePentagonThickness);
         }
 
         /// <summary>
@@ -136,15 +175,15 @@ namespace OneShotSupport.UI.Components
             float[] statValues = { m, w, a, f, c }; // Reordered for visual balance
 
             // Pentagon points (starting from top, going clockwise)
-            // Top: Might (0°)
-            // Top-Right: Wit (72°)
-            // Bottom-Right: Agility (144°)
-            // Bottom-Left: Fortitude (216°)
-            // Top-Left: Charm (288°)
+            // Top: Might (90°)
+            // Top-Right: Wit (162°)
+            // Bottom-Right: Agility (234°)
+            // Bottom-Left: Fortitude (306°)
+            // Top-Left: Charm (18°)
 
             for (int i = 0; i < 5; i++)
             {
-                float angle = (i * 72f - 90f) * Mathf.Deg2Rad; // Start at top, rotate clockwise
+                float angle = (i * 72f + 90f) * Mathf.Deg2Rad; // Start at top (90°), rotate clockwise
                 float statRatio = statValues[i] / MAX_STAT;
                 float currentRadius = radius * statRatio;
 
@@ -161,7 +200,7 @@ namespace OneShotSupport.UI.Components
             }
 
             // Draw outline
-            DrawPentagonOutline(vh, points, outline);
+            DrawPentagonOutline(vh, points, outline, lineThickness);
         }
 
         /// <summary>
@@ -197,12 +236,12 @@ namespace OneShotSupport.UI.Components
         /// <summary>
         /// Draw pentagon outline using thick lines
         /// </summary>
-        private void DrawPentagonOutline(VertexHelper vh, Vector2[] points, Color outlineColor)
+        private void DrawPentagonOutline(VertexHelper vh, Vector2[] points, Color outlineColor, float thickness)
         {
             for (int i = 0; i < 5; i++)
             {
                 int next = (i + 1) % 5;
-                DrawThickLine(vh, points[i], points[next], lineThickness, outlineColor);
+                DrawThickLine(vh, points[i], points[next], thickness, outlineColor);
             }
         }
 
