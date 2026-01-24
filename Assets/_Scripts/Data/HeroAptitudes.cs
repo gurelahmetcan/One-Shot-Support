@@ -3,36 +3,46 @@ using UnityEngine;
 namespace OneShotSupport.Data
 {
     /// <summary>
-    /// Aptitudes determine how effectively a hero learns/grows in each stat
+    /// Aptitudes determine how effectively a hero learns/grows in each stat (5-stat system)
     /// Higher aptitude = faster stat growth when training that focus
     /// </summary>
     [System.Serializable]
     public class HeroAptitudes
     {
-        [Tooltip("Multiplier for Prowess growth (0.5 to 2.0)")]
+        [Tooltip("Multiplier for Might growth (0.5 to 2.0)")]
         [Range(0.5f, 2.0f)]
-        public float prowessAptitude = 1.0f;
+        public float mightAptitude = 1.0f;
 
-        [Tooltip("Multiplier for Charisma growth (0.5 to 2.0)")]
+        [Tooltip("Multiplier for Charm growth (0.5 to 2.0)")]
         [Range(0.5f, 2.0f)]
-        public float charismaAptitude = 1.0f;
+        public float charmAptitude = 1.0f;
 
-        [Tooltip("Multiplier for Vitality growth (0.5 to 2.0)")]
+        [Tooltip("Multiplier for Wit growth (0.5 to 2.0)")]
         [Range(0.5f, 2.0f)]
-        public float vitalityAptitude = 1.0f;
+        public float witAptitude = 1.0f;
+
+        [Tooltip("Multiplier for Agility growth (0.5 to 2.0)")]
+        [Range(0.5f, 2.0f)]
+        public float agilityAptitude = 1.0f;
+
+        [Tooltip("Multiplier for Fortitude growth (0.5 to 2.0)")]
+        [Range(0.5f, 2.0f)]
+        public float fortitudeAptitude = 1.0f;
 
         [Tooltip("Multiplier for Discipline training effectiveness (greed reduction)")]
         [Range(0.5f, 2.0f)]
         public float disciplineAptitude = 1.0f;
 
         /// <summary>
-        /// Constructor for random aptitudes
+        /// Constructor for random aptitudes (5-stat system)
         /// </summary>
-        public HeroAptitudes(float prowess, float charisma, float vitality, float discipline)
+        public HeroAptitudes(float might, float charm, float wit, float agility, float fortitude, float discipline)
         {
-            prowessAptitude = Mathf.Clamp(prowess, 0.5f, 2.0f);
-            charismaAptitude = Mathf.Clamp(charisma, 0.5f, 2.0f);
-            vitalityAptitude = Mathf.Clamp(vitality, 0.5f, 2.0f);
+            mightAptitude = Mathf.Clamp(might, 0.5f, 2.0f);
+            charmAptitude = Mathf.Clamp(charm, 0.5f, 2.0f);
+            witAptitude = Mathf.Clamp(wit, 0.5f, 2.0f);
+            agilityAptitude = Mathf.Clamp(agility, 0.5f, 2.0f);
+            fortitudeAptitude = Mathf.Clamp(fortitude, 0.5f, 2.0f);
             disciplineAptitude = Mathf.Clamp(discipline, 0.5f, 2.0f);
         }
 
@@ -41,9 +51,11 @@ namespace OneShotSupport.Data
         /// </summary>
         public HeroAptitudes()
         {
-            prowessAptitude = 1.0f;
-            charismaAptitude = 1.0f;
-            vitalityAptitude = 1.0f;
+            mightAptitude = 1.0f;
+            charmAptitude = 1.0f;
+            witAptitude = 1.0f;
+            agilityAptitude = 1.0f;
+            fortitudeAptitude = 1.0f;
             disciplineAptitude = 1.0f;
         }
 
@@ -54,9 +66,11 @@ namespace OneShotSupport.Data
         {
             return focus switch
             {
-                EducationFocus.Prowess => prowessAptitude,
-                EducationFocus.Charisma => charismaAptitude,
-                EducationFocus.Vitality => vitalityAptitude,
+                EducationFocus.Might => mightAptitude,
+                EducationFocus.Charm => charmAptitude,
+                EducationFocus.Wit => witAptitude,
+                EducationFocus.Agility => agilityAptitude,
+                EducationFocus.Fortitude => fortitudeAptitude,
                 EducationFocus.Discipline => disciplineAptitude,
                 _ => 1.0f
             };

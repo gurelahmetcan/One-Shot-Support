@@ -133,13 +133,15 @@ namespace OneShotSupport.Data
     }
 
     /// <summary>
-    /// Education focus types for hero leveling and training
+    /// Education focus types for hero leveling and training (5-stat system)
     /// </summary>
     public enum EducationFocus
     {
-        Prowess,    // Combat effectiveness
-        Charisma,   // Social skills and reputation gains
-        Vitality,   // Health and durability
+        Might,      // Physical combat, strength, weapon skills
+        Charm,      // Persuasion, leadership, negotiation
+        Wit,        // Tactics, problem-solving, investigation
+        Agility,    // Reflexes, stealth, evasion
+        Fortitude,  // Endurance, resilience, survival
         Discipline  // Reduces greed, improves reliability
     }
 }

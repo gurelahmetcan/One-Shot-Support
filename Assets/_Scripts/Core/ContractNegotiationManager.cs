@@ -97,9 +97,9 @@ namespace OneShotSupport.Core
             // Get lifecycle multiplier
             float lifecycleMultiplier = GetLifecycleMultiplier(hero.lifeStage);
 
-            // Base calculation: (Prowess + Charisma + Vitality) × 2
-            int coreStatsSum = hero.prowess + hero.charisma + hero.maxVitality;
-            float baseValue = coreStatsSum * 2f;
+            // Base calculation: Average of all 5 core stats × 2 (5-stat system)
+            int coreStatsSum = hero.might + hero.charm + hero.wit + hero.agility + hero.fortitude;
+            float baseValue = (coreStatsSum / 5f) * 2f;
 
             // Apply lifecycle multiplier
             float lifecycleValue = baseValue * lifecycleMultiplier;

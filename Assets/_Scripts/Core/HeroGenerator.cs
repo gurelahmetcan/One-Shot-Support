@@ -70,11 +70,13 @@ namespace OneShotSupport.Core
             // Random age
             int age = Random.Range(minAge, maxAge + 1);
 
-            // Random aptitudes (different for each stat)
+            // Random aptitudes (5-stat system + discipline)
             HeroAptitudes aptitudes = new HeroAptitudes(
-                Random.Range(minAptitude, maxAptitude), // prowess
-                Random.Range(minAptitude, maxAptitude), // charisma
-                Random.Range(minAptitude, maxAptitude), // vitality
+                Random.Range(minAptitude, maxAptitude), // might
+                Random.Range(minAptitude, maxAptitude), // charm
+                Random.Range(minAptitude, maxAptitude), // wit
+                Random.Range(minAptitude, maxAptitude), // agility
+                Random.Range(minAptitude, maxAptitude), // fortitude
                 Random.Range(minAptitude, maxAptitude)  // discipline
             );
 

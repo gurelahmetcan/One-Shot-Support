@@ -18,15 +18,21 @@ namespace OneShotSupport.ScriptableObjects
         [TextArea(2, 4)]
         public string description;
 
-        [Header("Stat Modifiers")]
-        [Tooltip("Flat bonus/penalty to Prowess")]
-        public int prowessModifier = 0;
+        [Header("Stat Modifiers (5-Stat System)")]
+        [Tooltip("Flat bonus/penalty to Might")]
+        public int mightModifier = 0;
 
-        [Tooltip("Flat bonus/penalty to Charisma")]
-        public int charismaModifier = 0;
+        [Tooltip("Flat bonus/penalty to Charm")]
+        public int charmModifier = 0;
 
-        [Tooltip("Flat bonus/penalty to Max Vitality")]
-        public int vitalityModifier = 0;
+        [Tooltip("Flat bonus/penalty to Wit")]
+        public int witModifier = 0;
+
+        [Tooltip("Flat bonus/penalty to Agility")]
+        public int agilityModifier = 0;
+
+        [Tooltip("Flat bonus/penalty to Fortitude")]
+        public int fortitudeModifier = 0;
 
         [Header("Contract Modifiers")]
         [Tooltip("Percentage modifier to daily salary (e.g., -0.1 = 10% cheaper)")]
@@ -51,13 +57,15 @@ namespace OneShotSupport.ScriptableObjects
         public float fameGainModifier = 0f;
 
         /// <summary>
-        /// Apply this trait's stat modifiers to the provided stats
+        /// Apply this trait's stat modifiers to the provided stats (5-stat system)
         /// </summary>
-        public void ApplyStatModifiers(ref int prowess, ref int charisma, ref int maxVitality)
+        public void ApplyStatModifiers(ref int might, ref int charm, ref int wit, ref int agility, ref int fortitude)
         {
-            prowess += prowessModifier;
-            charisma += charismaModifier;
-            maxVitality += vitalityModifier;
+            might += mightModifier;
+            charm += charmModifier;
+            wit += witModifier;
+            agility += agilityModifier;
+            fortitude += fortitudeModifier;
         }
 
         /// <summary>

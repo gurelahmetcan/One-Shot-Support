@@ -24,21 +24,33 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Life stage based on age")]
         public HeroLifecycleStage lifeStage = HeroLifecycleStage.Rookie;
 
-        // === CORE STATS ===
+        // === CORE STATS (5-Stat System) ===
         [Header("Core Stats")]
-        [Tooltip("Combat effectiveness")]
-        public int prowess = 10;
+        [Tooltip("Physical combat, strength, weapon skills")]
+        [Range(0, 100)]
+        public int might = 10;
 
-        [Tooltip("Social skills and reputation gains")]
-        public int charisma = 10;
+        [Tooltip("Persuasion, leadership, negotiation")]
+        [Range(0, 100)]
+        public int charm = 10;
 
-        [Tooltip("Current hit points")]
-        public int currentVitality = 50;
+        [Tooltip("Tactics, problem-solving, investigation")]
+        [Range(0, 100)]
+        public int wit = 10;
 
-        [Tooltip("Maximum hit points")]
-        public int maxVitality = 50;
+        [Tooltip("Reflexes, stealth, evasion")]
+        [Range(0, 100)]
+        public int agility = 10;
+
+        [Tooltip("Endurance, resilience, survival")]
+        [Range(0, 100)]
+        public int fortitude = 50;
+
+        [Tooltip("Current hit points (derived from fortitude)")]
+        public int currentHP = 50;
 
         [Tooltip("Greediness - affects loot demands (reduced by Discipline training)")]
+        [Range(0, 100)]
         public int greed = 50;
 
         // === CONTRACT INFO ===
@@ -111,7 +123,15 @@ namespace OneShotSupport.ScriptableObjects
         /// </summary>
         public bool IsAlive
         {
-            get { return currentVitality > 0; }
+            get { return currentHP > 0; }
+        }
+
+        /// <summary>
+        /// Maximum HP is based on fortitude stat
+        /// </summary>
+        public int MaxHP
+        {
+            get { return fortitude; }
         }
 
         /// <summary>
@@ -124,23 +144,27 @@ namespace OneShotSupport.ScriptableObjects
         }
 
         /// <summary>
-        /// Get total stat modifiers from all traits
+        /// Get total stat modifiers from all traits (5-stat system)
         /// </summary>
-        public void GetTotalStatModifiers(out int prowessMod, out int charismaMod, out int vitalityMod)
+        public void GetTotalStatModifiers(out int mightMod, out int charmMod, out int witMod, out int agilityMod, out int fortitudeMod)
         {
-            prowessMod = 0;
-            charismaMod = 0;
-            vitalityMod = 0;
+            mightMod = 0;
+            charmMod = 0;
+            witMod = 0;
+            agilityMod = 0;
+            fortitudeMod = 0;
 
             foreach (var trait in traits)
             {
                 if (trait != null)
                 {
-                    int p = prowess, c = charisma, v = maxVitality;
-                    trait.ApplyStatModifiers(ref p, ref c, ref v);
-                    prowessMod += (p - prowess);
-                    charismaMod += (c - charisma);
-                    vitalityMod += (v - maxVitality);
+                    int m = might, ch = charm, w = wit, a = agility, f = fortitude;
+                    trait.ApplyStatModifiers(ref m, ref ch, ref w, ref a, ref f);
+                    mightMod += (m - might);
+                    charmMod += (ch - charm);
+                    witMod += (w - wit);
+                    agilityMod += (a - agility);
+                    fortitudeMod += (f - fortitude);
                 }
             }
         }
@@ -148,7 +172,7 @@ namespace OneShotSupport.ScriptableObjects
         // === CORE METHODS ===
 
         /// <summary>
-        /// Level up the hero with chosen education focus
+        /// Level up the hero with chosen education focus (5-stat system)
         /// Increases stats based on aptitude and focus choice
         /// </summary>
         public void LevelUp(EducationFocus focus)
@@ -162,32 +186,50 @@ namespace OneShotSupport.ScriptableObjects
             // Apply stat gains based on focus and aptitude
             switch (focus)
             {
-                case EducationFocus.Prowess:
-                    prowess += Mathf.FloorToInt(focusedStatGain * aptitudes.prowessAptitude);
-                    charisma += Mathf.FloorToInt(baseStatGain * aptitudes.charismaAptitude * 0.5f);
+                case EducationFocus.Might:
+                    might += Mathf.FloorToInt(focusedStatGain * aptitudes.mightAptitude);
+                    fortitude += Mathf.FloorToInt(baseStatGain * aptitudes.fortitudeAptitude * 0.5f);
                     break;
 
-                case EducationFocus.Charisma:
-                    charisma += Mathf.FloorToInt(focusedStatGain * aptitudes.charismaAptitude);
-                    prowess += Mathf.FloorToInt(baseStatGain * aptitudes.prowessAptitude * 0.5f);
+                case EducationFocus.Charm:
+                    charm += Mathf.FloorToInt(focusedStatGain * aptitudes.charmAptitude);
+                    wit += Mathf.FloorToInt(baseStatGain * aptitudes.witAptitude * 0.5f);
                     break;
 
-                case EducationFocus.Vitality:
-                    int vitalityGain = Mathf.FloorToInt(focusedStatGain * aptitudes.vitalityAptitude);
-                    maxVitality += vitalityGain;
-                    currentVitality += vitalityGain; // Heal on vitality levelup
+                case EducationFocus.Wit:
+                    wit += Mathf.FloorToInt(focusedStatGain * aptitudes.witAptitude);
+                    charm += Mathf.FloorToInt(baseStatGain * aptitudes.charmAptitude * 0.5f);
+                    break;
+
+                case EducationFocus.Agility:
+                    agility += Mathf.FloorToInt(focusedStatGain * aptitudes.agilityAptitude);
+                    wit += Mathf.FloorToInt(baseStatGain * aptitudes.witAptitude * 0.5f);
+                    break;
+
+                case EducationFocus.Fortitude:
+                    int fortitudeGain = Mathf.FloorToInt(focusedStatGain * aptitudes.fortitudeAptitude);
+                    fortitude += fortitudeGain;
+                    currentHP += fortitudeGain; // Heal on fortitude levelup
                     break;
 
                 case EducationFocus.Discipline:
                     // Discipline training reduces greed
                     int greedReduction = Mathf.FloorToInt(focusedStatGain * aptitudes.disciplineAptitude);
                     greed = Mathf.Max(0, greed - greedReduction);
-                    // Discipline training also slightly improves self-control stats
-                    prowess += Mathf.FloorToInt(baseStatGain * aptitudes.prowessAptitude * 0.3f);
-                    charisma += Mathf.FloorToInt(baseStatGain * aptitudes.charismaAptitude * 0.3f);
+                    // Discipline training also slightly improves all stats
+                    might += 1;
+                    charm += 1;
                     Debug.Log($"[HeroData] {heroName} reduced greed by {greedReduction} (now {greed})");
                     break;
             }
+
+            // Clamp all stats to 0-100 range
+            might = Mathf.Clamp(might, 0, 100);
+            charm = Mathf.Clamp(charm, 0, 100);
+            wit = Mathf.Clamp(wit, 0, 100);
+            agility = Mathf.Clamp(agility, 0, 100);
+            fortitude = Mathf.Clamp(fortitude, 0, 100);
+            currentHP = Mathf.Clamp(currentHP, 0, fortitude);
 
             Debug.Log($"[HeroData] {heroName} leveled up to {level}! Focus: {focus}");
             OnLevelUp?.Invoke(level);
@@ -232,13 +274,13 @@ namespace OneShotSupport.ScriptableObjects
         /// </summary>
         public bool TakeDamage(int amount)
         {
-            currentVitality -= amount;
-            currentVitality = Mathf.Max(0, currentVitality);
+            currentHP -= amount;
+            currentHP = Mathf.Max(0, currentHP);
 
-            Debug.Log($"[HeroData] {heroName} took {amount} damage. HP: {currentVitality}/{maxVitality}");
+            Debug.Log($"[HeroData] {heroName} took {amount} damage. HP: {currentHP}/{MaxHP}");
 
             // Check for death
-            if (currentVitality <= 0)
+            if (currentHP <= 0)
             {
                 Debug.LogWarning($"[HeroData] {heroName} has died!");
                 OnHeroDeath?.Invoke();
@@ -246,7 +288,7 @@ namespace OneShotSupport.ScriptableObjects
             }
 
             // Check for forced retirement (low HP + old age)
-            if (currentVitality < maxVitality * 0.2f && lifeStage == HeroLifecycleStage.Veteran)
+            if (currentHP < MaxHP * 0.2f && lifeStage == HeroLifecycleStage.Veteran)
             {
                 Debug.LogWarning($"[HeroData] {heroName} is considering retirement due to injury and age...");
                 // Could trigger retirement event here
@@ -260,16 +302,16 @@ namespace OneShotSupport.ScriptableObjects
         /// </summary>
         public void Heal(int amount)
         {
-            currentVitality += amount;
-            currentVitality = Mathf.Min(currentVitality, maxVitality);
+            currentHP += amount;
+            currentHP = Mathf.Min(currentHP, MaxHP);
         }
 
         /// <summary>
-        /// Fully heal the hero to max vitality
+        /// Fully heal the hero to max HP
         /// </summary>
         public void FullHeal()
         {
-            currentVitality = maxVitality;
+            currentHP = MaxHP;
         }
 
         /// <summary>
@@ -347,7 +389,7 @@ namespace OneShotSupport.ScriptableObjects
         }
 
         /// <summary>
-        /// Initialize a new hero with random stats (for procedural generation)
+        /// Initialize a new hero with random stats (5-stat system)
         /// </summary>
         public void InitializeRandom(string name, int age, HeroAptitudes randomAptitudes, int contractYears = 2)
         {
@@ -355,11 +397,13 @@ namespace OneShotSupport.ScriptableObjects
             currentAge = age;
             UpdateLifeStage();
 
-            // Random base stats
-            prowess = UnityEngine.Random.Range(8, 15);
-            charisma = UnityEngine.Random.Range(8, 15);
-            maxVitality = UnityEngine.Random.Range(40, 60);
-            currentVitality = maxVitality;
+            // Random base stats (5-stat system, scaled to 0-100)
+            might = UnityEngine.Random.Range(10, 30);
+            charm = UnityEngine.Random.Range(10, 30);
+            wit = UnityEngine.Random.Range(10, 30);
+            agility = UnityEngine.Random.Range(10, 30);
+            fortitude = UnityEngine.Random.Range(30, 60);
+            currentHP = fortitude;
             greed = UnityEngine.Random.Range(30, 70);
 
             // Set aptitudes
@@ -369,8 +413,9 @@ namespace OneShotSupport.ScriptableObjects
             contractLengthInYears = contractYears;
             turnsRemainingInContract = contractYears * 4; // 4 turns per year
 
-            // Random salary based on stats
-            dailySalary = UnityEngine.Random.Range(8, 21); // 8-20 gold per turn
+            // Random salary based on average stats
+            int avgStats = (might + charm + wit + agility + fortitude) / 5;
+            dailySalary = Mathf.RoundToInt(avgStats * 0.5f); // Salary scales with stat average
 
             // Start at level 1
             level = 1;
@@ -384,7 +429,7 @@ namespace OneShotSupport.ScriptableObjects
             currentTension = 0;
             trustLevel = UnityEngine.Random.Range(40, 61); // Random initial trust 40-60
 
-            Debug.Log($"[HeroData] Initialized random hero: {heroName}, Age: {currentAge}, Stage: {lifeStage}");
+            Debug.Log($"[HeroData] Initialized random hero: {heroName}, Age: {currentAge}, Stage: {lifeStage}, Stats: M{might}/C{charm}/W{wit}/A{agility}/F{fortitude}");
         }
 
         // === NEGOTIATION METHODS ===
