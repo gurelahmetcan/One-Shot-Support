@@ -331,38 +331,39 @@ namespace OneShotSupport.UI.Components
             int salary = Mathf.RoundToInt(salarySlider.value);
             ContractOffer offer = new ContractOffer(signingBonus, salary, selectedContractLength);
 
-            // Calculate tension delta
-            int tensionDelta = negotiationManager.CalculateTensionDelta(
-                currentHero,
-                offer,
-                currentHero.currentTension
-            );
+            // Calculate offer value and compare to expected value
+            int offerValue = negotiationManager.CalculateOfferValue(offer);
+            int expectedValue = heroExpectedValue;
 
-            // Apply tension change
-            int newTension = currentHero.currentTension;
-            bool walkedAway = negotiationManager.ApplyTensionChange(
-                currentHero,
-                tensionDelta,
-                ref newTension
-            );
+            Debug.Log($"[NegotiationPanel] Offer: {offerValue}g vs Expected: {expectedValue}g");
 
-            currentHero.currentTension = newTension;
-
-            // Update display
-            UpdateTensionDisplay(newTension);
-
-            Debug.Log($"[NegotiationPanel] Offer made! Tension: {currentHero.currentTension}% (Delta: {tensionDelta:+0;-0}%)");
-
-            // Check result
-            if (walkedAway)
+            // Simple logic: if offer >= expected, accept; else increase tension
+            if (offerValue >= expectedValue)
             {
-                // Hero walked away!
-                HandleHeroWalkAway();
+                // Hero accepts the offer!
+                Debug.Log($"[NegotiationPanel] {currentHero.heroName} accepted the offer! ({offerValue}g >= {expectedValue}g)");
+                HandleNegotiationSuccess(offer);
             }
             else
             {
-                // Hero accepts!
-                HandleNegotiationSuccess(offer);
+                // Offer is too low, increase tension
+                int valueDifference = expectedValue - offerValue;
+                int tensionIncrease = Mathf.RoundToInt((float)valueDifference / expectedValue * 100f);
+
+                currentHero.currentTension += tensionIncrease;
+                currentHero.currentTension = Mathf.Clamp(currentHero.currentTension, 0, 100);
+
+                // Update display
+                UpdateTensionDisplay(currentHero.currentTension);
+
+                Debug.Log($"[NegotiationPanel] Offer too low! Tension increased by {tensionIncrease}% → {currentHero.currentTension}%");
+
+                // Check if tension is too high (walk away)
+                if (currentHero.currentTension >= 100)
+                {
+                    Debug.LogWarning($"[NegotiationPanel] Tension reached 100%! {currentHero.heroName} walks away!");
+                    HandleHeroWalkAway();
+                }
             }
         }
 
