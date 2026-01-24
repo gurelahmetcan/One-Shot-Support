@@ -95,7 +95,8 @@ namespace OneShotSupport.UI
 
             if (tavernScreen != null)
             {
-                tavernScreen.OnHeroRecruited += (hero) => gameManager.RecruitHero(hero);
+                tavernScreen.OnHeroRecruited += (hero, offer) => gameManager.RecruitHero(hero, offer);
+                tavernScreen.OnHeroWalkedAway += (hero) => gameManager.HeroWalkedAway(hero);
                 tavernScreen.OnBackClicked += () => gameManager.LeaveTavern();
             }
 
@@ -353,9 +354,9 @@ namespace OneShotSupport.UI
         /// <summary>
         /// Handle hero recruited
         /// </summary>
-        private void HandleHeroRecruited(ScriptableObjects.HeroData hero)
+        private void HandleHeroRecruited(ScriptableObjects.HeroData hero, Core.ContractOffer offer)
         {
-            Debug.Log($"[UIManager] Hero recruited: {hero.heroName}");
+            Debug.Log($"[UIManager] Hero recruited: {hero.heroName} (Contract: {offer.signingBonus}g signing + {offer.dailySalary}g/turn × {offer.contractLengthYears}yr)");
             // Refresh tavern screen to show updated hero list
             if (tavernScreen != null && tavernScreen.gameObject.activeSelf)
             {

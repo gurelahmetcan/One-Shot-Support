@@ -94,7 +94,8 @@ namespace OneShotSupport.Core
         public event Action<List<MissionData>> OnMissionsGenerated; // (missions) - when missions are available
         public event Action<MissionData> OnMissionSelected; // (mission) - when a mission is selected
         public event Action<List<HeroData>, int> OnTavernHeroesGenerated; // (heroes, cost) - when tavern heroes are available
-        public event Action<HeroData> OnHeroRecruited; // (hero) - when a hero is recruited
+        public event Action<HeroData, ContractOffer> OnHeroRecruited; // (hero, offer) - when a hero is recruited with contract
+        public event Action<HeroData> OnHeroWalkedAway; // (hero) - when a hero walks away from negotiation
         public event Action<List<HeroData>, int> OnBarracksOpened; // (heroes, maxCapacity) - when barracks is opened
 
         // Singleton for easy access (game jam pattern)
@@ -373,14 +374,14 @@ namespace OneShotSupport.Core
         /// <summary>
         /// Called by UIManager when player recruits a hero from tavern
         /// </summary>
-        public void RecruitHero(HeroData hero)
+        public void RecruitHero(HeroData hero, ContractOffer offer)
         {
             if (currentState != GameState.Tavern) return;
 
-            // Check if player can afford
-            if (goldManager != null && goldManager.CurrentGold < baseRecruitmentCost)
+            // Check if player can afford signing bonus
+            if (goldManager != null && goldManager.CurrentGold < offer.signingBonus)
             {
-                Debug.LogWarning($"[Tavern] Cannot afford hero! Need {baseRecruitmentCost}, have {goldManager.CurrentGold}");
+                Debug.LogWarning($"[Tavern] Cannot afford signing bonus! Need {offer.signingBonus}, have {goldManager.CurrentGold}");
                 return;
             }
 
@@ -391,11 +392,15 @@ namespace OneShotSupport.Core
                 return;
             }
 
-            // Deduct cost
+            // Deduct signing bonus
             if (goldManager != null)
             {
-                goldManager.TrySpendGold(baseRecruitmentCost);
+                goldManager.TrySpendGold(offer.signingBonus);
             }
+
+            // Apply contract to hero
+            hero.dailySalary = offer.dailySalary;
+            hero.contractLengthInYears = offer.contractLengthYears;
 
             // Add to recruited heroes
             recruitedHeroes.Add(hero);
@@ -403,8 +408,22 @@ namespace OneShotSupport.Core
             // Remove from tavern heroes
             tavernHeroes.Remove(hero);
 
-            Debug.Log($"[Tavern] Recruited {hero.heroName}! Barracks: {recruitedHeroes.Count}/{maxBarracksCapacity}");
-            OnHeroRecruited?.Invoke(hero);
+            Debug.Log($"[Tavern] Recruited {hero.heroName}! Contract: {offer.signingBonus}g signing + {offer.dailySalary}g/turn × {offer.contractLengthYears}yr. Barracks: {recruitedHeroes.Count}/{maxBarracksCapacity}");
+            OnHeroRecruited?.Invoke(hero, offer);
+        }
+
+        /// <summary>
+        /// Called when a hero walks away from negotiation
+        /// </summary>
+        public void HeroWalkedAway(HeroData hero)
+        {
+            if (currentState != GameState.Tavern) return;
+
+            // Mark walk-away turn for re-recruitment lockout
+            hero.walkAwayTurn = seasonalCalendar.CurrentTurn;
+
+            Debug.LogWarning($"[Tavern] {hero.heroName} walked away! Locked until turn {hero.walkAwayTurn + 4}");
+            OnHeroWalkedAway?.Invoke(hero);
         }
 
         /// <summary>
