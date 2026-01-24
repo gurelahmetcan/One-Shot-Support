@@ -17,6 +17,9 @@ namespace OneShotSupport.ScriptableObjects
         [TextArea(2, 4)]
         public string description;
 
+        [Tooltip("Mission archetype (determines stat distribution theme)")]
+        public MissionArchetype archetype = MissionArchetype.Balanced;
+
         [Header("Difficulty")]
         [Tooltip("Mission danger level (1-5 stars)")]
         public MissionDanger dangerLevel = MissionDanger.OneStar;
@@ -24,6 +27,32 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Threat level for combat calculation (affects success chance)")]
         [Range(0, 50)]
         public int threatLevel = 15;
+
+        [Header("Stat Requirements (5-Stat System)")]
+        [Tooltip("Might requirement (multiples of 5)")]
+        [Range(0, 60)]
+        public int mightRequirement = 10;
+
+        [Tooltip("Charm requirement (multiples of 5)")]
+        [Range(0, 60)]
+        public int charmRequirement = 10;
+
+        [Tooltip("Wit requirement (multiples of 5)")]
+        [Range(0, 60)]
+        public int witRequirement = 10;
+
+        [Tooltip("Agility requirement (multiples of 5)")]
+        [Range(0, 60)]
+        public int agilityRequirement = 10;
+
+        [Tooltip("Fortitude requirement (multiples of 5)")]
+        [Range(0, 60)]
+        public int fortitudeRequirement = 10;
+
+        [Header("Hero Capacity")]
+        [Tooltip("Maximum number of heroes that can be sent on this mission")]
+        [Range(1, 3)]
+        public int maxHeroCount = 1;
 
         [Header("Rewards")]
         [Tooltip("Gold reward for completing this mission")]

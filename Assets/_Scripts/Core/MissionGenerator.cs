@@ -96,6 +96,69 @@ namespace OneShotSupport.Core
             "Lighting equipment required"
         };
 
+        [Header("Stat Budget per Danger Level")]
+        [Tooltip("Total stat budget for 1-star missions")]
+        public Vector2Int oneStarBudget = new Vector2Int(60, 80);
+
+        [Tooltip("Total stat budget for 2-star missions")]
+        public Vector2Int twoStarBudget = new Vector2Int(80, 120);
+
+        [Tooltip("Total stat budget for 3-star missions")]
+        public Vector2Int threeStarBudget = new Vector2Int(120, 160);
+
+        [Tooltip("Total stat budget for 4-star missions")]
+        public Vector2Int fourStarBudget = new Vector2Int(160, 200);
+
+        [Tooltip("Total stat budget for 5-star missions")]
+        public Vector2Int fiveStarBudget = new Vector2Int(200, 250);
+
+        // Mission name pools per archetype (with stat hints)
+        private readonly Dictionary<MissionArchetype, string[]> missionNamePools = new Dictionary<MissionArchetype, string[]>()
+        {
+            { MissionArchetype.Combat, new string[] {
+                "Slay the Dragon (Might)",
+                "Defend the Village (Might)",
+                "Clear the Dungeon (Might)",
+                "Defeat the Warlord (Might)",
+                "Hunt the Beast (Might)"
+            }},
+            { MissionArchetype.Stealth, new string[] {
+                "Infiltrate the Castle (Agility)",
+                "Steal the Relic (Agility)",
+                "Shadow Assassination (Agility)",
+                "Bypass the Guards (Agility)",
+                "Secret Passage (Agility)"
+            }},
+            { MissionArchetype.Diplomatic, new string[] {
+                "Negotiate Peace (Charm)",
+                "Convince the Council (Charm)",
+                "Royal Audience (Charm)",
+                "Merchant Bargain (Charm)",
+                "Alliance Proposal (Charm)"
+            }},
+            { MissionArchetype.Investigation, new string[] {
+                "Solve the Mystery (Wit)",
+                "Find the Culprit (Wit)",
+                "Decode the Message (Wit)",
+                "Track the Clues (Wit)",
+                "Uncover the Plot (Wit)"
+            }},
+            { MissionArchetype.Survival, new string[] {
+                "Cross the Desert (Fortitude)",
+                "Survive the Blizzard (Fortitude)",
+                "Endure the Trial (Fortitude)",
+                "Mountain Expedition (Fortitude)",
+                "Wasteland Trek (Fortitude)"
+            }},
+            { MissionArchetype.Balanced, new string[] {
+                "General Quest",
+                "Mixed Objectives",
+                "Standard Mission",
+                "Varied Challenges",
+                "All-Purpose Task"
+            }}
+        };
+
         /// <summary>
         /// Generate a list of random missions
         /// </summary>
@@ -110,7 +173,7 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Generate a single random mission
+        /// Generate a single random mission with stat requirements (5-stat system)
         /// </summary>
         public MissionData GenerateMission()
         {
@@ -120,11 +183,20 @@ namespace OneShotSupport.Core
             // Assign danger level
             mission.dangerLevel = GetRandomDangerLevel();
 
-            // Assign visuals (sprite + name)
-            AssignVisuals(mission);
+            // Assign random archetype
+            mission.archetype = GetRandomArchetype();
+
+            // Assign mission name based on archetype (with stat hint)
+            mission.missionName = GetMissionName(mission.archetype);
 
             // Assign description
             mission.description = GenerateDescription(mission.dangerLevel);
+
+            // Assign stat requirements based on archetype and danger
+            AssignStatRequirements(mission);
+
+            // Assign max hero count based on danger
+            mission.maxHeroCount = GetMaxHeroCount(mission.dangerLevel);
 
             // Assign rewards based on danger level
             AssignRewards(mission);
@@ -142,6 +214,10 @@ namespace OneShotSupport.Core
             {
                 mission.intelHint = "";
             }
+
+            Debug.Log($"[MissionGen] {mission.missionName} ({mission.dangerLevel}, {mission.archetype}) | " +
+                      $"M:{mission.mightRequirement} C:{mission.charmRequirement} W:{mission.witRequirement} " +
+                      $"A:{mission.agilityRequirement} F:{mission.fortitudeRequirement} | Heroes: {mission.maxHeroCount}");
 
             return mission;
         }
@@ -244,6 +320,83 @@ namespace OneShotSupport.Core
                 MissionDanger.FourStar => fourStarThreat,
                 MissionDanger.FiveStar => fiveStarThreat,
                 _ => oneStarThreat
+            };
+        }
+
+        /// <summary>
+        /// Get a random archetype
+        /// </summary>
+        private MissionArchetype GetRandomArchetype()
+        {
+            return (MissionArchetype)Random.Range(0, 6); // 0-5 = 6 archetype types
+        }
+
+        /// <summary>
+        /// Get mission name from archetype pool
+        /// </summary>
+        private string GetMissionName(MissionArchetype archetype)
+        {
+            if (missionNamePools.TryGetValue(archetype, out string[] names))
+            {
+                return names[Random.Range(0, names.Length)];
+            }
+            return "Unknown Mission";
+        }
+
+        /// <summary>
+        /// Assign stat requirements based on archetype and danger level
+        /// All requirements are multiples of 5
+        /// </summary>
+        private void AssignStatRequirements(MissionData mission)
+        {
+            // Get stat budget for this danger level
+            Vector2Int budgetRange = mission.dangerLevel switch
+            {
+                MissionDanger.OneStar => oneStarBudget,
+                MissionDanger.TwoStar => twoStarBudget,
+                MissionDanger.ThreeStar => threeStarBudget,
+                MissionDanger.FourStar => fourStarBudget,
+                MissionDanger.FiveStar => fiveStarBudget,
+                _ => oneStarBudget
+            };
+
+            int totalBudget = Random.Range(budgetRange.x, budgetRange.y + 1);
+
+            // Get stat profile for archetype
+            MissionStatProfile profile = MissionStatProfile.GetProfile(mission.archetype);
+
+            // Calculate requirements (automatically rounds to multiples of 5)
+            profile.CalculateRequirements(
+                totalBudget,
+                out int might,
+                out int charm,
+                out int wit,
+                out int agility,
+                out int fortitude
+            );
+
+            // Assign to mission
+            mission.mightRequirement = might;
+            mission.charmRequirement = charm;
+            mission.witRequirement = wit;
+            mission.agilityRequirement = agility;
+            mission.fortitudeRequirement = fortitude;
+        }
+
+        /// <summary>
+        /// Get max hero count based on danger level
+        /// Higher danger = more heroes allowed
+        /// </summary>
+        private int GetMaxHeroCount(MissionDanger danger)
+        {
+            return danger switch
+            {
+                MissionDanger.OneStar => 1,      // Solo mission
+                MissionDanger.TwoStar => Random.Range(1, 3) == 1 ? 1 : 2,  // 1-2 heroes
+                MissionDanger.ThreeStar => 2,    // Duo mission
+                MissionDanger.FourStar => Random.Range(2, 4) == 2 ? 2 : 3, // 2-3 heroes
+                MissionDanger.FiveStar => 3,     // Full party
+                _ => 1
             };
         }
     }

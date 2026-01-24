@@ -123,6 +123,19 @@ namespace OneShotSupport.Data
     }
 
     /// <summary>
+    /// Mission archetypes that determine stat distribution and theme
+    /// </summary>
+    public enum MissionArchetype
+    {
+        Combat,         // Might + Fortitude focused (warriors, tanks)
+        Stealth,        // Agility + Wit focused (rogues, infiltrators)
+        Diplomatic,     // Charm + Wit focused (negotiators, socialites)
+        Investigation,  // Wit + Charm focused (detectives, scholars)
+        Survival,       // Fortitude + Agility focused (survivalists, rangers)
+        Balanced        // All stats equal (generalists)
+    }
+
+    /// <summary>
     /// Mission stances that affect hero behavior during missions
     /// </summary>
     public enum MissionStance
