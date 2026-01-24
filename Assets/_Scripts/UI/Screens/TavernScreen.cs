@@ -92,8 +92,14 @@ namespace OneShotSupport.UI.Screens
 
             HeroData hero = availableHeroes[slotIndex];
 
-            // Get player's current gold (need to get this from GameManager)
-            // For now, we'll pass 0 and update it in the next integration step
+            // Don't open if panel is already open
+            if (negotiationPanel != null && negotiationPanel.gameObject.activeSelf)
+            {
+                Debug.LogWarning("[Tavern] Negotiation panel already open!");
+                return;
+            }
+
+            // Get player's current gold
             int playerGold = Core.GoldManager.Instance != null ? Core.GoldManager.Instance.CurrentGold : 0;
 
             // Open negotiation panel

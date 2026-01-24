@@ -105,6 +105,13 @@ namespace OneShotSupport.UI.Components
         /// </summary>
         public void Setup(HeroData hero, int currentGold)
         {
+            // Guard against duplicate calls
+            if (gameObject.activeSelf && currentHero == hero)
+            {
+                Debug.LogWarning("[NegotiationPanel] Setup called again for same hero while panel is open. Ignoring.");
+                return;
+            }
+
             // Get instance lazily (in case it wasn't ready during Awake)
             if (negotiationManager == null)
             {
@@ -154,26 +161,35 @@ namespace OneShotSupport.UI.Components
                 }
             }
 
-            // Set ideal offer as starting point
+            // Set ideal offer as starting point WITHOUT triggering callbacks
             ContractOffer idealOffer = negotiationManager.CalculateIdealOffer(hero, 2);
             if (signingBonusSlider != null)
-                signingBonusSlider.value = idealOffer.signingBonus;
+            {
+                signingBonusSlider.SetValueWithoutNotify(idealOffer.signingBonus);
+                if (signingBonusValueText != null)
+                    signingBonusValueText.text = $"{idealOffer.signingBonus}g";
+            }
             if (salarySlider != null)
-                salarySlider.value = idealOffer.dailySalary;
+            {
+                salarySlider.SetValueWithoutNotify(idealOffer.dailySalary);
+                if (salaryValueText != null)
+                    salaryValueText.text = $"{idealOffer.dailySalary}g/turn";
+            }
 
             // Select 2 years by default
-            SelectContractLength(2);
+            selectedContractLength = 2;
+            UpdateContractLengthButtons();
 
             // Update initial tension display
             UpdateTensionDisplay(hero.currentTension);
 
-            // Update offer value display
+            // Update offer value display (now that all values are set)
             UpdateOfferDisplay();
 
             // Update offer button state
             UpdateOfferButtonState();
 
-            // Show panel
+            // Show panel LAST (after everything is ready)
             gameObject.SetActive(true);
 
             Debug.Log($"[NegotiationPanel] Opened negotiation with {hero.heroName} (Vexp: {heroExpectedValue}g)");
