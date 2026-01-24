@@ -345,10 +345,10 @@ namespace OneShotSupport.UI
         /// <summary>
         /// Handle tavern heroes generated
         /// </summary>
-        private void HandleTavernHeroesGenerated(List<ScriptableObjects.HeroData> heroes, int cost)
+        private void HandleTavernHeroesGenerated(List<ScriptableObjects.HeroData> heroes)
         {
-            Debug.Log($"[UIManager] Tavern heroes generated: {heroes.Count}, cost: {cost}");
-            ShowTavernScreen(heroes, cost);
+            Debug.Log($"[UIManager] Tavern heroes generated: {heroes.Count}");
+            ShowTavernScreen(heroes);
         }
 
         /// <summary>
@@ -518,13 +518,13 @@ namespace OneShotSupport.UI
             }
         }
 
-        private void ShowTavernScreen(List<ScriptableObjects.HeroData> heroes, int cost)
+        private void ShowTavernScreen(List<ScriptableObjects.HeroData> heroes)
         {
             HideAllScreens();
 
             if (tavernScreen != null)
             {
-                tavernScreen.Setup(heroes, cost);
+                tavernScreen.Setup(heroes);
             }
         }
 

@@ -13,11 +13,30 @@ MonoBehaviour:
   m_Name: TutorialHero
   m_EditorClassIdentifier: 
   heroName: Mr. Noob
-  description: 
-  tier: 0
-  baseChance: 10
-  slots: 2
-  perk: 3
+  currentAge: 20
+  lifeStage: 0
+  prowess: 10
+  charisma: 10
+  currentVitality: 50
+  maxVitality: 50
+  greed: 50
+  contractLengthInYears: 2
+  turnsRemainingInContract: 8
+  dailySalary: 10
+  bondLevel: 1
+  hasWalkedAway: 0
+  walkAwayTurn: -1
+  isLockedFromRecruitment: 0
+  currentTension: 0
+  trustLevel: 50
+  currentXP: 0
+  level: 1
+  aptitudes:
+    prowessAptitude: 1
+    charismaAptitude: 1
+    vitalityAptitude: 1
+    disciplineAptitude: 1
+  traits:
+  - {fileID: 11400000, guid: d9ba2474f756c469c8ad0f8104a9822d, type: 2}
   portrait: {fileID: 21300000, guid: 025b8ed0b735046c9b2c3fd8c135571a, type: 3}
-  characterCard: {fileID: 21300000, guid: 49805fa43f16e49a189abb517732979d, type: 3}
   heroVoiceline: {fileID: 8300000, guid: ac00c8e3d9327419c88cf6e65ecd048c, type: 3}

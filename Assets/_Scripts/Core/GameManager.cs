@@ -93,7 +93,7 @@ namespace OneShotSupport.Core
         public event Action<TrustThreshold> OnTrustThresholdCrossed; // Propagate trust threshold events
         public event Action<List<MissionData>> OnMissionsGenerated; // (missions) - when missions are available
         public event Action<MissionData> OnMissionSelected; // (mission) - when a mission is selected
-        public event Action<List<HeroData>, int> OnTavernHeroesGenerated; // (heroes, cost) - when tavern heroes are available
+        public event Action<List<HeroData>> OnTavernHeroesGenerated; // (heroes, cost) - when tavern heroes are available
         public event Action<HeroData, ContractOffer> OnHeroRecruited; // (hero, offer) - when a hero is recruited with contract
         public event Action<HeroData> OnHeroWalkedAway; // (hero) - when a hero walks away from negotiation
         public event Action<List<HeroData>, int> OnBarracksOpened; // (heroes, maxCapacity) - when barracks is opened
@@ -361,7 +361,7 @@ namespace OneShotSupport.Core
             }
 
             // Always invoke event to show tavern UI
-            OnTavernHeroesGenerated?.Invoke(tavernHeroes, baseRecruitmentCost);
+            OnTavernHeroesGenerated?.Invoke(tavernHeroes);
 
             // UI will show tavern via UIManager
         }

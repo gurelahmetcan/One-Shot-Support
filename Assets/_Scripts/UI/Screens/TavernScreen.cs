@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using OneShotSupport.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using OneShotSupport.ScriptableObjects;
@@ -25,7 +26,6 @@ namespace OneShotSupport.UI.Screens
         public event Action OnBackClicked;
 
         private List<HeroData> availableHeroes;
-        private int recruitmentCost = 50; // Base cost to recruit a hero
 
         private void Awake()
         {
@@ -60,17 +60,16 @@ namespace OneShotSupport.UI.Screens
         /// <summary>
         /// Setup and show the tavern with available heroes
         /// </summary>
-        public void Setup(List<HeroData> heroes, int costPerHero)
+        public void Setup(List<HeroData> heroes)
         {
             availableHeroes = heroes;
-            recruitmentCost = costPerHero;
 
             // Display heroes in slots
             for (int i = 0; i < heroSlots.Length; i++)
             {
                 if (i < heroes.Count)
                 {
-                    heroSlots[i].Setup(heroes[i], recruitmentCost);
+                    heroSlots[i].Setup(heroes[i]);
                     heroSlots[i].gameObject.SetActive(true);
                 }
                 else
@@ -100,7 +99,7 @@ namespace OneShotSupport.UI.Screens
             }
 
             // Get player's current gold
-            int playerGold = Core.GoldManager.Instance != null ? Core.GoldManager.Instance.CurrentGold : 0;
+            int playerGold = GameManager.Instance.goldManager != null ? GameManager.Instance.goldManager.CurrentGold : 0;
 
             // Open negotiation panel
             if (negotiationPanel != null)
@@ -161,7 +160,7 @@ namespace OneShotSupport.UI.Screens
             {
                 if (i < availableHeroes.Count)
                 {
-                    heroSlots[i].Setup(availableHeroes[i], recruitmentCost);
+                    heroSlots[i].Setup(availableHeroes[i]);
                     heroSlots[i].gameObject.SetActive(true);
                 }
                 else

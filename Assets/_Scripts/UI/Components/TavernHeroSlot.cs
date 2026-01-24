@@ -29,7 +29,6 @@ namespace OneShotSupport.UI.Components
         public event Action OnRecruitClicked;
 
         private HeroData hero;
-        private int cost;
 
         private void Awake()
         {
@@ -42,10 +41,9 @@ namespace OneShotSupport.UI.Components
         /// <summary>
         /// Setup the hero slot with hero data
         /// </summary>
-        public void Setup(HeroData heroData, int recruitmentCost)
+        public void Setup(HeroData heroData)
         {
             hero = heroData;
-            cost = recruitmentCost;
 
             // Update UI
             if (heroNameText != null)
@@ -94,10 +92,6 @@ namespace OneShotSupport.UI.Components
                     traitsText.text = "Traits: None";
                 }
             }
-
-            if (costText != null)
-                costText.text = $"{cost} Gold";
-
             if (heroPortrait != null && hero.portrait != null)
             {
                 heroPortrait.sprite = hero.portrait;
