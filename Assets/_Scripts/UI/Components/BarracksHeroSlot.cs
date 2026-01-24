@@ -55,11 +55,11 @@ namespace OneShotSupport.UI.Components
                 lifecycleText.color = GetLifecycleColor(hero.lifeStage);
             }
 
-            // Update stats
+            // Update stats (5-stat system)
             if (statsText != null)
             {
-                statsText.text = $"Prowess: {hero.prowess} | Charisma: {hero.charisma}\n" +
-                                $"HP: {hero.currentVitality}/{hero.maxVitality} | Greed: {hero.greed}";
+                statsText.text = $"Might: {hero.might} | Charm: {hero.charm} | Wit: {hero.wit}\n" +
+                                $"Agility: {hero.agility} | Fort: {hero.fortitude} | HP: {hero.currentHP}/{hero.MaxHP}";
             }
 
             // Update contract

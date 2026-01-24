@@ -107,10 +107,12 @@ namespace OneShotSupport.Core
             sb.AppendLine($"Name: {testHero.heroName}");
             sb.AppendLine($"Age: {testHero.currentAge} | Stage: {testHero.lifeStage}");
             sb.AppendLine($"Level: {testHero.level}");
-            sb.AppendLine("\nCore Stats:");
-            sb.AppendLine($"  Prowess: {testHero.prowess}");
-            sb.AppendLine($"  Charisma: {testHero.charisma}");
-            sb.AppendLine($"  Vitality: {testHero.maxVitality}");
+            sb.AppendLine("\nCore Stats (5-Stat System):");
+            sb.AppendLine($"  Might: {testHero.might}");
+            sb.AppendLine($"  Charm: {testHero.charm}");
+            sb.AppendLine($"  Wit: {testHero.wit}");
+            sb.AppendLine($"  Agility: {testHero.agility}");
+            sb.AppendLine($"  Fortitude: {testHero.fortitude}");
             sb.AppendLine($"  Greed: {testHero.greed}");
             sb.AppendLine($"\nTrust Level: {testHero.trustLevel}%");
             sb.AppendLine($"Bond Level: {testHero.bondLevel}");
@@ -141,11 +143,12 @@ namespace OneShotSupport.Core
 
             int vexp = negotiationManager.CalculateHeroExpectedValue(testHero);
 
-            int coreStats = testHero.prowess + testHero.charisma + testHero.maxVitality;
-            int baseValue = coreStats * 2;
+            int coreStatsSum = testHero.might + testHero.charm + testHero.wit + testHero.agility + testHero.fortitude;
+            float avgStats = coreStatsSum / 5f;
+            int baseValue = Mathf.RoundToInt(avgStats * 2f);
 
-            sb.AppendLine($"Core Stats Sum: {coreStats}");
-            sb.AppendLine($"Base Value (Core × 2): {baseValue}g");
+            sb.AppendLine($"Core Stats Sum: {coreStatsSum} (Avg: {avgStats:F1})");
+            sb.AppendLine($"Base Value (Avg × 2): {baseValue}g");
             sb.AppendLine($"Lifecycle Stage: {testHero.lifeStage}");
             sb.AppendLine($"Greed Premium: {testHero.greed}%");
             sb.AppendLine($"\n>>> TOTAL Vexp: {vexp}g <<<");

@@ -63,9 +63,9 @@ namespace OneShotSupport.UI.Components
 
             if (statsText != null)
             {
-                // Display core stats
-                statsText.text = $"Prowess: {hero.prowess} | Charisma: {hero.charisma}\n" +
-                                $"Vitality: {hero.maxVitality} | Greed: {hero.greed}";
+                // Display core stats (5-stat system)
+                statsText.text = $"Might: {hero.might} | Charm: {hero.charm} | Wit: {hero.wit}\n" +
+                                $"Agility: {hero.agility} | Fortitude: {hero.fortitude} | Greed: {hero.greed}";
             }
 
             if (contractText != null)
