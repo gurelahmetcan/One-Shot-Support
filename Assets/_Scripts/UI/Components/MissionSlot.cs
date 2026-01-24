@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using OneShotSupport.Data;
 using OneShotSupport.ScriptableObjects;
+using OneShotSupport.UI.Components;
 
 namespace OneShotSupport.UI.Screens
 {
@@ -22,6 +23,11 @@ namespace OneShotSupport.UI.Screens
         [SerializeField] private Image missionIcon;
         [SerializeField] private Button slotButton;
         [SerializeField] private Image selectionHighlight;
+
+        [Header("Stat Display (5-Stat System)")]
+        [SerializeField] private PentagonStatDisplay pentagonDisplay;
+        [SerializeField] private TextMeshProUGUI statRequirementsText;
+        [SerializeField] private TextMeshProUGUI maxHeroCountText;
 
         [Header("Colors")]
         [SerializeField] private Color normalColor = Color.white;
@@ -80,6 +86,31 @@ namespace OneShotSupport.UI.Screens
             if (missionIcon != null && mission.missionSprite != null)
             {
                 missionIcon.sprite = mission.missionSprite;
+            }
+
+            // Update pentagon display with mission stat requirements
+            if (pentagonDisplay != null)
+            {
+                pentagonDisplay.SetStats(
+                    mission.mightRequirement,
+                    mission.charmRequirement,
+                    mission.witRequirement,
+                    mission.agilityRequirement,
+                    mission.fortitudeRequirement
+                );
+            }
+
+            // Update stat requirements text (optional - shows numbers)
+            if (statRequirementsText != null)
+            {
+                statRequirementsText.text = $"M:{mission.mightRequirement} C:{mission.charmRequirement} W:{mission.witRequirement}\n" +
+                                           $"A:{mission.agilityRequirement} F:{mission.fortitudeRequirement}";
+            }
+
+            // Update max hero count
+            if (maxHeroCountText != null)
+            {
+                maxHeroCountText.text = $"Max Heroes: {mission.maxHeroCount}";
             }
 
             SetSelected(false);
