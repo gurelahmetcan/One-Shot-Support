@@ -124,6 +124,9 @@ namespace OneShotSupport.UI.Components
                 return;
             }
 
+            // Show panel FIRST so slider updates work correctly
+            gameObject.SetActive(true);
+
             currentHero = hero;
             playerCurrentGold = currentGold;
 
@@ -188,9 +191,6 @@ namespace OneShotSupport.UI.Components
 
             // Update offer button state
             UpdateOfferButtonState();
-
-            // Show panel LAST (after everything is ready)
-            gameObject.SetActive(true);
 
             Debug.Log($"[NegotiationPanel] Opened negotiation with {hero.heroName} (Vexp: {heroExpectedValue}g)");
         }
