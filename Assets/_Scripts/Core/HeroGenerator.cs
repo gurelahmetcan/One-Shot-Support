@@ -180,6 +180,8 @@ namespace OneShotSupport.Core
                 Random.Range(minAptitude, maxAptitude),
                 Random.Range(minAptitude, maxAptitude),
                 Random.Range(minAptitude, maxAptitude),
+                Random.Range(minAptitude, maxAptitude),
+                Random.Range(minAptitude, maxAptitude),
                 Random.Range(minAptitude, maxAptitude)
             );
 
