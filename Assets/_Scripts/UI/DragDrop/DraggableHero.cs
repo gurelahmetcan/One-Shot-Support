@@ -35,12 +35,24 @@ namespace OneShotSupport.UI.DragDrop
 
         private void Awake()
         {
-            rectTransform = GetComponent<RectTransform>();
-            canvasGroup = GetComponent<CanvasGroup>();
-            if (canvasGroup == null)
-                canvasGroup = gameObject.AddComponent<CanvasGroup>();
-
+            EnsureComponents();
             TryFindCanvas();
+        }
+
+        /// <summary>
+        /// Ensure required components are cached
+        /// </summary>
+        private void EnsureComponents()
+        {
+            if (rectTransform == null)
+                rectTransform = GetComponent<RectTransform>();
+
+            if (canvasGroup == null)
+            {
+                canvasGroup = GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                    canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            }
         }
 
         private void TryFindCanvas()
@@ -56,6 +68,7 @@ namespace OneShotSupport.UI.DragDrop
         /// </summary>
         public void Initialize(HeroData data, HeroAssignmentSlot slot = null)
         {
+            EnsureComponents();
             heroData = data;
             currentSlot = slot;
 
@@ -171,6 +184,7 @@ namespace OneShotSupport.UI.DragDrop
         /// </summary>
         public void SetOriginalParent(Transform parent)
         {
+            EnsureComponents();
             originalParent = parent;
             originalPosition = rectTransform.anchoredPosition;
         }
