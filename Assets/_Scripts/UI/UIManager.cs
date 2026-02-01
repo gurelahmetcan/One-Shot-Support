@@ -21,6 +21,7 @@ namespace OneShotSupport.UI
         public Screens.MissionBoardScreen missionBoardScreen;
         public Screens.TavernScreen tavernScreen;
         public Screens.BarracksScreen barracksScreen;
+        public Screens.PreparationPhaseScreen preparationPhaseScreen;
         public RestockScreen restockScreen;
         public DayEndScreen dayEndScreen;
         public GameOverScreen gameOverScreen;
@@ -59,6 +60,7 @@ namespace OneShotSupport.UI
             gameManager.OnTavernHeroesGenerated += HandleTavernHeroesGenerated;
             gameManager.OnHeroRecruited += HandleHeroRecruited;
             gameManager.OnBarracksOpened += HandleBarracksOpened;
+            gameManager.OnPreparationPhaseStarted += HandlePreparationPhaseStarted;
             gameManager.OnDayEnded += HandleDayEnded;
             gameManager.OnGameOver += HandleGameOver;
 
@@ -85,6 +87,7 @@ namespace OneShotSupport.UI
                 villageHubScreen.OnTavernClicked += () => gameManager.OpenTavern();
                 villageHubScreen.OnMissionBoardClicked += () => gameManager.OpenMissionBoard();
                 villageHubScreen.OnBarracksClicked += () => gameManager.OpenBarracks();
+                villageHubScreen.OnPreparationClicked += () => gameManager.OpenPreparationPhase();
             }
 
             if (missionBoardScreen != null)
@@ -103,6 +106,12 @@ namespace OneShotSupport.UI
             if (barracksScreen != null)
             {
                 barracksScreen.OnBackClicked += () => gameManager.LeaveBarracks();
+            }
+
+            if (preparationPhaseScreen != null)
+            {
+                preparationPhaseScreen.OnDispatchClicked += HandlePreparationDispatch;
+                preparationPhaseScreen.OnBackClicked += () => gameManager.LeavePreparationPhase();
             }
 
             if (restockScreen != null)
@@ -134,6 +143,7 @@ namespace OneShotSupport.UI
                 gameManager.OnTavernHeroesGenerated -= HandleTavernHeroesGenerated;
                 gameManager.OnHeroRecruited -= HandleHeroRecruited;
                 gameManager.OnBarracksOpened -= HandleBarracksOpened;
+                gameManager.OnPreparationPhaseStarted -= HandlePreparationPhaseStarted;
                 gameManager.OnDayEnded -= HandleDayEnded;
                 gameManager.OnGameOver -= HandleGameOver;
 
@@ -231,6 +241,10 @@ namespace OneShotSupport.UI
 
                 case GameState.Barracks:
                     // Barracks will be shown when OnBarracksOpened event fires
+                    break;
+
+                case GameState.PreparationPhase:
+                    // Preparation phase will be shown when OnPreparationPhaseStarted event fires
                     break;
 
                 case GameState.Restock:
@@ -380,6 +394,27 @@ namespace OneShotSupport.UI
         }
 
         /// <summary>
+        /// Handle preparation phase started
+        /// </summary>
+        private void HandlePreparationPhaseStarted(ScriptableObjects.MissionData mission, List<ScriptableObjects.HeroData> heroes)
+        {
+            Debug.Log($"[UIManager] Preparation phase started: {mission.missionName} with {heroes.Count} available heroes");
+            ShowPreparationPhaseScreen(mission, heroes);
+        }
+
+        /// <summary>
+        /// Handle dispatch button clicked in preparation phase
+        /// </summary>
+        private void HandlePreparationDispatch()
+        {
+            if (preparationPhaseScreen != null && gameManager != null)
+            {
+                var assignedHeroes = preparationPhaseScreen.GetAssignedHeroes();
+                gameManager.DispatchMission(assignedHeroes);
+            }
+        }
+
+        /// <summary>
         /// Handle fame changed
         /// </summary>
         private void HandleFameChanged(int newFame)
@@ -478,6 +513,9 @@ namespace OneShotSupport.UI
             if (barracksScreen != null)
                 barracksScreen.gameObject.SetActive(false);
 
+            if (preparationPhaseScreen != null)
+                preparationPhaseScreen.gameObject.SetActive(false);
+
             if (restockScreen != null)
                 restockScreen.gameObject.SetActive(false);
             
@@ -535,6 +573,16 @@ namespace OneShotSupport.UI
             if (barracksScreen != null)
             {
                 barracksScreen.Setup(heroes, maxCapacity);
+            }
+        }
+
+        private void ShowPreparationPhaseScreen(ScriptableObjects.MissionData mission, List<ScriptableObjects.HeroData> heroes)
+        {
+            HideAllScreens();
+
+            if (preparationPhaseScreen != null)
+            {
+                preparationPhaseScreen.Setup(mission, heroes);
             }
         }
 

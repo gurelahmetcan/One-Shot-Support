@@ -97,6 +97,8 @@ namespace OneShotSupport.Core
         public event Action<HeroData, ContractOffer> OnHeroRecruited; // (hero, offer) - when a hero is recruited with contract
         public event Action<HeroData> OnHeroWalkedAway; // (hero) - when a hero walks away from negotiation
         public event Action<List<HeroData>, int> OnBarracksOpened; // (heroes, maxCapacity) - when barracks is opened
+        public event Action<MissionData, List<HeroData>> OnPreparationPhaseStarted; // (mission, availableHeroes) - when preparation phase starts
+        public event Action<MissionData, List<HeroData>> OnMissionDispatched; // (mission, assignedHeroes) - when heroes are dispatched
 
         // Singleton for easy access (game jam pattern)
         public static GameManager Instance { get; private set; }
@@ -195,6 +197,10 @@ namespace OneShotSupport.Core
                     EnterConsultation();
                     break;
 
+                case GameState.PreparationPhase:
+                    EnterPreparationPhase();
+                    break;
+
                 case GameState.DayEnd:
                     EnterDayEnd();
                     break;
@@ -238,6 +244,10 @@ namespace OneShotSupport.Core
 
                 case GameState.Consultation:
                     UpdateConsultation();
+                    break;
+
+                case GameState.PreparationPhase:
+                    UpdatePreparationPhase();
                     break;
 
                 case GameState.DayEnd:
@@ -610,7 +620,97 @@ namespace OneShotSupport.Core
         {
             // Waiting for player to equip items and call CompleteConsultation()
         }
-        
+
+        // === PREPARATION PHASE STATE ===
+
+        private void EnterPreparationPhase()
+        {
+            Debug.Log("[PreparationPhase] Entering preparation phase...");
+
+            // Generate a mission if we don't have one
+            if (selectedMission == null)
+            {
+                if (missionGenerator != null)
+                {
+                    var missions = missionGenerator.GenerateMissions(1);
+                    if (missions.Count > 0)
+                    {
+                        selectedMission = missions[0];
+                        Debug.Log($"[PreparationPhase] Auto-generated mission: {selectedMission.missionName}");
+                    }
+                }
+            }
+
+            if (selectedMission == null)
+            {
+                Debug.LogError("[PreparationPhase] No mission available!");
+                return;
+            }
+
+            // Invoke event with mission and available heroes
+            OnPreparationPhaseStarted?.Invoke(selectedMission, recruitedHeroes);
+        }
+
+        private void UpdatePreparationPhase()
+        {
+            // Waiting for player to assign heroes and dispatch
+        }
+
+        /// <summary>
+        /// Called by UIManager when player clicks the preparation/dispatch button from VillageHub
+        /// </summary>
+        public void OpenPreparationPhase()
+        {
+            if (currentState == GameState.VillageHub)
+            {
+                ChangeState(GameState.PreparationPhase);
+            }
+        }
+
+        /// <summary>
+        /// Called by UIManager when player dispatches heroes on a mission
+        /// </summary>
+        public void DispatchMission(List<HeroData> assignedHeroes)
+        {
+            if (currentState != GameState.PreparationPhase) return;
+
+            if (assignedHeroes == null || assignedHeroes.Count == 0)
+            {
+                Debug.LogWarning("[PreparationPhase] Cannot dispatch - no heroes assigned!");
+                return;
+            }
+
+            Debug.Log($"[PreparationPhase] Dispatching {assignedHeroes.Count} heroes on mission: {selectedMission.missionName}");
+
+            // For MVP: Auto-succeed and give rewards
+            if (goldManager != null)
+            {
+                goldManager.AddGold(selectedMission.goldReward);
+                Debug.Log($"[PreparationPhase] Rewarded {selectedMission.goldReward} gold");
+            }
+
+            // Trigger event
+            OnMissionDispatched?.Invoke(selectedMission, assignedHeroes);
+
+            // Clear selected mission
+            selectedMission = null;
+            missionsGeneratedThisSeason = false;
+
+            // Move to day end
+            ChangeState(GameState.DayEnd);
+        }
+
+        /// <summary>
+        /// Called by UIManager when player leaves preparation phase without dispatching
+        /// </summary>
+        public void LeavePreparationPhase()
+        {
+            if (currentState == GameState.PreparationPhase)
+            {
+                ChangeState(GameState.VillageHub);
+            }
+        }
+
         // === DAY END STATE ===
 
         private void EnterDayEnd()

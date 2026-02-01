@@ -15,12 +15,14 @@ namespace OneShotSupport.UI.Screens
         [SerializeField] private Button missionBoardButton;
         [SerializeField] private Button barracksButton;
         [SerializeField] private Button forgeButton;
+        [SerializeField] private Button preparationButton;
 
         // Events
         public event Action OnTavernClicked;
         public event Action OnMissionBoardClicked;
         public event Action OnBarracksClicked;
         public event Action OnForgeClicked;
+        public event Action OnPreparationClicked;
 
         private void Awake()
         {
@@ -36,6 +38,9 @@ namespace OneShotSupport.UI.Screens
 
             if (forgeButton != null)
                 forgeButton.onClick.AddListener(() => OnForgeClicked?.Invoke());
+
+            if (preparationButton != null)
+                preparationButton.onClick.AddListener(() => OnPreparationClicked?.Invoke());
         }
 
         /// <summary>
@@ -72,6 +77,9 @@ namespace OneShotSupport.UI.Screens
 
             if (forgeButton != null)
                 forgeButton.interactable = true;
+
+            if (preparationButton != null)
+                preparationButton.interactable = true;
         }
 
         /// <summary>
