@@ -19,6 +19,9 @@ namespace OneShotSupport.Core
 
         [Tooltip("Hero portrait sprite")]
         public Sprite portrait;
+
+        [Tooltip("Hero card sprite for draggable cards in preparation phase")]
+        public Sprite cardSprite;
     }
 
     /// <summary>
@@ -123,7 +126,7 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Assign random visuals (portrait + voiceline) from the visual pool
+        /// Assign random visuals (portrait, cardSprite, voiceline) from the visual pool
         /// </summary>
         private void AssignVisuals(HeroData hero)
         {
@@ -138,6 +141,9 @@ namespace OneShotSupport.Core
 
             // Assign portrait
             hero.portrait = visuals.portrait;
+
+            // Assign card sprite for preparation phase
+            hero.cardSprite = visuals.cardSprite;
 
             // Randomly select one voiceline from the available voicelines for this visual
             if (visuals.heroVoicelines != null && visuals.heroVoicelines.Length > 0)
