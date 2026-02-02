@@ -22,8 +22,8 @@ namespace OneShotSupport.UI.DragDrop
         private Canvas canvas;
         private RectTransform rectTransform;
         private CanvasGroup canvasGroup;
-        private Vector2 originalPosition;
-        private Transform originalParent;
+        private Vector2 homePosition;
+        private Transform homeParent; // The "home" container (available heroes area)
         private HeroAssignmentSlot currentSlot;
 
         // Events
@@ -96,10 +96,6 @@ namespace OneShotSupport.UI.DragDrop
                 return;
             }
 
-            // Store original position and parent
-            originalPosition = rectTransform.anchoredPosition;
-            originalParent = transform.parent;
-
             // Remove from current slot if in one
             if (currentSlot != null)
             {
@@ -160,14 +156,19 @@ namespace OneShotSupport.UI.DragDrop
         }
 
         /// <summary>
-        /// Return hero to its original position
+        /// Return hero to its home position (available heroes area)
         /// </summary>
         public void ReturnToOriginal()
         {
-            if (originalParent != null)
+            if (homeParent != null)
             {
-                transform.SetParent(originalParent);
-                rectTransform.anchoredPosition = originalPosition;
+                transform.SetParent(homeParent);
+
+                // Reset anchors to match the layout group
+                rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                rectTransform.anchoredPosition = homePosition;
             }
         }
 
@@ -180,13 +181,13 @@ namespace OneShotSupport.UI.DragDrop
         }
 
         /// <summary>
-        /// Store original parent for returning later
+        /// Store home parent for returning later (the available heroes container)
         /// </summary>
         public void SetOriginalParent(Transform parent)
         {
             EnsureComponents();
-            originalParent = parent;
-            originalPosition = rectTransform.anchoredPosition;
+            homeParent = parent;
+            homePosition = rectTransform.anchoredPosition;
         }
 
         public HeroAssignmentSlot CurrentSlot => currentSlot;

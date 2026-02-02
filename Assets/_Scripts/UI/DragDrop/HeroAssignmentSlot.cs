@@ -86,7 +86,14 @@ namespace OneShotSupport.UI.DragDrop
             // Place hero in this slot
             currentHero = hero;
             hero.transform.SetParent(heroContainer);
-            hero.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
+            // Reset anchors to center so the hero is properly centered in the slot
+            RectTransform heroRect = hero.GetComponent<RectTransform>();
+            heroRect.anchorMin = new Vector2(0.5f, 0.5f);
+            heroRect.anchorMax = new Vector2(0.5f, 0.5f);
+            heroRect.pivot = new Vector2(0.5f, 0.5f);
+            heroRect.anchoredPosition = Vector2.zero;
+
             hero.SetSlot(this);
 
             // Hide placeholder
