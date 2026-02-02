@@ -17,18 +17,22 @@ MonoBehaviour:
     heroVoicelines:
     - {fileID: 8300000, guid: ac00c8e3d9327419c88cf6e65ecd048c, type: 3}
     portrait: {fileID: 21300000, guid: 025b8ed0b735046c9b2c3fd8c135571a, type: 3}
+    cardSprite: {fileID: 21300000, guid: e369816c479f24c07893720144968152, type: 3}
   - heroNames: []
     heroVoicelines:
     - {fileID: 8300000, guid: 042beeae82f344e888c0c7fdc991df6e, type: 3}
     portrait: {fileID: 21300000, guid: 6764cf6dbf98542cd948fe4763135f7f, type: 3}
+    cardSprite: {fileID: 21300000, guid: e3a0d93fbd07d4511bf71ddbad9df63c, type: 3}
   - heroNames: []
     heroVoicelines:
     - {fileID: 8300000, guid: 89919361e0bb7411e9474862bc80f938, type: 3}
     portrait: {fileID: 21300000, guid: b9c06e70757fd4b4387b019d65ed17fe, type: 3}
+    cardSprite: {fileID: 21300000, guid: cf6285e9c16214ebe9867971fd4ee866, type: 3}
   - heroNames: []
     heroVoicelines:
     - {fileID: 8300000, guid: da2a8594d140c421186f56e5186a84ce, type: 3}
     portrait: {fileID: 21300000, guid: 69251b14a045344c29fe645e42ab6105, type: 3}
+    cardSprite: {fileID: 21300000, guid: 1f5b135256a3c4582b02a453b73a1fd6, type: 3}
   possibleTraits:
   - {fileID: 11400000, guid: 55419ba1db158448183bf19a29bc3d05, type: 2}
   - {fileID: 11400000, guid: 8966b01501f364c18988a2fc45a5940a, type: 2}
