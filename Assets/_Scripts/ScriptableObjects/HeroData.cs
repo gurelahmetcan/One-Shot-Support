@@ -108,6 +108,9 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Hero portrait for UI display")]
         public Sprite portrait;
 
+        [Tooltip("Hero card sprite for draggable cards in preparation phase")]
+        public Sprite cardSprite;
+
         [Tooltip("Hero voiceline (optional)")]
         public AudioClip heroVoiceline;
 

@@ -13,7 +13,7 @@ namespace OneShotSupport.UI.DragDrop
     {
         [Header("References")]
         public HeroData heroData;
-        public Image heroPortrait;
+        public Image heroCardImage;
         public TMPro.TextMeshProUGUI heroNameText;
 
         [Header("Drag Settings")]
@@ -72,9 +72,17 @@ namespace OneShotSupport.UI.DragDrop
             heroData = data;
             currentSlot = slot;
 
-            if (heroPortrait != null && heroData != null && heroData.portrait != null)
+            // Use cardSprite if available, fallback to portrait
+            if (heroCardImage != null && heroData != null)
             {
-                heroPortrait.sprite = heroData.portrait;
+                if (heroData.cardSprite != null)
+                {
+                    heroCardImage.sprite = heroData.cardSprite;
+                }
+                else if (heroData.portrait != null)
+                {
+                    heroCardImage.sprite = heroData.portrait;
+                }
             }
 
             if (heroNameText != null && heroData != null)
