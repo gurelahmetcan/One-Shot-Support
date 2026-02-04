@@ -668,7 +668,7 @@ namespace OneShotSupport.Core
         }
 
         /// <summary>
-        /// Called by UIManager when player dispatches heroes on a mission
+        /// Called by UIManager when player dispatches heroes on a mission (legacy - calculates result internally)
         /// </summary>
         public void DispatchMission(List<HeroData> assignedHeroes)
         {
@@ -680,10 +680,25 @@ namespace OneShotSupport.Core
                 return;
             }
 
-            Debug.Log($"[PreparationPhase] Dispatching {assignedHeroes.Count} heroes on mission: {selectedMission.missionName}");
-
-            // Resolve the mission using pentagon-based mechanics
+            // Calculate result and complete
             var result = MissionResolver.ResolveMission(selectedMission, assignedHeroes);
+            CompleteMissionDispatch(result, assignedHeroes);
+        }
+
+        /// <summary>
+        /// Called by UIManager when resolution animation completes with pre-calculated result
+        /// </summary>
+        public void CompleteMissionDispatch(MissionResolutionResult result, List<HeroData> assignedHeroes)
+        {
+            if (currentState != GameState.PreparationPhase) return;
+
+            if (result == null)
+            {
+                Debug.LogError("[PreparationPhase] Cannot complete dispatch - no result!");
+                return;
+            }
+
+            Debug.Log($"[PreparationPhase] Completing dispatch for mission: {selectedMission.missionName}");
 
             if (result.isSuccess)
             {

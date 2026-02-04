@@ -25,6 +25,10 @@ namespace OneShotSupport.UI.Screens
 
         [Header("Pentagon Display")]
         [SerializeField] private PentagonStatDisplay pentagonDisplay;
+        [SerializeField] private float pentagonRadius = 100f;
+
+        [Header("Ball Resolution Animation")]
+        [SerializeField] private BallResolutionAnimator ballAnimator;
 
         [Header("Rewards Display")]
         [SerializeField] private TextMeshProUGUI goldRewardText;
@@ -50,9 +54,12 @@ namespace OneShotSupport.UI.Screens
         private MissionData currentMission;
         private List<HeroData> availableHeroes = new List<HeroData>();
         private List<DraggableHero> spawnedHeroCards = new List<DraggableHero>();
+        private MissionResolutionResult pendingResult;
+        private bool isResolving = false;
 
         // Events
         public event Action OnDispatchClicked;
+        public event Action<MissionResolutionResult> OnDispatchCompleted;
         public event Action OnBackClicked;
         public event Action<List<HeroData>> OnHeroAssignmentChanged;
 
@@ -63,6 +70,15 @@ namespace OneShotSupport.UI.Screens
 
             if (backButton != null)
                 backButton.onClick.AddListener(() => OnBackClicked?.Invoke());
+
+            if (ballAnimator != null)
+                ballAnimator.OnAnimationComplete += HandleResolutionAnimationComplete;
+        }
+
+        private void OnDestroy()
+        {
+            if (ballAnimator != null)
+                ballAnimator.OnAnimationComplete -= HandleResolutionAnimationComplete;
         }
 
         /// <summary>
@@ -318,6 +334,8 @@ namespace OneShotSupport.UI.Screens
         /// </summary>
         private void HandleDispatchClicked()
         {
+            if (isResolving) return;
+
             // Gather assigned heroes
             List<HeroData> assignedHeroes = GetAssignedHeroes();
 
@@ -328,7 +346,46 @@ namespace OneShotSupport.UI.Screens
             }
 
             Debug.Log($"[PreparationPhase] Dispatching {assignedHeroes.Count} heroes on mission: {currentMission.missionName}");
+
+            // Calculate the result
+            pendingResult = MissionResolver.ResolveMission(currentMission, assignedHeroes);
+
+            // Start the ball animation if we have an animator
+            if (ballAnimator != null)
+            {
+                isResolving = true;
+                dispatchButton.interactable = false;
+                backButton.interactable = false;
+
+                // Start animation with the target landing position
+                ballAnimator.StartAnimation(pendingResult.ballLandingPosition, pendingResult.isSuccess, pentagonRadius);
+            }
+            else
+            {
+                // No animator - complete immediately
+                OnDispatchClicked?.Invoke();
+                OnDispatchCompleted?.Invoke(pendingResult);
+            }
+        }
+
+        /// <summary>
+        /// Handle resolution animation complete
+        /// </summary>
+        private void HandleResolutionAnimationComplete(bool isSuccess)
+        {
+            isResolving = false;
+
+            Debug.Log($"[PreparationPhase] Resolution animation complete - {(isSuccess ? "SUCCESS" : "FAILURE")}");
+
+            // Re-enable buttons
+            if (dispatchButton != null)
+                dispatchButton.interactable = true;
+            if (backButton != null)
+                backButton.interactable = true;
+
+            // Notify listeners
             OnDispatchClicked?.Invoke();
+            OnDispatchCompleted?.Invoke(pendingResult);
         }
 
         /// <summary>

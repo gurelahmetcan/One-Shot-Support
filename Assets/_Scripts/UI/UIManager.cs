@@ -110,7 +110,7 @@ namespace OneShotSupport.UI
 
             if (preparationPhaseScreen != null)
             {
-                preparationPhaseScreen.OnDispatchClicked += HandlePreparationDispatch;
+                preparationPhaseScreen.OnDispatchCompleted += HandlePreparationDispatchCompleted;
                 preparationPhaseScreen.OnBackClicked += () => gameManager.LeavePreparationPhase();
             }
 
@@ -403,14 +403,14 @@ namespace OneShotSupport.UI
         }
 
         /// <summary>
-        /// Handle dispatch button clicked in preparation phase
+        /// Handle dispatch completed with resolution result
         /// </summary>
-        private void HandlePreparationDispatch()
+        private void HandlePreparationDispatchCompleted(Core.MissionResolutionResult result)
         {
             if (preparationPhaseScreen != null && gameManager != null)
             {
                 var assignedHeroes = preparationPhaseScreen.GetAssignedHeroes();
-                gameManager.DispatchMission(assignedHeroes);
+                gameManager.CompleteMissionDispatch(result, assignedHeroes);
             }
         }
 
