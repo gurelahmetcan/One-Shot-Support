@@ -627,18 +627,11 @@ namespace OneShotSupport.Core
         {
             Debug.Log("[PreparationPhase] Entering preparation phase...");
 
-            // Generate a mission if we don't have one
-            if (selectedMission == null)
+            // Helper to auto-select mission if testing
+            if (selectedMission == null && missionGenerator != null)
             {
-                if (missionGenerator != null)
-                {
-                    var missions = missionGenerator.GenerateMissions(1);
-                    if (missions.Count > 0)
-                    {
-                        selectedMission = missions[0];
-                        Debug.Log($"[PreparationPhase] Auto-generated mission: {selectedMission.missionName}");
-                    }
-                }
+                var missions = missionGenerator.GenerateMissions(1);
+                if (missions.Count > 0) selectedMission = missions[0];
             }
 
             if (selectedMission == null)
@@ -647,7 +640,6 @@ namespace OneShotSupport.Core
                 return;
             }
 
-            // Invoke event with mission and available heroes
             OnPreparationPhaseStarted?.Invoke(selectedMission, recruitedHeroes);
         }
 
@@ -672,17 +664,7 @@ namespace OneShotSupport.Core
         /// </summary>
         public void DispatchMission(List<HeroData> assignedHeroes)
         {
-            if (currentState != GameState.PreparationPhase) return;
-
-            if (assignedHeroes == null || assignedHeroes.Count == 0)
-            {
-                Debug.LogWarning("[PreparationPhase] Cannot dispatch - no heroes assigned!");
-                return;
-            }
-
-            // Calculate result and complete
-            var result = MissionResolver.ResolveMission(selectedMission, assignedHeroes);
-            CompleteMissionDispatch(result, assignedHeroes);
+            Debug.LogWarning("[GameManager] DispatchMission called directly. This assumes UI is handling the physics resolution.");
         }
 
         /// <summary>
