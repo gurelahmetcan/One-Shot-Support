@@ -357,8 +357,17 @@ namespace OneShotSupport.UI.Screens
                 dispatchButton.interactable = false;
                 backButton.interactable = false;
 
-                // Start animation with the target landing position
-                ballAnimator.StartAnimation(pendingResult.ballLandingPosition, pendingResult.isSuccess, pentagonRadius);
+                // Start animation with mission requirements and target landing position
+                ballAnimator.StartAnimation(
+                    currentMission.mightRequirement,
+                    currentMission.charmRequirement,
+                    currentMission.witRequirement,
+                    currentMission.agilityRequirement,
+                    currentMission.fortitudeRequirement,
+                    pendingResult.ballLandingPosition,
+                    pendingResult.isSuccess,
+                    pentagonRadius
+                );
             }
             else
             {

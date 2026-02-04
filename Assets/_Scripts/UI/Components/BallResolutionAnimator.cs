@@ -13,7 +13,6 @@ namespace OneShotSupport.UI.Components
         [Header("References")]
         [SerializeField] private RectTransform ballTransform;
         [SerializeField] private Image ballImage;
-        [SerializeField] private RectTransform pentagonBounds; // The pentagon area
 
         [Header("Ball Settings")]
         [SerializeField] private float ballRadius = 10f;
@@ -22,14 +21,11 @@ namespace OneShotSupport.UI.Components
         [SerializeField] private Color failureColor = Color.red;
 
         [Header("Animation Settings")]
-        [SerializeField] private float initialSpeed = 400f;
-        [SerializeField] private float friction = 0.98f; // Velocity multiplier per frame
-        [SerializeField] private float minSpeed = 20f; // Speed at which we start guiding to target
-        [SerializeField] private float bounceRandomness = 0.2f; // How much randomness in bounce direction
-        [SerializeField] private float maxAnimationTime = 5f; // Maximum time before forcing end
-
-        [Header("Pentagon Settings")]
-        [SerializeField] private float pentagonRadius = 100f; // Radius of the pentagon bounds
+        [SerializeField] private float initialSpeed = 300f;
+        [SerializeField] private float friction = 0.985f;
+        [SerializeField] private float minSpeed = 30f;
+        [SerializeField] private float bounceRandomness = 0.15f;
+        [SerializeField] private float maxAnimationTime = 4f;
 
         // Animation state
         private Vector2 ballPosition;
@@ -39,23 +35,16 @@ namespace OneShotSupport.UI.Components
         private bool isSuccess = false;
         private float animationTimer = 0f;
 
-        // Pentagon vertices (normalized, will be scaled by radius)
-        private Vector2[] pentagonVertices;
+        // Pentagon data
+        private Vector2[] pentagonVertices = new Vector2[5];
+        private float pentagonRadius;
+        private const float MAX_STAT = 60f;
 
         // Events
-        public System.Action<bool> OnAnimationComplete; // passes isSuccess
+        public System.Action<bool> OnAnimationComplete;
 
         private void Awake()
         {
-            // Calculate pentagon vertices (starting from top, going clockwise)
-            // Might (top), Charm (top-right), Fortitude (bottom-right), Agility (bottom-left), Wit (top-left)
-            pentagonVertices = new Vector2[5];
-            for (int i = 0; i < 5; i++)
-            {
-                float angle = (90f - i * 72f) * Mathf.Deg2Rad; // Start at top, go clockwise
-                pentagonVertices[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
-            }
-
             if (ballImage != null)
             {
                 ballImage.color = ballColor;
@@ -63,27 +52,55 @@ namespace OneShotSupport.UI.Components
         }
 
         /// <summary>
-        /// Start the ball resolution animation
+        /// Start the ball resolution animation with mission requirements
         /// </summary>
-        /// <param name="targetPos">Normalized position where ball should land (-1 to 1 range)</param>
+        /// <param name="mightReq">Mission might requirement</param>
+        /// <param name="charmReq">Mission charm requirement</param>
+        /// <param name="witReq">Mission wit requirement</param>
+        /// <param name="agilityReq">Mission agility requirement</param>
+        /// <param name="fortitudeReq">Mission fortitude requirement</param>
+        /// <param name="targetPos">Normalized position where ball should land</param>
         /// <param name="success">Whether this is a success or failure</param>
-        /// <param name="pentRadius">Radius of the pentagon in pixels</param>
-        public void StartAnimation(Vector2 targetPos, bool success, float pentRadius = 100f)
+        /// <param name="pentRadius">Radius of the pentagon display in pixels</param>
+        public void StartAnimation(int mightReq, int charmReq, int witReq, int agilityReq, int fortitudeReq,
+                                   Vector2 targetPos, bool success, float pentRadius)
         {
             if (isAnimating) return;
 
             pentagonRadius = pentRadius;
-            targetPosition = targetPos * pentagonRadius;
             isSuccess = success;
             isAnimating = true;
             animationTimer = 0f;
 
-            // Start ball at random position inside pentagon
-            ballPosition = GetRandomPositionInPentagon() * 0.5f; // Start closer to center
+            // Calculate pentagon vertices based on mission requirements
+            // Using same coordinate system as PentagonStatDisplay
+            // Order: Might, Wit, Agility, Fortitude, Charm (for angles 0,1,2,3,4)
+            int[] statValues = { mightReq, witReq, agilityReq, fortitudeReq, charmReq };
+
+            for (int i = 0; i < 5; i++)
+            {
+                float angle = (i * 72f + 90f) * Mathf.Deg2Rad;
+                float statRatio = Mathf.Max(statValues[i], 5f) / MAX_STAT; // Min 5 to ensure some area
+                float vertexRadius = pentagonRadius * statRatio;
+
+                pentagonVertices[i] = new Vector2(
+                    Mathf.Cos(angle) * vertexRadius,
+                    Mathf.Sin(angle) * vertexRadius
+                );
+            }
+
+            // Calculate target position (scale by pentagon radius)
+            targetPosition = targetPos * pentagonRadius * 0.5f; // Scale down since targetPos is normalized
+
+            // Clamp target to be inside pentagon
+            targetPosition = ClampToPentagon(targetPosition);
+
+            // Start ball at center
+            ballPosition = Vector2.zero;
 
             // Random initial velocity
-            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-            ballVelocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * initialSpeed;
+            float startAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            ballVelocity = new Vector2(Mathf.Cos(startAngle), Mathf.Sin(startAngle)) * initialSpeed;
 
             // Show the ball
             if (ballTransform != null)
@@ -97,12 +114,19 @@ namespace OneShotSupport.UI.Components
                 ballImage.color = ballColor;
             }
 
+            Debug.Log($"[BallAnimator] Starting animation. Target: {targetPosition}, Success: {success}");
             StartCoroutine(AnimateBall());
         }
 
         /// <summary>
-        /// Main animation coroutine
+        /// Legacy method - uses default pentagon shape
         /// </summary>
+        public void StartAnimation(Vector2 targetPos, bool success, float pentRadius = 100f)
+        {
+            // Use default values if called without mission requirements
+            StartAnimation(30, 30, 30, 30, 30, targetPos, success, pentRadius);
+        }
+
         private IEnumerator AnimateBall()
         {
             while (isAnimating)
@@ -110,32 +134,38 @@ namespace OneShotSupport.UI.Components
                 animationTimer += Time.deltaTime;
 
                 // Update ball position
-                ballPosition += ballVelocity * Time.deltaTime;
+                Vector2 newPosition = ballPosition + ballVelocity * Time.deltaTime;
 
                 // Check for collision with pentagon edges
-                CheckPentagonCollision();
+                bool bounced = CheckAndHandleCollision(ref newPosition, ref ballVelocity);
+
+                ballPosition = newPosition;
 
                 // Apply friction
                 ballVelocity *= friction;
 
                 // Check if we should start guiding to target
                 float speed = ballVelocity.magnitude;
-                if (speed < minSpeed || animationTimer > maxAnimationTime * 0.7f)
+                float timeRatio = animationTimer / maxAnimationTime;
+
+                if (speed < minSpeed || timeRatio > 0.7f)
                 {
                     // Start guiding towards target
                     Vector2 toTarget = targetPosition - ballPosition;
                     float distanceToTarget = toTarget.magnitude;
 
-                    if (distanceToTarget < 5f || animationTimer > maxAnimationTime)
+                    if (distanceToTarget < 3f || animationTimer > maxAnimationTime)
                     {
                         // Close enough or time's up - snap to target and end
                         ballPosition = targetPosition;
                         isAnimating = false;
+                        Debug.Log($"[BallAnimator] Animation ended. Final position: {ballPosition}");
                     }
                     else
                     {
-                        // Guide towards target
-                        ballVelocity = Vector2.Lerp(ballVelocity, toTarget.normalized * minSpeed * 0.5f, Time.deltaTime * 3f);
+                        // Smoothly guide towards target
+                        float guideStrength = Mathf.Lerp(2f, 8f, timeRatio);
+                        ballVelocity = Vector2.Lerp(ballVelocity, toTarget.normalized * minSpeed, Time.deltaTime * guideStrength);
                     }
                 }
 
@@ -153,49 +183,106 @@ namespace OneShotSupport.UI.Components
         }
 
         /// <summary>
-        /// Check if ball hit pentagon edge and bounce
+        /// Check collision with pentagon edges and handle bounce
         /// </summary>
-        private void CheckPentagonCollision()
+        private bool CheckAndHandleCollision(ref Vector2 position, ref Vector2 velocity)
         {
-            // Check each edge of the pentagon
+            bool bounced = false;
+
             for (int i = 0; i < 5; i++)
             {
-                Vector2 v1 = pentagonVertices[i] * pentagonRadius;
-                Vector2 v2 = pentagonVertices[(i + 1) % 5] * pentagonRadius;
+                Vector2 v1 = pentagonVertices[i];
+                Vector2 v2 = pentagonVertices[(i + 1) % 5];
 
-                // Check if ball is outside this edge
+                // Calculate edge and its inward-pointing normal
                 Vector2 edge = v2 - v1;
-                Vector2 edgeNormal = new Vector2(-edge.y, edge.x).normalized;
+                // Normal pointing inward (toward center)
+                Vector2 edgeNormal = new Vector2(edge.y, -edge.x).normalized;
 
-                // Distance from ball to edge line
-                Vector2 toPoint = ballPosition - v1;
-                float distance = Vector2.Dot(toPoint, edgeNormal);
-
-                // If ball is past the edge (outside pentagon)
-                if (distance > 0)
+                // Check which side of the edge we're on
+                // For a pentagon drawn clockwise from center, the normal should point inward
+                // We need to verify this by checking against center (0,0)
+                Vector2 edgeCenter = (v1 + v2) * 0.5f;
+                if (Vector2.Dot(edgeNormal, -edgeCenter) < 0)
                 {
-                    // Push ball back inside
-                    ballPosition -= edgeNormal * (distance + ballRadius * 0.1f);
+                    edgeNormal = -edgeNormal; // Flip if pointing outward
+                }
 
-                    // Reflect velocity
-                    ballVelocity = Vector2.Reflect(ballVelocity, -edgeNormal);
+                // Distance from point to edge (positive = inside, negative = outside)
+                Vector2 toPoint = position - v1;
+                float signedDistance = Vector2.Dot(toPoint, edgeNormal);
 
-                    // Add some randomness to the bounce
-                    float randomAngle = Random.Range(-bounceRandomness, bounceRandomness) * 90f * Mathf.Deg2Rad;
-                    ballVelocity = RotateVector(ballVelocity, randomAngle);
+                // If outside the edge (or very close to it)
+                if (signedDistance < ballRadius)
+                {
+                    // Push back inside
+                    position += edgeNormal * (ballRadius - signedDistance + 1f);
 
-                    // Lose some energy on bounce
-                    ballVelocity *= 0.9f;
+                    // Only bounce if moving toward the edge
+                    if (Vector2.Dot(velocity, edgeNormal) < 0)
+                    {
+                        // Reflect velocity off the edge
+                        velocity = Vector2.Reflect(velocity, edgeNormal);
+
+                        // Add randomness
+                        float randomAngle = Random.Range(-bounceRandomness, bounceRandomness) * Mathf.PI;
+                        velocity = RotateVector(velocity, randomAngle);
+
+                        // Energy loss
+                        velocity *= 0.85f;
+
+                        bounced = true;
+                        Debug.Log($"[BallAnimator] Bounce! Edge {i}, New velocity: {velocity.magnitude}");
+                    }
                 }
             }
+
+            return bounced;
         }
 
         /// <summary>
-        /// Show the final result with color change
+        /// Clamp a position to be inside the pentagon
         /// </summary>
+        private Vector2 ClampToPentagon(Vector2 pos)
+        {
+            // Simple approach: if outside, move toward center until inside
+            for (int attempt = 0; attempt < 10; attempt++)
+            {
+                bool inside = true;
+
+                for (int i = 0; i < 5; i++)
+                {
+                    Vector2 v1 = pentagonVertices[i];
+                    Vector2 v2 = pentagonVertices[(i + 1) % 5];
+
+                    Vector2 edge = v2 - v1;
+                    Vector2 edgeNormal = new Vector2(edge.y, -edge.x).normalized;
+
+                    Vector2 edgeCenter = (v1 + v2) * 0.5f;
+                    if (Vector2.Dot(edgeNormal, -edgeCenter) < 0)
+                    {
+                        edgeNormal = -edgeNormal;
+                    }
+
+                    Vector2 toPoint = pos - v1;
+                    float signedDistance = Vector2.Dot(toPoint, edgeNormal);
+
+                    if (signedDistance < 0)
+                    {
+                        inside = false;
+                        pos += edgeNormal * (-signedDistance + 5f);
+                        break;
+                    }
+                }
+
+                if (inside) break;
+            }
+
+            return pos;
+        }
+
         private IEnumerator ShowResult()
         {
-            // Flash the ball color based on result
             Color targetColor = isSuccess ? successColor : failureColor;
 
             if (ballImage != null)
@@ -213,24 +300,9 @@ namespace OneShotSupport.UI.Components
 
             yield return new WaitForSeconds(0.5f);
 
-            // Notify listeners
             OnAnimationComplete?.Invoke(isSuccess);
         }
 
-        /// <summary>
-        /// Get a random position inside the pentagon
-        /// </summary>
-        private Vector2 GetRandomPositionInPentagon()
-        {
-            // Simple approach: random point in circle, scaled down to fit in pentagon
-            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-            float distance = Random.Range(0.2f, 0.7f) * pentagonRadius;
-            return new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
-        }
-
-        /// <summary>
-        /// Rotate a vector by an angle in radians
-        /// </summary>
         private Vector2 RotateVector(Vector2 v, float angle)
         {
             float cos = Mathf.Cos(angle);
@@ -241,18 +313,12 @@ namespace OneShotSupport.UI.Components
             );
         }
 
-        /// <summary>
-        /// Stop animation immediately
-        /// </summary>
         public void StopAnimation()
         {
             isAnimating = false;
             StopAllCoroutines();
         }
 
-        /// <summary>
-        /// Hide the ball
-        /// </summary>
         public void HideBall()
         {
             if (ballTransform != null)
@@ -261,9 +327,6 @@ namespace OneShotSupport.UI.Components
             }
         }
 
-        /// <summary>
-        /// Check if animation is currently playing
-        /// </summary>
         public bool IsAnimating => isAnimating;
     }
 }
