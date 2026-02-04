@@ -81,6 +81,16 @@ namespace OneShotSupport.Core
             OnNotEnoughGold?.Invoke();
             return false;
         }
+        
+        /// <summary>
+        /// Spend gold without checking.
+        /// </summary>
+        public void SpendGold(int amount)
+        {
+            currentGold -= amount;
+            OnGoldChanged?.Invoke(currentGold);
+            Debug.Log($"[GoldManager] Spent {amount} gold. Remaining: {currentGold}");
+        }
 
         /// <summary>
         /// Get the cost of a specific crate type

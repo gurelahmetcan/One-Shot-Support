@@ -736,7 +736,7 @@ namespace OneShotSupport.Core
         /// <summary>
         /// Called by UI when player is ready for next turn/season (after day end animations)
         /// </summary>
-        public void StartNextDay()
+        public void StartNextSeason()
         {
             foreach (var result in currentDay.heroResults)
             {
@@ -747,6 +747,12 @@ namespace OneShotSupport.Core
                 {
                     goldManager.AddGold(result.moneyChange);
                 }
+            }
+            
+            // Hero salary/turn spent
+            foreach (var hero in recruitedHeroes)
+            {
+                goldManager.SpendGold((int)hero.GetEffectiveSalary());
             }
 
             Debug.Log($"[Season End] Final Reputation: {reputationManager.CurrentReputation}/100 ({reputationManager.GetReputationStatus()})");

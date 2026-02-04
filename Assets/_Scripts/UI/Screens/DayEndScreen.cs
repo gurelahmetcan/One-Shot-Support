@@ -317,7 +317,7 @@ namespace OneShotSupport.UI.Screens
 
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.StartNextDay();
+                GameManager.Instance.StartNextSeason();
             }
         }
     }
