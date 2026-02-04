@@ -682,11 +682,22 @@ namespace OneShotSupport.Core
 
             Debug.Log($"[PreparationPhase] Dispatching {assignedHeroes.Count} heroes on mission: {selectedMission.missionName}");
 
-            // For MVP: Auto-succeed and give rewards
-            if (goldManager != null)
+            // Resolve the mission using pentagon-based mechanics
+            var result = MissionResolver.ResolveMission(selectedMission, assignedHeroes);
+
+            if (result.isSuccess)
             {
-                goldManager.AddGold(selectedMission.goldReward);
-                Debug.Log($"[PreparationPhase] Rewarded {selectedMission.goldReward} gold");
+                // Success - give rewards
+                if (goldManager != null)
+                {
+                    goldManager.AddGold(selectedMission.goldReward);
+                    Debug.Log($"[PreparationPhase] SUCCESS! Rewarded {selectedMission.goldReward} gold");
+                }
+            }
+            else
+            {
+                // Failure - no rewards
+                Debug.Log($"[PreparationPhase] FAILURE! No rewards given.");
             }
 
             // Trigger event
