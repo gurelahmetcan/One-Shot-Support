@@ -690,6 +690,21 @@ namespace OneShotSupport.Core
                     goldManager.AddGold(selectedMission.goldReward);
                     Debug.Log($"[PreparationPhase] SUCCESS! Rewarded {selectedMission.goldReward} gold");
                 }
+
+                // Distribute XP among party members
+                if (assignedHeroes != null && assignedHeroes.Count > 0)
+                {
+                    int xpPerHero = selectedMission.xpReward / assignedHeroes.Count;
+                    Debug.Log($"[PreparationPhase] Distributing {selectedMission.xpReward} XP among {assignedHeroes.Count} heroes ({xpPerHero} XP each)");
+
+                    foreach (var hero in assignedHeroes)
+                    {
+                        if (hero != null && hero.IsAlive)
+                        {
+                            hero.GainXP(xpPerHero);
+                        }
+                    }
+                }
             }
             else
             {

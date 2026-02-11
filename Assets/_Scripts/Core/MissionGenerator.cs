@@ -66,6 +66,22 @@ namespace OneShotSupport.Core
         [Tooltip("Gold reward range for 5-star missions")]
         public Vector2Int fiveStarGoldRange = new Vector2Int(150, 250);
 
+        [Header("XP Reward Ranges per Danger Level")]
+        [Tooltip("XP reward range for 1-star missions")]
+        public Vector2Int oneStarXPRange = new Vector2Int(20, 40);
+
+        [Tooltip("XP reward range for 2-star missions")]
+        public Vector2Int twoStarXPRange = new Vector2Int(40, 60);
+
+        [Tooltip("XP reward range for 3-star missions")]
+        public Vector2Int threeStarXPRange = new Vector2Int(60, 90);
+
+        [Tooltip("XP reward range for 4-star missions")]
+        public Vector2Int fourStarXPRange = new Vector2Int(90, 130);
+
+        [Tooltip("XP reward range for 5-star missions")]
+        public Vector2Int fiveStarXPRange = new Vector2Int(130, 180);
+
         [Header("Threat Level per Danger")]
         [Tooltip("Threat level for 1-star missions")]
         public int oneStarThreat = 5;
@@ -303,8 +319,19 @@ namespace OneShotSupport.Core
                 _ => oneStarGoldRange
             };
 
+            Vector2Int xpRange = mission.dangerLevel switch
+            {
+                MissionDanger.OneStar => oneStarXPRange,
+                MissionDanger.TwoStar => twoStarXPRange,
+                MissionDanger.ThreeStar => threeStarXPRange,
+                MissionDanger.FourStar => fourStarXPRange,
+                MissionDanger.FiveStar => fiveStarXPRange,
+                _ => oneStarXPRange
+            };
+
             mission.goldReward = Random.Range(goldRange.x, goldRange.y + 1);
             mission.materialsReward = mission.goldReward / 2; // Materials = half of gold
+            mission.xpReward = Random.Range(xpRange.x, xpRange.y + 1);
         }
 
         /// <summary>

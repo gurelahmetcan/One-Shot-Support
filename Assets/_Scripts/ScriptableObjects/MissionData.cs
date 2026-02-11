@@ -63,6 +63,10 @@ namespace OneShotSupport.ScriptableObjects
         [Range(5, 100)]
         public int materialsReward = 20;
 
+        [Tooltip("Experience points reward for completing this mission (shared among party)")]
+        [Range(10, 200)]
+        public int xpReward = 50;
+
         [Header("Intel (Optional)")]
         [Tooltip("Intel hint about this mission (e.g., 'Sharp weapons needed')")]
         public string intelHint = "";

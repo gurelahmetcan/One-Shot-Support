@@ -239,6 +239,56 @@ namespace OneShotSupport.ScriptableObjects
         }
 
         /// <summary>
+        /// Gain experience points and automatically level up when threshold is reached
+        /// Uses the hero's highest aptitude stat as default focus
+        /// </summary>
+        public void GainXP(int amount)
+        {
+            if (amount <= 0) return;
+
+            currentXP += amount;
+            Debug.Log($"[HeroData] {heroName} gained {amount} XP. Total: {currentXP}/{XPForNextLevel}");
+
+            // Check for level up(s)
+            while (currentXP >= XPForNextLevel)
+            {
+                currentXP -= XPForNextLevel;
+
+                // Determine best education focus based on highest aptitude
+                EducationFocus bestFocus = GetBestEducationFocus();
+
+                LevelUp(bestFocus);
+                Debug.Log($"[HeroData] {heroName} AUTO LEVELED UP! New level: {level}, Focus: {bestFocus}");
+            }
+        }
+
+        /// <summary>
+        /// Determine the best education focus based on hero's highest aptitude
+        /// </summary>
+        private EducationFocus GetBestEducationFocus()
+        {
+            float maxApt = Mathf.Max(
+                aptitudes.mightAptitude,
+                aptitudes.charmAptitude,
+                aptitudes.witAptitude,
+                aptitudes.agilityAptitude,
+                aptitudes.fortitudeAptitude
+            );
+
+            // Return focus with highest aptitude
+            if (Mathf.Approximately(maxApt, aptitudes.mightAptitude))
+                return EducationFocus.Might;
+            else if (Mathf.Approximately(maxApt, aptitudes.charmAptitude))
+                return EducationFocus.Charm;
+            else if (Mathf.Approximately(maxApt, aptitudes.witAptitude))
+                return EducationFocus.Wit;
+            else if (Mathf.Approximately(maxApt, aptitudes.agilityAptitude))
+                return EducationFocus.Agility;
+            else
+                return EducationFocus.Fortitude;
+        }
+
+        /// <summary>
         /// Tick the turn - reduce contract time and age the hero
         /// Called once per turn (season)
         /// </summary>
