@@ -23,7 +23,6 @@ namespace OneShotSupport.UI.Components
         [Header("Education Focus")]
         [SerializeField] private Button focusButton;
         [SerializeField] private Image focusIcon;
-        [SerializeField] private TextMeshProUGUI focusText;
         [SerializeField] private EducationFocusPopup focusPopup;
 
         private HeroData hero;
@@ -94,12 +93,6 @@ namespace OneShotSupport.UI.Components
         private void UpdateFocusDisplay()
         {
             if (hero == null) return;
-
-            // Update focus text
-            if (focusText != null)
-            {
-                focusText.text = EducationFocusPopup.GetFocusDisplayName(hero.preferredEducationFocus);
-            }
 
             // Update focus icon (if popup is assigned and has icons)
             if (focusIcon != null && focusPopup != null)
