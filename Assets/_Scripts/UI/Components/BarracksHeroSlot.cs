@@ -20,7 +20,22 @@ namespace OneShotSupport.UI.Components
         [SerializeField] private TextMeshProUGUI statsText;
         [SerializeField] private TextMeshProUGUI contractText;
 
+        [Header("Education Focus")]
+        [SerializeField] private Button focusButton;
+        [SerializeField] private Image focusIcon;
+        [SerializeField] private TextMeshProUGUI focusText;
+        [SerializeField] private EducationFocusPopup focusPopup;
+
         private HeroData hero;
+
+        private void Awake()
+        {
+            // Setup focus button listener
+            if (focusButton != null)
+            {
+                focusButton.onClick.AddListener(OnFocusButtonClicked);
+            }
+        }
 
         /// <summary>
         /// Setup the hero slot with hero data
@@ -68,6 +83,60 @@ namespace OneShotSupport.UI.Components
                 int yearsRemaining = Mathf.CeilToInt(hero.turnsRemainingInContract / 4f);
                 contractText.text = $"Contract: {hero.turnsRemainingInContract} turns ({yearsRemaining}yr)";
             }
+
+            // Update education focus
+            UpdateFocusDisplay();
+        }
+
+        /// <summary>
+        /// Update the education focus display
+        /// </summary>
+        private void UpdateFocusDisplay()
+        {
+            if (hero == null) return;
+
+            // Update focus text
+            if (focusText != null)
+            {
+                focusText.text = EducationFocusPopup.GetFocusDisplayName(hero.preferredEducationFocus);
+            }
+
+            // Update focus icon (if popup is assigned and has icons)
+            if (focusIcon != null && focusPopup != null)
+            {
+                Sprite icon = focusPopup.GetIconForFocus(hero.preferredEducationFocus);
+                if (icon != null)
+                {
+                    focusIcon.sprite = icon;
+                    focusIcon.gameObject.SetActive(true);
+                }
+                else
+                {
+                    focusIcon.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handle focus button clicked - open popup
+        /// </summary>
+        private void OnFocusButtonClicked()
+        {
+            if (hero == null || focusPopup == null) return;
+
+            focusPopup.Show(hero);
+
+            // Subscribe to focus selection to refresh display
+            focusPopup.OnFocusSelected -= OnFocusChanged;
+            focusPopup.OnFocusSelected += OnFocusChanged;
+        }
+
+        /// <summary>
+        /// Handle focus changed - refresh display
+        /// </summary>
+        private void OnFocusChanged(EducationFocus newFocus)
+        {
+            UpdateFocusDisplay();
         }
 
         /// <summary>

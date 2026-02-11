@@ -98,6 +98,9 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Aptitudes for stat growth (different per hero)")]
         public HeroAptitudes aptitudes = new HeroAptitudes();
 
+        [Tooltip("Preferred education focus for automatic level ups")]
+        public EducationFocus preferredEducationFocus = EducationFocus.Might;
+
         // === TRAITS ===
         [Header("Traits & Characteristics")]
         [Tooltip("List of traits that modify this hero's stats and behavior")]
@@ -240,7 +243,7 @@ namespace OneShotSupport.ScriptableObjects
 
         /// <summary>
         /// Gain experience points and automatically level up when threshold is reached
-        /// Uses the hero's highest aptitude stat as default focus
+        /// Uses the hero's preferred education focus (set by player in barracks)
         /// </summary>
         public void GainXP(int amount)
         {
@@ -254,11 +257,9 @@ namespace OneShotSupport.ScriptableObjects
             {
                 currentXP -= XPForNextLevel;
 
-                // Determine best education focus based on highest aptitude
-                EducationFocus bestFocus = GetBestEducationFocus();
-
-                LevelUp(bestFocus);
-                Debug.Log($"[HeroData] {heroName} AUTO LEVELED UP! New level: {level}, Focus: {bestFocus}");
+                // Use preferred education focus (set by player)
+                LevelUp(preferredEducationFocus);
+                Debug.Log($"[HeroData] {heroName} AUTO LEVELED UP! New level: {level}, Focus: {preferredEducationFocus}");
             }
         }
 
@@ -474,6 +475,9 @@ namespace OneShotSupport.ScriptableObjects
             level = 1;
             currentXP = 0;
             bondLevel = 1;
+
+            // Set preferred education focus based on highest aptitude
+            preferredEducationFocus = GetBestEducationFocus();
 
             // Initialize negotiation state
             hasWalkedAway = false;
