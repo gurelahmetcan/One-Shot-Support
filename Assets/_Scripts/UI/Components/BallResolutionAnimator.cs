@@ -181,12 +181,9 @@ namespace OneShotSupport.UI.Components
 
         private bool CheckSuccess(Vector2 p)
         {
-            // 1. Strict Check (Center is inside)
-            if (IsPointInPolygon(p, heroVertices)) return true;
-
-            // 2. Lenient Check (Ball edge is touching polygon)
-            // This prevents "It was on the line!" frustration
-            return IsTouchingPolygon(p, heroVertices, ballRadius);
+            // Strict Check: Only succeed if ball center is inside the overlap polygon
+            // This prevents false positives where ball is clearly outside but close to edge
+            return IsPointInPolygon(p, heroVertices);
         }
 
         private bool IsPointInPolygon(Vector2 p, Vector2[] poly)
