@@ -189,6 +189,10 @@ namespace OneShotSupport.Core
                     EnterBarracks();
                     break;
 
+                case GameState.Economy:
+                    EnterEconomy();
+                    break;
+
                 case GameState.Restock:
                     EnterRestock();
                     break;
@@ -236,6 +240,10 @@ namespace OneShotSupport.Core
 
                 case GameState.Barracks:
                     UpdateBarracks();
+                    break;
+
+                case GameState.Economy:
+                    UpdateEconomy();
                     break;
 
                 case GameState.Restock:
@@ -478,6 +486,38 @@ namespace OneShotSupport.Core
         public void LeaveBarracks()
         {
             if (currentState == GameState.Barracks)
+            {
+                ChangeState(GameState.VillageHub);
+            }
+        }
+
+        // === ECONOMY STATE ===
+
+        private void EnterEconomy()
+        {
+            Debug.Log("[Economy] Entering economy screen...");
+            // UI will show economy screen via UIManager
+        }
+
+        private void UpdateEconomy()
+        {
+            // Waiting for player to view economy or leave economy screen
+        }
+
+        /// <summary>
+        /// Called by UIManager when player opens economy from village hub
+        /// </summary>
+        public void OpenEconomy()
+        {
+            ChangeState(GameState.Economy);
+        }
+
+        /// <summary>
+        /// Called by UIManager when player leaves economy
+        /// </summary>
+        public void LeaveEconomy()
+        {
+            if (currentState == GameState.Economy)
             {
                 ChangeState(GameState.VillageHub);
             }

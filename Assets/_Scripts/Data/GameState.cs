@@ -12,6 +12,7 @@ namespace OneShotSupport.Data
         Barracks,           // View recruited heroes
         Restock,            // Generate items for the day
         Consultation,       // Equipping a hero (one at a time)
+        Economy,            // View seasonal expenses and incomes
         PreparationPhase,   // Assign heroes to quests before dispatching
         DayEnd,             // Show results, update reputation
         GameOver            // Reputation <= 0

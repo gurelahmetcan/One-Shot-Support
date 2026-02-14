@@ -21,6 +21,7 @@ namespace OneShotSupport.UI
         public Screens.MissionBoardScreen missionBoardScreen;
         public Screens.TavernScreen tavernScreen;
         public Screens.BarracksScreen barracksScreen;
+        public Screens.EconomyScreen economyScreen;
         public Screens.PreparationPhaseScreen preparationPhaseScreen;
         public RestockScreen restockScreen;
         public DayEndScreen dayEndScreen;
@@ -87,6 +88,7 @@ namespace OneShotSupport.UI
                 villageHubScreen.OnTavernClicked += () => gameManager.OpenTavern();
                 villageHubScreen.OnMissionBoardClicked += () => gameManager.OpenMissionBoard();
                 villageHubScreen.OnBarracksClicked += () => gameManager.OpenBarracks();
+                villageHubScreen.OnEconomyClicked += () => gameManager.OpenEconomy();
                 villageHubScreen.OnPreparationClicked += () => gameManager.OpenPreparationPhase();
             }
 
@@ -106,6 +108,11 @@ namespace OneShotSupport.UI
             if (barracksScreen != null)
             {
                 barracksScreen.OnBackClicked += () => gameManager.LeaveBarracks();
+            }
+
+            if (economyScreen != null)
+            {
+                economyScreen.OnBackClicked += () => gameManager.LeaveEconomy();
             }
 
             if (preparationPhaseScreen != null)
@@ -241,6 +248,10 @@ namespace OneShotSupport.UI
 
                 case GameState.Barracks:
                     // Barracks will be shown when OnBarracksOpened event fires
+                    break;
+
+                case GameState.Economy:
+                    ShowEconomyScreen();
                     break;
 
                 case GameState.PreparationPhase:
@@ -513,12 +524,15 @@ namespace OneShotSupport.UI
             if (barracksScreen != null)
                 barracksScreen.gameObject.SetActive(false);
 
+            if (economyScreen != null)
+                economyScreen.gameObject.SetActive(false);
+
             if (preparationPhaseScreen != null)
                 preparationPhaseScreen.gameObject.SetActive(false);
 
             if (restockScreen != null)
                 restockScreen.gameObject.SetActive(false);
-            
+
             if (dayEndScreen != null)
                 dayEndScreen.gameObject.SetActive(false);
 
@@ -573,6 +587,18 @@ namespace OneShotSupport.UI
             if (barracksScreen != null)
             {
                 barracksScreen.Setup(heroes, maxCapacity);
+            }
+        }
+
+        private void ShowEconomyScreen()
+        {
+            HideAllScreens();
+
+            if (economyScreen != null && gameManager != null)
+            {
+                List<ScriptableObjects.HeroData> recruitedHeroes = gameManager.GetRecruitedHeroes();
+                int currentGold = gameManager.Gold != null ? gameManager.Gold.CurrentGold : 0;
+                economyScreen.Setup(recruitedHeroes, currentGold);
             }
         }
 
