@@ -14,7 +14,8 @@ namespace OneShotSupport.UI.Screens
     public class EconomyScreen : MonoBehaviour
     {
         [Header("Entry Slots")]
-        [SerializeField] private Components.EconomyEntrySlot[] entrySlots;
+        [SerializeField] private Components.EconomyEntrySlot entrySlotPrefab;
+        [SerializeField] private Transform entryContainer;
 
         [Header("UI References")]
         [SerializeField] private Button backButton;
@@ -23,6 +24,9 @@ namespace OneShotSupport.UI.Screens
 
         // Events
         public event Action OnBackClicked;
+
+        // Track instantiated slots
+        private List<Components.EconomyEntrySlot> instantiatedSlots = new List<Components.EconomyEntrySlot>();
 
         private void Awake()
         {
@@ -72,19 +76,22 @@ namespace OneShotSupport.UI.Screens
             // Calculate net balance
             int netBalance = totalIncome - totalExpenses;
 
-            // Display entries in slots
-            for (int i = 0; i < entrySlots.Length; i++)
+            // Clear existing slots
+            ClearEntrySlots();
+
+            // Create entry slots dynamically
+            if (entrySlotPrefab != null && entryContainer != null)
             {
-                if (i < entries.Count)
+                foreach (EconomyEntry entry in entries)
                 {
-                    entrySlots[i].Setup(entries[i].description, entries[i].amount);
-                    entrySlots[i].gameObject.SetActive(true);
+                    Components.EconomyEntrySlot slot = Instantiate(entrySlotPrefab, entryContainer);
+                    slot.Setup(entry.description, entry.amount);
+                    instantiatedSlots.Add(slot);
                 }
-                else
-                {
-                    entrySlots[i].Clear();
-                    entrySlots[i].gameObject.SetActive(false);
-                }
+            }
+            else
+            {
+                Debug.LogWarning("[EconomyScreen] Entry slot prefab or container is not assigned!");
             }
 
             // Update balance text
@@ -113,6 +120,21 @@ namespace OneShotSupport.UI.Screens
         public void Hide()
         {
             gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Clear all instantiated entry slots
+        /// </summary>
+        private void ClearEntrySlots()
+        {
+            foreach (Components.EconomyEntrySlot slot in instantiatedSlots)
+            {
+                if (slot != null)
+                {
+                    Destroy(slot.gameObject);
+                }
+            }
+            instantiatedSlots.Clear();
         }
 
         /// <summary>
