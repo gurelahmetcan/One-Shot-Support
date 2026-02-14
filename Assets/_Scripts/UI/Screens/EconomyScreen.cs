@@ -55,7 +55,7 @@ namespace OneShotSupport.UI.Screens
             // Calculate hero salaries (expenses)
             foreach (HeroData hero in recruitedHeroes)
             {
-                int seasonalSalary = hero.dailySalary * 4; // 4 turns per season
+                int seasonalSalary = hero.dailySalary;
                 entries.Add(new EconomyEntry
                 {
                     description = $"{hero.heroName} - Salary (Season)",
