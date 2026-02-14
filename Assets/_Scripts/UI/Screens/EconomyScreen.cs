@@ -20,7 +20,6 @@ namespace OneShotSupport.UI.Screens
         [SerializeField] private Button backButton;
         [SerializeField] private TextMeshProUGUI titleText;
         [SerializeField] private TextMeshProUGUI balanceText;
-        [SerializeField] private TextMeshProUGUI currentGoldText;
 
         // Events
         public event Action OnBackClicked;
@@ -47,12 +46,6 @@ namespace OneShotSupport.UI.Screens
             if (titleText != null)
             {
                 titleText.text = "Seasonal Economy";
-            }
-
-            // Add current gold display
-            if (currentGoldText != null)
-            {
-                currentGoldText.text = $"Current Gold: {currentGold}";
             }
 
             // Calculate hero salaries (expenses)

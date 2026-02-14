@@ -596,8 +596,8 @@ namespace OneShotSupport.UI
 
             if (economyScreen != null && gameManager != null)
             {
-                List<ScriptableObjects.HeroData> recruitedHeroes = gameManager.GetRecruitedHeroes();
-                int currentGold = gameManager.Gold != null ? gameManager.Gold.CurrentGold : 0;
+                List<ScriptableObjects.HeroData> recruitedHeroes = gameManager.RecruitedHeroes;
+                int currentGold = gameManager.goldManager.CurrentGold;
                 economyScreen.Setup(recruitedHeroes, currentGold);
             }
         }
