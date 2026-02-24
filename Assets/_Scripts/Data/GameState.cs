@@ -15,6 +15,7 @@ namespace OneShotSupport.Data
         Economy,            // View seasonal expenses and incomes
         PreparationPhase,   // Assign heroes to quests before dispatching
         DayEnd,             // Show results, update reputation
+        ContractRenewal,    // Handle expired contracts (renew or release heroes)
         GameOver            // Reputation <= 0
     }
 }

@@ -72,6 +72,7 @@ namespace OneShotSupport.Core
         // Hero roster management
         private List<HeroData> recruitedHeroes = new List<HeroData>(); // Heroes in barracks
         private List<HeroData> tavernHeroes = new List<HeroData>(); // Heroes available for recruitment
+        private List<HeroData> pendingContractHeroes = new List<HeroData>(); // Expired contracts pending resolution
 
         // Season refresh tracking
         private bool missionsGeneratedThisSeason = false;
@@ -99,6 +100,9 @@ namespace OneShotSupport.Core
         public event Action<List<HeroData>, int> OnBarracksOpened; // (heroes, maxCapacity) - when barracks is opened
         public event Action<MissionData, List<HeroData>> OnPreparationPhaseStarted; // (mission, availableHeroes) - when preparation phase starts
         public event Action<MissionData, List<HeroData>> OnMissionDispatched; // (mission, assignedHeroes) - when heroes are dispatched
+        public event Action<List<HeroData>> OnContractRenewalRequired; // expired heroes needing renewal/release
+        public event Action<HeroData, ContractOffer> OnHeroContractRenewed; // contract successfully renewed
+        public event Action<HeroData> OnHeroReleased; // hero released from the guild
 
         // Singleton for easy access (game jam pattern)
         public static GameManager Instance { get; private set; }
@@ -209,6 +213,10 @@ namespace OneShotSupport.Core
                     EnterDayEnd();
                     break;
 
+                case GameState.ContractRenewal:
+                    EnterContractRenewal();
+                    break;
+
                 case GameState.GameOver:
                     EnterGameOver();
                     break;
@@ -260,6 +268,10 @@ namespace OneShotSupport.Core
 
                 case GameState.DayEnd:
                     UpdateDayEnd();
+                    break;
+
+                case GameState.ContractRenewal:
+                    UpdateContractRenewal();
                     break;
 
                 case GameState.GameOver:
@@ -819,16 +831,76 @@ namespace OneShotSupport.Core
             if (reputationManager.IsGameOver)
             {
                 ChangeState(GameState.GameOver);
+                return;
+            }
+
+            // Advance to next season
+            seasonalCalendar.AdvanceSeason();
+
+            // Reset season refresh flags for new content
+            missionsGeneratedThisSeason = false;
+            tavernHeroesGeneratedThisSeason = false;
+
+            // Check for heroes whose contracts just expired this turn
+            pendingContractHeroes = recruitedHeroes.FindAll(h => h.turnsRemainingInContract <= 0);
+            if (pendingContractHeroes.Count > 0)
+            {
+                ChangeState(GameState.ContractRenewal);
             }
             else
             {
-                // Advance to next season
-                seasonalCalendar.AdvanceSeason();
+                ChangeState(GameState.DayStart);
+            }
+        }
 
-                // Reset season refresh flags for new content
-                missionsGeneratedThisSeason = false;
-                tavernHeroesGeneratedThisSeason = false;
+        // === CONTRACT RENEWAL STATE ===
 
+        private void EnterContractRenewal()
+        {
+            Debug.Log($"[ContractRenewal] {pendingContractHeroes.Count} contract(s) expired. Opening renewal screen.");
+            OnContractRenewalRequired?.Invoke(new List<HeroData>(pendingContractHeroes));
+        }
+
+        private void UpdateContractRenewal()
+        {
+            // Waiting for player to resolve all expired contracts via ContractRenewalScreen.
+        }
+
+        /// <summary>
+        /// Deducts the signing bonus after a renewal negotiation is accepted.
+        /// FinalizeContract was already called by NegotiationPanel, so contract terms on the
+        /// hero are already updated — we just handle the gold side here.
+        /// </summary>
+        public void CompleteHeroRenewal(HeroData hero, ContractOffer offer)
+        {
+            if (goldManager != null && offer.signingBonus > 0)
+                goldManager.TrySpendGold(offer.signingBonus);
+
+            Debug.Log($"[ContractRenewal] {hero.heroName} renewed: {offer.dailySalary}g/turn × {offer.contractLengthYears}yr");
+            OnHeroContractRenewed?.Invoke(hero, offer);
+        }
+
+        /// <summary>
+        /// Removes a hero from the guild roster (release or walk-away during renewal).
+        /// </summary>
+        public void ReleaseHero(HeroData hero)
+        {
+            if (recruitedHeroes.Remove(hero))
+            {
+                Debug.Log($"[ContractRenewal] {hero.heroName} released from the guild.");
+                OnHeroReleased?.Invoke(hero);
+            }
+        }
+
+        /// <summary>
+        /// Called by UIManager when all expired contracts have been resolved (continue pressed).
+        /// Transitions to the next DayStart.
+        /// </summary>
+        public void CompleteContractRenewal()
+        {
+            if (currentState == GameState.ContractRenewal)
+            {
+                pendingContractHeroes.Clear();
                 ChangeState(GameState.DayStart);
             }
         }

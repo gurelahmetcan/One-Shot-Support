@@ -21,6 +21,7 @@ namespace OneShotSupport.UI
         public Screens.MissionBoardScreen missionBoardScreen;
         public Screens.TavernScreen tavernScreen;
         public Screens.BarracksScreen barracksScreen;
+        public Screens.ContractRenewalScreen contractRenewalScreen;
         public Screens.EconomyScreen economyScreen;
         public Screens.PreparationPhaseScreen preparationPhaseScreen;
         public RestockScreen restockScreen;
@@ -61,6 +62,7 @@ namespace OneShotSupport.UI
             gameManager.OnTavernHeroesGenerated += HandleTavernHeroesGenerated;
             gameManager.OnHeroRecruited += HandleHeroRecruited;
             gameManager.OnBarracksOpened += HandleBarracksOpened;
+            gameManager.OnContractRenewalRequired += HandleContractRenewalRequired;
             gameManager.OnPreparationPhaseStarted += HandlePreparationPhaseStarted;
             gameManager.OnDayEnded += HandleDayEnded;
             gameManager.OnGameOver += HandleGameOver;
@@ -110,6 +112,11 @@ namespace OneShotSupport.UI
                 barracksScreen.OnBackClicked += () => gameManager.LeaveBarracks();
             }
 
+            if (contractRenewalScreen != null)
+            {
+                contractRenewalScreen.OnContinueClicked += () => gameManager.CompleteContractRenewal();
+            }
+
             if (economyScreen != null)
             {
                 economyScreen.OnBackClicked += () => gameManager.LeaveEconomy();
@@ -150,6 +157,7 @@ namespace OneShotSupport.UI
                 gameManager.OnTavernHeroesGenerated -= HandleTavernHeroesGenerated;
                 gameManager.OnHeroRecruited -= HandleHeroRecruited;
                 gameManager.OnBarracksOpened -= HandleBarracksOpened;
+                gameManager.OnContractRenewalRequired -= HandleContractRenewalRequired;
                 gameManager.OnPreparationPhaseStarted -= HandlePreparationPhaseStarted;
                 gameManager.OnDayEnded -= HandleDayEnded;
                 gameManager.OnGameOver -= HandleGameOver;
@@ -262,6 +270,10 @@ namespace OneShotSupport.UI
                     ShowRestockScreen();
                     break;
                 
+                case GameState.ContractRenewal:
+                    // Screen is shown by HandleContractRenewalRequired when the event fires.
+                    break;
+
                 case GameState.DayEnd:
                     ShowDayEndScreen();
                     break;
@@ -405,6 +417,15 @@ namespace OneShotSupport.UI
         }
 
         /// <summary>
+        /// Handle contract renewal required — show the renewal screen.
+        /// </summary>
+        private void HandleContractRenewalRequired(List<ScriptableObjects.HeroData> expiredHeroes)
+        {
+            Debug.Log($"[UIManager] Contract renewal required: {expiredHeroes.Count} hero(es)");
+            ShowContractRenewalScreen(expiredHeroes);
+        }
+
+        /// <summary>
         /// Handle preparation phase started
         /// </summary>
         private void HandlePreparationPhaseStarted(ScriptableObjects.MissionData mission, List<ScriptableObjects.HeroData> heroes)
@@ -524,6 +545,9 @@ namespace OneShotSupport.UI
             if (barracksScreen != null)
                 barracksScreen.gameObject.SetActive(false);
 
+            if (contractRenewalScreen != null)
+                contractRenewalScreen.Hide();
+
             if (economyScreen != null)
                 economyScreen.gameObject.SetActive(false);
 
@@ -587,6 +611,16 @@ namespace OneShotSupport.UI
             if (barracksScreen != null)
             {
                 barracksScreen.Setup(heroes, maxCapacity);
+            }
+        }
+
+        private void ShowContractRenewalScreen(List<ScriptableObjects.HeroData> expiredHeroes)
+        {
+            HideAllScreens();
+
+            if (contractRenewalScreen != null)
+            {
+                contractRenewalScreen.Setup(expiredHeroes);
             }
         }
 
