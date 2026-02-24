@@ -41,13 +41,12 @@ namespace OneShotSupport.UI.Components
         // ── Level & XP ────────────────────────────────────────────────────────
         [Header("Level & XP")]
         [SerializeField] private TextMeshProUGUI levelText;
-        [SerializeField] private Slider xpBar;
+        [SerializeField] private Image xpBar;
         [SerializeField] private TextMeshProUGUI xpText;
 
         // ── Vital Stats ───────────────────────────────────────────────────────
         [Header("Vital Stats")]
         [SerializeField] private TextMeshProUGUI ageText;
-        [SerializeField] private Slider healthBar;
         [SerializeField] private TextMeshProUGUI healthText;
 
         // ── Status ────────────────────────────────────────────────────────────
@@ -58,16 +57,12 @@ namespace OneShotSupport.UI.Components
         // ── Contract ──────────────────────────────────────────────────────────
         [Header("Contract")]
         [SerializeField] private TextMeshProUGUI contractText;
+        [SerializeField] private TextMeshProUGUI expiryText;
 
         // ── Bond Level ────────────────────────────────────────────────────────
         [Header("Bond Level")]
         [SerializeField] private TextMeshProUGUI bondLevelText;
-        /// <summary>
-        /// Optional array of 10 star Images that light up gold to show bond level (0-10).
-        /// Leave empty to rely on bondLevelText alone.
-        /// </summary>
-        [SerializeField] private Image[] bondStars;
-
+        
         // ── Skill Pentagram ───────────────────────────────────────────────────
         [Header("Skill Pentagram")]
         [SerializeField] private PentagonStatDisplay pentagonStatDisplay;
@@ -80,11 +75,7 @@ namespace OneShotSupport.UI.Components
         private static readonly Color HealthColorHigh   = new Color(0.20f, 0.78f, 0.20f); // green
         private static readonly Color HealthColorMedium = new Color(0.90f, 0.70f, 0.10f); // gold
         private static readonly Color HealthColorLow    = new Color(0.88f, 0.20f, 0.20f); // red
-
-        // Colors for bond stars
-        private static readonly Color StarActive   = new Color(1.00f, 0.85f, 0.10f); // gold
-        private static readonly Color StarInactive = new Color(0.25f, 0.25f, 0.25f); // dark grey
-
+        
         private HeroData currentHero;
 
         /// <summary>Fired when the close button is pressed.</summary>
@@ -141,7 +132,7 @@ namespace OneShotSupport.UI.Components
             {
                 if (currentHero.portrait != null)
                 {
-                    heroPortrait.sprite = currentHero.portrait;
+                    heroPortrait.sprite = currentHero.cardSprite;
                     heroPortrait.color = Color.white;
                     heroPortrait.gameObject.SetActive(true);
                 }
@@ -164,9 +155,7 @@ namespace OneShotSupport.UI.Components
 
             if (xpBar != null)
             {
-                xpBar.minValue = 0f;
-                xpBar.maxValue = 1f;
-                xpBar.value = progress;
+                xpBar.fillAmount = progress;
             }
 
             if (xpText != null)
@@ -183,29 +172,9 @@ namespace OneShotSupport.UI.Components
 
             int cur = currentHero.currentHP;
             int max = currentHero.MaxHP;
-            float ratio = max > 0 ? Mathf.Clamp01((float)cur / max) : 0f;
 
             if (healthText != null)
                 healthText.text = $"{cur} / {max}";
-
-            if (healthBar != null)
-            {
-                healthBar.minValue = 0f;
-                healthBar.maxValue = 1f;
-                healthBar.value = ratio;
-
-                // Tint fill to reflect health status
-                Image fill = healthBar.fillRect != null
-                    ? healthBar.fillRect.GetComponent<Image>()
-                    : null;
-
-                if (fill != null)
-                {
-                    fill.color = ratio > 0.5f ? HealthColorHigh
-                               : ratio > 0.25f ? HealthColorMedium
-                               : HealthColorLow;
-                }
-            }
         }
 
         // ── Status ────────────────────────────────────────────────────────────
@@ -247,7 +216,8 @@ namespace OneShotSupport.UI.Components
             int seasonsLeft = currentHero.turnsRemainingInContract;
             string seasonLabel = seasonsLeft == 1 ? "Season" : "Seasons";
 
-            contractText.text = $"{salary:0}g / Season     •     {seasonsLeft} {seasonLabel} Left";
+            contractText.text = $"{salary:0}g / Season";
+            expiryText.text = $"{seasonsLeft} {seasonLabel} Left";
         }
 
         // ── Bond Level ────────────────────────────────────────────────────────
@@ -258,15 +228,6 @@ namespace OneShotSupport.UI.Components
 
             if (bondLevelText != null)
                 bondLevelText.text = $"Bond  {bond} / 10";
-
-            if (bondStars != null)
-            {
-                for (int i = 0; i < bondStars.Length; i++)
-                {
-                    if (bondStars[i] != null)
-                        bondStars[i].color = i < bond ? StarActive : StarInactive;
-                }
-            }
         }
 
         // ── Skill Pentagram ───────────────────────────────────────────────────
