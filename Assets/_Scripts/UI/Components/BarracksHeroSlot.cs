@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -7,8 +8,10 @@ using OneShotSupport.Data;
 namespace OneShotSupport.UI.Components
 {
     /// <summary>
-    /// UI component representing a recruited hero in the barracks
-    /// Displays hero identity, stats, and contract status
+    /// UI component representing a recruited hero in the barracks.
+    /// Displays hero identity, stats, and contract status.
+    /// Clicking the slot fires <see cref="OnHeroSelected"/> so the
+    /// BarracksScreen can open the HeroProfilePanel.
     /// </summary>
     public class BarracksHeroSlot : MonoBehaviour
     {
@@ -24,6 +27,16 @@ namespace OneShotSupport.UI.Components
         [SerializeField] private Button focusButton;
         [SerializeField] private Image focusIcon;
         [SerializeField] private EducationFocusPopup focusPopup;
+
+        [Header("Profile")]
+        [Tooltip("Button covering the slot card (or the root Button). " +
+                 "Clicking it opens the Hero Profile Panel.")]
+        [SerializeField] private Button slotButton;
+
+        /// <summary>
+        /// Fired when the player clicks this slot to view the hero's full profile.
+        /// </summary>
+        public event Action<HeroData> OnHeroSelected;
 
         private HeroData hero;
 
@@ -42,6 +55,14 @@ namespace OneShotSupport.UI.Components
         public void Setup(HeroData heroData)
         {
             hero = heroData;
+
+            // Wire up the slot click to open the profile panel.
+            // RemoveAllListeners prevents duplicate subscriptions on re-use.
+            if (slotButton != null)
+            {
+                slotButton.onClick.RemoveAllListeners();
+                slotButton.onClick.AddListener(() => OnHeroSelected?.Invoke(hero));
+            }
 
             // Update portrait
             if (heroPortrait != null && hero.portrait != null)
@@ -137,6 +158,9 @@ namespace OneShotSupport.UI.Components
         /// </summary>
         public void Clear()
         {
+            if (slotButton != null)
+                slotButton.onClick.RemoveAllListeners();
+
             if (heroPortrait != null)
                 heroPortrait.gameObject.SetActive(false);
 

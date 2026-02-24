@@ -8,8 +8,9 @@ using OneShotSupport.ScriptableObjects;
 namespace OneShotSupport.UI.Screens
 {
     /// <summary>
-    /// Barracks screen for viewing recruited heroes
-    /// Displays all heroes currently in the player's roster
+    /// Barracks screen for viewing recruited heroes.
+    /// Displays all heroes currently in the player's roster.
+    /// Clicking a hero slot opens the HeroProfilePanel overlay.
     /// </summary>
     public class BarracksScreen : MonoBehaviour
     {
@@ -19,6 +20,10 @@ namespace OneShotSupport.UI.Screens
         [Header("UI References")]
         [SerializeField] private Button backButton;
         [SerializeField] private TextMeshProUGUI capacityText;
+
+        [Header("Hero Profile")]
+        [Tooltip("Full-screen overlay panel that shows detailed hero information.")]
+        [SerializeField] private Components.HeroProfilePanel heroProfilePanel;
 
         // Events
         public event Action OnBackClicked;
@@ -48,12 +53,16 @@ namespace OneShotSupport.UI.Screens
                 capacityText.text = $"Heroes: {heroes.Count}/{maxCapacity}";
             }
 
-            // Display heroes in slots
+            // Display heroes in slots and subscribe to profile events
             for (int i = 0; i < heroSlots.Length; i++)
             {
+                // Unsubscribe first to avoid duplicate listeners on re-open
+                heroSlots[i].OnHeroSelected -= OpenHeroProfile;
+
                 if (i < heroes.Count)
                 {
                     heroSlots[i].Setup(heroes[i]);
+                    heroSlots[i].OnHeroSelected += OpenHeroProfile;
                     heroSlots[i].gameObject.SetActive(true);
                 }
                 else
@@ -63,7 +72,20 @@ namespace OneShotSupport.UI.Screens
                 }
             }
 
+            // Make sure the profile panel starts closed
+            if (heroProfilePanel != null)
+                heroProfilePanel.gameObject.SetActive(false);
+
             gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// Open the Hero Profile Panel for the selected hero.
+        /// </summary>
+        private void OpenHeroProfile(HeroData hero)
+        {
+            if (heroProfilePanel != null)
+                heroProfilePanel.Show(hero);
         }
 
         /// <summary>

@@ -68,6 +68,9 @@ namespace OneShotSupport.ScriptableObjects
         [Range(0, 10)]
         public int bondLevel = 1;
 
+        [Tooltip("Current injury description (empty string means no injury)")]
+        public string currentInjury = "";
+
         // === NEGOTIATION STATE ===
         [Header("Negotiation State")]
         [Tooltip("Whether this hero has walked away from negotiations")]
