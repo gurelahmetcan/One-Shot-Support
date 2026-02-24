@@ -169,7 +169,7 @@ namespace OneShotSupport.UI.Components
             }
 
             if (xpText != null)
-                xpText.text = $"{currentHero.currentXP} / {xpNeeded} XP";
+                xpText.text = $"{currentHero.currentXP}/{xpNeeded} XP";
         }
 
         // ── Vital Stats ───────────────────────────────────────────────────────
@@ -178,13 +178,13 @@ namespace OneShotSupport.UI.Components
         {
             // Age line shows lifecycle stage for context
             if (ageText != null)
-                ageText.text = $"Age: {currentHero.currentAge}  ({currentHero.lifeStage})";
+                ageText.text = $"Age: {currentHero.currentAge} ({currentHero.lifeStage})";
 
             int cur = currentHero.currentHP;
             int max = currentHero.MaxHP;
 
             if (healthText != null)
-                healthText.text = $"{cur} / {max}";
+                healthText.text = $"HP: {cur}/{max}";
         }
 
         // ── Status ────────────────────────────────────────────────────────────
@@ -195,8 +195,8 @@ namespace OneShotSupport.UI.Components
             if (injuryText != null)
             {
                 bool hasInjury = !string.IsNullOrEmpty(currentHero.currentInjury);
-                injuryText.text = hasInjury ? currentHero.currentInjury : "None";
-                injuryText.color = hasInjury ? HealthColorLow : Color.white;
+                injuryText.text = hasInjury ? currentHero.currentInjury : "Healthy";
+                injuryText.color = hasInjury ? HealthColorLow : Color.green;
             }
 
             // Perk — uses the first trait on the hero
@@ -206,7 +206,7 @@ namespace OneShotSupport.UI.Components
                 {
                     HeroTrait trait = currentHero.traits[0];
                     string desc = string.IsNullOrEmpty(trait.description) ? "" : $": {trait.description}";
-                    perkText.text = $"{trait.traitName}{desc}";
+                    perkText.text = $"Perk: {trait.traitName}{desc}";
                 }
                 else
                 {
@@ -226,7 +226,7 @@ namespace OneShotSupport.UI.Components
             int seasonsLeft = currentHero.turnsRemainingInContract;
             string seasonLabel = seasonsLeft == 1 ? "Season" : "Seasons";
 
-            contractText.text = $"{salary:0}g / Season";
+            contractText.text = $"{salary:0}g/Season";
             expiryText.text = $"{seasonsLeft} {seasonLabel} Left";
         }
 
@@ -257,7 +257,7 @@ namespace OneShotSupport.UI.Components
 
             // Label
             if (educationFocusText != null)
-                educationFocusText.text = $"Training: {EducationFocusPopup.GetFocusDisplayName(focus)}";
+                educationFocusText.text = $"Focus: {EducationFocusPopup.GetFocusDisplayName(focus)}";
         }
 
         // ── Bond Level ────────────────────────────────────────────────────────
@@ -267,7 +267,7 @@ namespace OneShotSupport.UI.Components
             int bond = currentHero.bondLevel;
 
             if (bondLevelText != null)
-                bondLevelText.text = $"Bond  {bond} / 10";
+                bondLevelText.text = $"Bond  {bond}/10";
         }
 
         // ── Skill Pentagram ───────────────────────────────────────────────────

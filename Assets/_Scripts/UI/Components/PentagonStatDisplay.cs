@@ -62,6 +62,12 @@ namespace OneShotSupport.UI.Components
         [Range(1f, 10f)]
         public float basePentagonThickness = 2f;
 
+        public TextMeshProUGUI mightText;
+        public TextMeshProUGUI charmText;
+        public TextMeshProUGUI witText;
+        public TextMeshProUGUI agilityText;
+        public TextMeshProUGUI fortitudeText;
+
         [Header("Overlay (Optional)")]
         [Tooltip("Show overlay pentagon (for comparing requirements vs hero stats)")]
         public bool showOverlay = false;
@@ -97,8 +103,9 @@ namespace OneShotSupport.UI.Components
             agility = Mathf.Clamp(a, 0, 60);
             fortitude = Mathf.Clamp(f, 0, 60);
             SetVerticesDirty();
+            ShowStatNumbers(m,c,w,a,f);
         }
-
+    
         /// <summary>
         /// Update overlay stat values programmatically
         /// </summary>
@@ -279,6 +286,37 @@ namespace OneShotSupport.UI.Components
             // Create triangles for the quad
             vh.AddTriangle(startIndex, startIndex + 1, startIndex + 2);
             vh.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
+        }
+
+        /// <summary>
+        /// Show stat numbers
+        /// </summary>
+        private void ShowStatNumbers(int m, int c, int w, int a, int f)
+        {
+            if (mightText != null)
+            {
+                mightText.text = m.ToString();
+            }
+
+            if (charmText != null)
+            {
+                charmText.text = c.ToString();
+            }
+
+            if (witText != null)
+            {
+                witText.text = w.ToString();
+            }
+
+            if (agilityText != null)
+            {
+                agilityText.text = a.ToString();
+            }
+
+            if (fortitudeText != null)
+            {
+                fortitudeText.text = f.ToString();
+            }
         }
 
 #if UNITY_EDITOR
