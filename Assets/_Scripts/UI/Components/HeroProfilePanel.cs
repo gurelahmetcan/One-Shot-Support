@@ -59,6 +59,15 @@ namespace OneShotSupport.UI.Components
         [SerializeField] private TextMeshProUGUI contractText;
         [SerializeField] private TextMeshProUGUI expiryText;
 
+        // ── Education Focus ───────────────────────────────────────────────────
+        [Header("Education Focus")]
+        [Tooltip("Icon image that displays the current education focus sprite.")]
+        [SerializeField] private Image educationFocusIcon;
+        [Tooltip("Text label showing the focus name, e.g. 'Training: Might'.")]
+        [SerializeField] private TextMeshProUGUI educationFocusText;
+        [Tooltip("Reference to the scene's EducationFocusPopup — used to fetch focus icons.")]
+        [SerializeField] private EducationFocusPopup educationFocusSource;
+
         // ── Bond Level ────────────────────────────────────────────────────────
         [Header("Bond Level")]
         [SerializeField] private TextMeshProUGUI bondLevelText;
@@ -117,6 +126,7 @@ namespace OneShotSupport.UI.Components
             PopulateVitalStats();
             PopulateStatus();
             PopulateContract();
+            PopulateEducationFocus();
             PopulateBond();
             PopulatePentagon();
         }
@@ -218,6 +228,36 @@ namespace OneShotSupport.UI.Components
 
             contractText.text = $"{salary:0}g / Season";
             expiryText.text = $"{seasonsLeft} {seasonLabel} Left";
+        }
+
+        // ── Education Focus ───────────────────────────────────────────────────
+
+        private void PopulateEducationFocus()
+        {
+            EducationFocus focus = currentHero.preferredEducationFocus;
+
+            // Icon — sourced from the shared EducationFocusPopup
+            if (educationFocusIcon != null)
+            {
+                Sprite icon = educationFocusSource != null
+                    ? educationFocusSource.GetIconForFocus(focus)
+                    : null;
+
+                if (icon != null)
+                {
+                    educationFocusIcon.sprite = icon;
+                    educationFocusIcon.color = Color.white;
+                    educationFocusIcon.gameObject.SetActive(true);
+                }
+                else
+                {
+                    educationFocusIcon.gameObject.SetActive(false);
+                }
+            }
+
+            // Label
+            if (educationFocusText != null)
+                educationFocusText.text = $"Training: {EducationFocusPopup.GetFocusDisplayName(focus)}";
         }
 
         // ── Bond Level ────────────────────────────────────────────────────────
