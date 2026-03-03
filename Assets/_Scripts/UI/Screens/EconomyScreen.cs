@@ -66,13 +66,15 @@ namespace OneShotSupport.UI.Screens
 
             // Add income note (missions will vary)
             // For now, show expected income range based on typical mission rewards
+            /*
             entries.Add(new EconomyEntry
             {
                 description = "Mission Rewards (Estimated)",
                 amount = 60 // Average of D-S rank rewards
             });
             totalIncome += 60;
-
+            */
+            
             // Calculate net balance
             int netBalance = totalIncome - totalExpenses;
 
