@@ -125,6 +125,8 @@ namespace OneShotSupport.UI.Components
         /// </summary>
         public void Setup(HeroData hero, int currentGold)
         {
+            heroAnimator.Play("Idle", -1, 0f);
+            
             // Guard against duplicate calls
             if (gameObject.activeSelf && currentHero == hero)
             {
@@ -364,16 +366,11 @@ namespace OneShotSupport.UI.Components
 
             // 1. Update emoji sprite BEFORE the animation plays
             UpdateEmojiDisplay(result.EmojiType);
-
-            // 2. Disable button so the player can't re-click while the animation plays.
-            //    OnReactionAnimationComplete() (called via Animation Event on the last frame) re-enables it.
-            if (offerButton != null)
-                offerButton.interactable = false;
-
-            // 3. Trigger reaction animation
+            
+            // 2. Trigger reaction animation
             if (heroAnimator != null)
-                heroAnimator.SetTrigger(offerAnimationTrigger);
-
+                heroAnimator.Play("SpeechBubbleAnim", -1, 0f);
+            
             // 3. Process result
             if (result.IsAccepted)
             {
@@ -423,15 +420,6 @@ namespace OneShotSupport.UI.Components
 
             if (target != null)
                 emojiImage.sprite = target;
-        }
-
-        /// <summary>
-        /// Called by an Animation Event on the last frame of the reaction animation clip.
-        /// Re-evaluates and restores the offer button so the player can make another offer.
-        /// </summary>
-        public void OnReactionAnimationComplete()
-        {
-            UpdateOfferButtonState();
         }
 
         /// <summary>

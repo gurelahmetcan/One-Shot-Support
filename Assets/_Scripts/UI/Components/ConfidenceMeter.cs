@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -47,7 +48,7 @@ namespace OneShotSupport.UI.Components
             // Update fill image
             if (confidenceFillImage != null)
             {
-                confidenceFillImage.fillAmount = fillAmount;
+                confidenceFillImage.DOFillAmount(fillAmount, 0.5f);
             }
 
             // Update handle position
@@ -55,7 +56,8 @@ namespace OneShotSupport.UI.Components
             {
                 // Lerp between left and right positions based on fill amount
                 float handleX = Mathf.Lerp(handleLeftPosition, handleRightPosition, fillAmount);
-                handleTransform.anchoredPosition = new Vector2(handleX, handleTransform.anchoredPosition.y);
+                //handleTransform.anchoredPosition = new Vector2(handleX, handleTransform.anchoredPosition.y);
+                handleTransform.DOAnchorPos(new Vector2(handleX, handleTransform.anchoredPosition.y), 0.5f);
             }
 
             // Update percentage text
