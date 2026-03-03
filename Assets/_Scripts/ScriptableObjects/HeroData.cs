@@ -64,6 +64,14 @@ namespace OneShotSupport.ScriptableObjects
         [Tooltip("Daily salary cost in gold per turn")]
         public int dailySalary = 10;
 
+        [Tooltip("Minimum contract length in years the hero will accept (year bound violation is Forced Red)")]
+        [Range(1, 5)]
+        public int minYearsDesired = 1;
+
+        [Tooltip("Maximum contract length in years the hero will accept (year bound violation is Forced Red)")]
+        [Range(1, 5)]
+        public int maxYearsDesired = 5;
+
         [Tooltip("Bond level with the guild (affects negotiations and loyalty)")]
         [Range(0, 10)]
         public int bondLevel = 1;

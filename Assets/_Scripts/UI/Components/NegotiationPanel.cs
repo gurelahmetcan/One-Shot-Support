@@ -47,6 +47,26 @@ namespace OneShotSupport.UI.Components
         [SerializeField] private Color selectedYearColor = new Color(0.3f, 0.7f, 1f);
         [SerializeField] private Color normalYearColor = Color.white;
 
+        [Header("Emoji Display")]
+        [Tooltip("Image component that displays the hero reaction emoji")]
+        [SerializeField] private Image emojiImage;
+        [Tooltip("Sprite shown when hero is happy (Green offer accepted)")]
+        [SerializeField] private Sprite happySprite;
+        [Tooltip("Sprite shown when hero is thinking (Yellow — offer too low but stays)")]
+        [SerializeField] private Sprite thinkingSprite;
+        [Tooltip("Sprite shown when hero is angry (Red / Forced Red — insulted)")]
+        [SerializeField] private Sprite angrySprite;
+
+        [Header("Offer Animation")]
+        [Tooltip("Animator on the hero reaction panel. Triggered when the Offer button is pressed.")]
+        [SerializeField] private Animator heroAnimator;
+        [Tooltip("Name of the Animator trigger parameter that plays the reaction animation.")]
+        [SerializeField] private string offerAnimationTrigger = "PlayOffer";
+
+        [Header("Feedback")]
+        [Tooltip("Text field that shows a hint explaining why the offer was rejected.")]
+        [SerializeField] private TextMeshProUGUI feedbackHintText;
+
         // Events
         public event Action<HeroData, ContractOffer> OnNegotiationAccepted;
         public event Action<HeroData> OnHeroWalkedAway;
@@ -192,6 +212,10 @@ namespace OneShotSupport.UI.Components
             // Update offer button state
             UpdateOfferButtonState();
 
+            // Clear any feedback hint from a previous offer attempt
+            if (feedbackHintText != null)
+                feedbackHintText.text = string.Empty;
+
             Debug.Log($"[NegotiationPanel] Opened negotiation with {hero.heroName} (Vexp: {heroExpectedValue}g)");
         }
 
@@ -316,7 +340,11 @@ namespace OneShotSupport.UI.Components
         }
 
         /// <summary>
-        /// Handle offer button clicked
+        /// Handle offer button clicked.
+        /// Values are only evaluated here — no real-time feedback while sliders move.
+        /// Emoji sprite is set first, then the reaction animation is triggered.
+        /// Tension persists across offers; it is a per-session meter that only
+        /// triggers a Walk-Away when it reaches 100%.
         /// </summary>
         private void HandleOfferClicked()
         {
@@ -326,45 +354,70 @@ namespace OneShotSupport.UI.Components
                 return;
             }
 
-            // Create offer from current slider values
+            // Build the offer from the current slider / button state
             int signingBonus = Mathf.RoundToInt(signingBonusSlider.value);
             int salary = Mathf.RoundToInt(salarySlider.value);
             ContractOffer offer = new ContractOffer(signingBonus, salary, selectedContractLength);
 
-            // Calculate offer value and compare to expected value
-            int offerValue = negotiationManager.CalculateOfferValue(offer);
-            int expectedValue = heroExpectedValue;
+            // Evaluate offer — all thresholds, year bounds, and hints resolved here
+            NegotiationResult result = negotiationManager.GetNegotiationFeedback(currentHero, offer);
 
-            Debug.Log($"[NegotiationPanel] Offer: {offerValue}g vs Expected: {expectedValue}g");
+            // 1. Update emoji sprite BEFORE the animation plays
+            UpdateEmojiDisplay(result.EmojiType);
 
-            // Simple logic: if offer >= expected, accept; else increase tension
-            if (offerValue >= expectedValue)
+            // 2. Trigger reaction animation
+            if (heroAnimator != null)
+                heroAnimator.SetTrigger(offerAnimationTrigger);
+
+            // 3. Process result
+            if (result.IsAccepted)
             {
-                // Hero accepts the offer!
-                Debug.Log($"[NegotiationPanel] {currentHero.heroName} accepted the offer! ({offerValue}g >= {expectedValue}g)");
+                // Green — hero accepts; tension is NOT reset (per-session meter)
+                Debug.Log($"[NegotiationPanel] {currentHero.heroName} accepted the offer!");
                 HandleNegotiationSuccess(offer);
             }
             else
             {
-                // Offer is too low, increase tension
-                int valueDifference = expectedValue - offerValue;
-                int tensionIncrease = Mathf.RoundToInt((float)valueDifference / expectedValue * 100f);
+                // Yellow or Red (including Forced Red for year violations)
+                // Apply tension; Mathf.Clamp is applied inside ApplyTensionChange
+                int tension = currentHero.currentTension;
+                bool walkedAway = negotiationManager.ApplyTensionChange(currentHero, result.TensionDelta, ref tension);
+                currentHero.currentTension = tension;
 
-                currentHero.currentTension += tensionIncrease;
-                currentHero.currentTension = Mathf.Clamp(currentHero.currentTension, 0, 100);
-
-                // Update display
+                // Refresh tension meter
                 UpdateTensionDisplay(currentHero.currentTension);
 
-                Debug.Log($"[NegotiationPanel] Offer too low! Tension increased by {tensionIncrease}% → {currentHero.currentTension}%");
+                // Show feedback hint so the player knows what to fix
+                if (feedbackHintText != null)
+                    feedbackHintText.text = result.FeedbackHint;
 
-                // Check if tension is too high (walk away)
-                if (currentHero.currentTension >= 100)
-                {
-                    Debug.LogWarning($"[NegotiationPanel] Tension reached 100%! {currentHero.heroName} walks away!");
+                Debug.Log($"[NegotiationPanel] Offer rejected — Emoji: {result.EmojiType}, " +
+                          $"TensionDelta: +{result.TensionDelta}, Tension: {currentHero.currentTension}%, " +
+                          $"Hint: \"{result.FeedbackHint}\"");
+
+                if (walkedAway)
                     HandleHeroWalkAway();
-                }
             }
+        }
+
+        /// <summary>
+        /// Switch the emoji sprite to match the hero's reaction.
+        /// Must be called before triggering the reaction animation.
+        /// </summary>
+        private void UpdateEmojiDisplay(EmojiType emojiType)
+        {
+            if (emojiImage == null) return;
+
+            Sprite target = emojiType switch
+            {
+                EmojiType.Happy    => happySprite,
+                EmojiType.Thinking => thinkingSprite,
+                EmojiType.Angry    => angrySprite,
+                _                  => null
+            };
+
+            if (target != null)
+                emojiImage.sprite = target;
         }
 
         /// <summary>

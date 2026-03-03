@@ -61,6 +61,19 @@ namespace OneShotSupport.Core
         [Tooltip("Additional tension added when payment preference is violated (10%)")]
         [SerializeField] private int paymentPreferencePenalty = 10;
 
+        [Header("Soft Threshold Settings")]
+        [Tooltip("Offer/Vexp percentage below which the hero enters the Yellow zone (rejects but stays). Default 80%.")]
+        [SerializeField] private int yellowThreshold = 80;
+
+        [Tooltip("Multiplier applied to tension delta when hero is in the Red zone (x <= yellowThreshold). Default 1.5.")]
+        [SerializeField] private float redTensionMultiplier = 1.5f;
+
+        [Tooltip("Fixed tension increase applied on a Forced Red result (year-bound violation). Default 25.")]
+        [SerializeField] private int forcedRedTensionDelta = 25;
+
+        [Tooltip("CalculateIdealOffer returns this multiple of Vexp as the Safe Green anchor (110% tempts player to slide left). Default 1.1.")]
+        [SerializeField] private float safeGreenMultiplier = 1.1f;
+
         // === EVENTS ===
         public event Action<HeroData, int> OnTensionChanged;
         public event Action<HeroData> OnHeroWalkAway;
@@ -164,6 +177,10 @@ namespace OneShotSupport.Core
 
             int vexp = CalculateHeroExpectedValue(hero);
 
+            // Safe Green anchor: start at 110% of Vexp so the player is tempted to slide left and save money.
+            // Any offer >= 100% Vexp will be accepted (Green), so 110% gives comfortable headroom.
+            int safeGreenValue = Mathf.RoundToInt(vexp * safeGreenMultiplier);
+
             // Default distribution based on payment preferences
             PaymentPreference preference = GetPaymentPreference(hero);
             float signingPercentage = 0.2f; // Default 20%
@@ -182,11 +199,11 @@ namespace OneShotSupport.Core
                     break;
             }
 
-            // Calculate signing bonus
-            int signingBonus = Mathf.RoundToInt(vexp * signingPercentage);
+            // Calculate signing bonus from Safe Green value
+            int signingBonus = Mathf.RoundToInt(safeGreenValue * signingPercentage);
 
             // Remaining value goes to salary
-            int remainingValue = vexp - signingBonus;
+            int remainingValue = safeGreenValue - signingBonus;
 
             // Calculate salary per turn
             int turnsInContract = 4 * desiredContractLength;
@@ -199,10 +216,10 @@ namespace OneShotSupport.Core
                 contractLengthYears = desiredContractLength
             };
 
-            Debug.Log($"[ContractNegotiation] {hero.heroName} Ideal Offer ({preference}): " +
+            Debug.Log($"[ContractNegotiation] {hero.heroName} Safe Green Offer ({preference}): " +
                       $"Signing={signingBonus}g ({signingPercentage * 100:F0}%), " +
                       $"Salary={dailySalary}g/turn, Length={desiredContractLength} years, " +
-                      $"Total={CalculateOfferValue(idealOffer)}g (Target: {vexp}g)");
+                      $"Total={CalculateOfferValue(idealOffer)}g (Vexp: {vexp}g, SafeGreen: {safeGreenValue}g)");
 
             return idealOffer;
         }
@@ -483,6 +500,120 @@ namespace OneShotSupport.Core
             return modifier;
         }
 
+        // ========== SOFT THRESHOLD NEGOTIATION ==========
+
+        /// <summary>
+        /// Evaluate a contract offer and return a NegotiationResult with emoji, tension delta, and a feedback hint.
+        /// Only call this when the player presses the Offer button — no real-time feedback.
+        ///
+        /// Priority order:
+        ///   1. Year-bound violation  → Forced Red (ignores gold values)
+        ///   2. Green  (x >= 100%)   → Hero accepts immediately
+        ///   3. Yellow (80% < x < 100%) → Rejects, stays at table, slight tension
+        ///   4. Red    (x <= 80%)    → Insulted, significant tension
+        /// </summary>
+        public NegotiationResult GetNegotiationFeedback(HeroData hero, ContractOffer offer)
+        {
+            if (hero == null || offer == null)
+            {
+                Debug.LogError("[ContractNegotiation] GetNegotiationFeedback called with null parameters");
+                return new NegotiationResult { EmojiType = EmojiType.Angry, TensionDelta = 0, FeedbackHint = string.Empty, IsAccepted = false };
+            }
+
+            // ── Priority 1: Year-bound violation (Forced Red) ──────────────────────
+            if (offer.contractLengthYears < hero.minYearsDesired)
+            {
+                Debug.Log($"[ContractNegotiation] {hero.heroName} year violation: {offer.contractLengthYears} yr < min {hero.minYearsDesired} yr → Forced Red");
+                return new NegotiationResult
+                {
+                    EmojiType = EmojiType.Angry,
+                    TensionDelta = forcedRedTensionDelta,
+                    FeedbackHint = "I need more security",
+                    IsAccepted = false
+                };
+            }
+
+            if (offer.contractLengthYears > hero.maxYearsDesired)
+            {
+                Debug.Log($"[ContractNegotiation] {hero.heroName} year violation: {offer.contractLengthYears} yr > max {hero.maxYearsDesired} yr → Forced Red");
+                return new NegotiationResult
+                {
+                    EmojiType = EmojiType.Angry,
+                    TensionDelta = forcedRedTensionDelta,
+                    FeedbackHint = "I won't be tied down",
+                    IsAccepted = false
+                };
+            }
+
+            // ── Threshold check ─────────────────────────────────────────────────────
+            int vexp = CalculateHeroExpectedValue(hero);
+            int voff = CalculateOfferValue(offer);
+            float xPercent = (vexp > 0) ? ((float)voff / vexp * 100f) : 0f;
+
+            Debug.Log($"[ContractNegotiation] {hero.heroName} offer ratio x={xPercent:F1}% (Voff={voff}g / Vexp={vexp}g)");
+
+            // ── Green: hero accepts ─────────────────────────────────────────────────
+            if (xPercent >= 100f)
+            {
+                return new NegotiationResult
+                {
+                    EmojiType = EmojiType.Happy,
+                    TensionDelta = 0,
+                    FeedbackHint = string.Empty,
+                    IsAccepted = true
+                };
+            }
+
+            // ── Yellow / Red: compute tension delta ─────────────────────────────────
+            int baseDelta = CalculateTensionDelta(hero, offer, hero.currentTension);
+
+            EmojiType emojiType;
+            int tensionDelta;
+
+            if (xPercent > yellowThreshold)
+            {
+                // Yellow: rejects but stays, slight tension increase
+                emojiType = EmojiType.Thinking;
+                tensionDelta = baseDelta;
+                Debug.Log($"[ContractNegotiation] {hero.heroName} → Yellow (tension +{tensionDelta})");
+            }
+            else
+            {
+                // Red: insulted, significant tension increase
+                emojiType = EmojiType.Angry;
+                tensionDelta = Mathf.RoundToInt(baseDelta * redTensionMultiplier);
+                Debug.Log($"[ContractNegotiation] {hero.heroName} → Red (tension +{tensionDelta})");
+            }
+
+            string feedbackHint = DetermineFailureHint(hero, offer, vexp);
+
+            return new NegotiationResult
+            {
+                EmojiType = emojiType,
+                TensionDelta = tensionDelta,
+                FeedbackHint = feedbackHint,
+                IsAccepted = false
+            };
+        }
+
+        /// <summary>
+        /// Determine a human-readable hint that explains the primary reason the offer failed.
+        /// Priority 2: Salary too low → Priority 3: Signing bonus too low.
+        /// </summary>
+        private string DetermineFailureHint(HeroData hero, ContractOffer offer, int vexp)
+        {
+            // Priority 2 – Salary violation: salary stream covers less than 40% of Vexp
+            int salaryValue = offer.dailySalary * 4 * offer.contractLengthYears;
+            if (salaryValue < vexp * 0.4f)
+                return "I can't pay my bills with these scraps.";
+
+            // Priority 3 – Bonus violation: signing bonus is under 5% of Vexp (effectively zero)
+            if (offer.signingBonus < vexp * 0.05f)
+                return "I need a reason to sign today. Where's the upfront gold?";
+
+            return string.Empty;
+        }
+
         // ========== NEGOTIATION OUTCOME ==========
 
         /// <summary>
@@ -547,5 +678,34 @@ namespace OneShotSupport.Core
             dailySalary = salary;
             contractLengthYears = years;
         }
+    }
+
+    /// <summary>
+    /// Hero's emotional reaction used to select the emoji sprite shown in the negotiation UI
+    /// </summary>
+    public enum EmojiType
+    {
+        Happy,    // Green  — x >= 100%: hero accepts immediately
+        Thinking, // Yellow — 80% < x < 100%: hero rejects but stays at the table
+        Angry     // Red    — x <= 80%: hero is insulted; also used for Forced Red (year violation)
+    }
+
+    /// <summary>
+    /// Result returned by ContractNegotiationManager.GetNegotiationFeedback.
+    /// Contains everything the UI needs to react to an offer button press.
+    /// </summary>
+    public struct NegotiationResult
+    {
+        /// <summary>Which emoji sprite to display before the reaction animation plays.</summary>
+        public EmojiType EmojiType;
+
+        /// <summary>Amount to add to the current session tension (always >= 0 for rejections; 0 for Green).</summary>
+        public int TensionDelta;
+
+        /// <summary>A short hint that explains the primary reason for rejection (empty on Green).</summary>
+        public string FeedbackHint;
+
+        /// <summary>True when the hero accepts the offer (Green zone). False for Yellow, Red, and Forced Red.</summary>
+        public bool IsAccepted;
     }
 }
