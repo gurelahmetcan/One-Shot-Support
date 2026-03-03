@@ -365,12 +365,14 @@ namespace OneShotSupport.UI.Components
             // 1. Update emoji sprite BEFORE the animation plays
             UpdateEmojiDisplay(result.EmojiType);
 
-            // 2. Trigger reaction animation — reset first so it always replays from the start
+            // 2. Disable button so the player can't re-click while the animation plays.
+            //    OnReactionAnimationComplete() (called via Animation Event on the last frame) re-enables it.
+            if (offerButton != null)
+                offerButton.interactable = false;
+
+            // 3. Trigger reaction animation
             if (heroAnimator != null)
-            {
-                heroAnimator.ResetTrigger(offerAnimationTrigger);
                 heroAnimator.SetTrigger(offerAnimationTrigger);
-            }
 
             // 3. Process result
             if (result.IsAccepted)
@@ -421,6 +423,15 @@ namespace OneShotSupport.UI.Components
 
             if (target != null)
                 emojiImage.sprite = target;
+        }
+
+        /// <summary>
+        /// Called by an Animation Event on the last frame of the reaction animation clip.
+        /// Re-evaluates and restores the offer button so the player can make another offer.
+        /// </summary>
+        public void OnReactionAnimationComplete()
+        {
+            UpdateOfferButtonState();
         }
 
         /// <summary>
