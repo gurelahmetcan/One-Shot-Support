@@ -365,9 +365,12 @@ namespace OneShotSupport.UI.Components
             // 1. Update emoji sprite BEFORE the animation plays
             UpdateEmojiDisplay(result.EmojiType);
 
-            // 2. Trigger reaction animation
+            // 2. Trigger reaction animation — reset first so it always replays from the start
             if (heroAnimator != null)
+            {
+                heroAnimator.ResetTrigger(offerAnimationTrigger);
                 heroAnimator.SetTrigger(offerAnimationTrigger);
+            }
 
             // 3. Process result
             if (result.IsAccepted)
